@@ -1,0 +1,195 @@
+/* 공통 스타일 (common.css) */
+
+/* 기본 리셋 및 전체 스타일 */
+body, h1, h2, h3, p {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f8f9fa;
+}
+
+
+/* 헤더 및 네비게이션 */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 10px;
+    padding-left: 20px;
+}
+
+.menu {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-right: 30px;
+}
+
+.menu a {
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.menu a:hover, .menu a.active {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+}
+
+.logo-picture {
+    width: 160px;
+    height: auto;
+}
+
+/* 컨테이너 스타일 */
+.container {
+    width: 100%;
+    max-width: 1700px;
+    margin: 0 auto;
+    padding-top: 100px;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 150px);
+}
+
+/* 푸터 스타일 */
+footer {
+    background: linear-gradient(135deg, #95ccfc, #5ea9fa);
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+footer a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+footer a:hover {
+    color: #f0f0f0;
+    text-decoration: underline;
+}
+
+/* 연락처 정보 스타일 - 가로 정렬 */
+.contact-info {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    max-width: 800px;
+    padding: 10px 0;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.contact-item i {
+    font-size: 1.2rem;
+}
+
+/* 구분선 추가 */
+.divider {
+    width: 1px;
+    height: 24px;
+    background-color: rgba(255, 255, 255, 0.3);
+    display: inline-block;
+}
+
+/* 애니메이션 효과 */
+.hidden {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 1s ease;
+}
+
+.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+    .menu a {
+        font-size: 0.9rem;
+        padding: 7px 10px;
+    }
+}
+
+@media (max-width: 992px) {
+    .container {
+        width: 95%;
+    }
+    
+    .logo-picture {
+        width: 140px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 10px 3%;
+    }
+    
+    .menu {
+        gap: 8px;
+        margin-right: 0;
+    }
+    
+    .menu a {
+        font-size: 0.8rem;
+        padding: 5px 8px;
+    }
+    
+    /* 작은 화면에서는 연락처 정보 세로 배치 */
+    .contact-info {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .divider {
+        display: none; /* 모바일에서는 구분선 숨김 */
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        width: 98%;
+    }
+    
+    .menu {
+        justify-content: center;
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .navbar {
+        flex-direction: column;
+        padding-bottom: 15px;
+    }
+}

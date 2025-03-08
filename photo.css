@@ -1,0 +1,435 @@
+/* 전체 컨테이너 너비 제한 */
+
+
+/* 활동 헤더 스타일 - 간결하게 */
+.activities-header {
+    text-align: center;
+    padding: 25px 15px 20px;
+    margin-bottom: 25px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
+}
+
+.activities-header h1 {
+    color: #005792;
+    font-size: 2.2em;
+    margin-bottom: 12px;
+    position: relative;
+    display: inline-block;
+}
+
+.activities-header h1::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background-color: #4facfe;
+}
+
+.activities-header p {
+    color: #555;
+    font-size: 1em;
+    max-width: 600px;
+    margin: 15px auto 0;
+}
+
+/* 섹션 공통 스타일 - 여백 축소 */
+.section {
+    margin-bottom: 35px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(79, 172, 254, 0.07) 0%, rgba(0, 242, 254, 0) 70%);
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.section h2 {
+    color: #005792;
+    font-size: 1.5em;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #4facfe;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.section h2 i {
+    margin-right: 8px;
+    color: #4facfe;
+}
+
+/* 특허 섹션 스타일 - 테두리 축소 */
+#patents {
+    border-left: 3px solid #4facfe;
+}
+
+.patent-list, .award-list {
+    list-style: none;
+    padding: 0;
+}
+
+.patent-list li, .award-list li {
+    margin-bottom: 10px;
+    padding: 14px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+    position: relative;
+    font-size: 0.95em;
+}
+
+.patent-list li:hover, .award-list li:hover {
+    background: #f0f7ff;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+}
+
+.patent-list li strong, .award-list li strong {
+    color: #005792;
+    margin-right: 6px;
+    display: inline-block;
+}
+
+/* 수상 섹션 스타일 - 테두리 축소 */
+#awards {
+    border-left: 3px solid #28a745;
+}
+
+.award-list li {
+    background: #f8fff8;
+}
+
+.award-list li:hover {
+    background: #f0fff0;
+}
+
+.award-highlight {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* 포토 갤러리 섹션 스타일 - 개선된 버전 */
+#photos {
+    border-left: 3px solid #ffc107;
+}
+
+.photo-gallery {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 400px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    margin-bottom: 20px;
+}
+
+.photo-gallery-inner {
+    display: flex;
+    width: max-content;
+    transition: transform 0.8s ease-in-out;
+    height: 100%;
+}
+
+.photo-gallery img {
+    width: 400px;
+    height: 400px;
+    flex-shrink: 0;
+    margin-right: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0.9;
+}
+
+.photo-gallery img:hover {
+    transform: scale(1.02);
+    opacity: 1;
+}
+
+/* 갤러리 컨트롤 버튼 */
+.gallery-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.gallery-btn {
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(79, 172, 254, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gallery-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3);
+}
+
+.gallery-btn i {
+    font-size: 0.9em;
+}
+
+.gallery-btn.play i {
+    margin-left: 2px;
+}
+
+/* 인디케이터 */
+.gallery-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.indicator {
+    width: 10px;
+    height: 10px;
+    background-color: #ddd;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.indicator.active {
+    background-color: #4facfe;
+}
+
+/* 스크린 리더용 텍스트 */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* 스와이프 구현을 위한 터치 영역 */
+.touch-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+/* 이미지 캡션 */
+.gallery-caption {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #555;
+    min-height: 20px;
+}
+
+/* 더보기 버튼 스타일 - 간결하게 */
+.show-more {
+    display: none;
+}
+
+.show-more.visible {
+    display: block;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.show-more-button {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.show-more-button button {
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.95em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(79, 172, 254, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 auto;
+}
+
+.show-more-button button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3);
+}
+
+.show-more-button button i {
+    transition: transform 0.3s ease;
+}
+
+.show-more-button.active button i {
+    transform: rotate(180deg);
+}
+
+/* 년도 선택기 스타일 - 간결하게 */
+#yearSelector {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #4facfe;
+    color: white;
+    font-size: 0.9em;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#yearSelector:hover {
+    background-color: #0080ff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* 애니메이션 효과 - 부드럽게 */
+.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+}
+
+.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 반응형 디자인 - 더 세밀하게 조정 */
+@media (max-width: 992px) {
+    .section h2 {
+        font-size: 1.4em;
+    }
+    
+    .photo-gallery {
+        height: 350px;
+    }
+    
+    .photo-gallery img {
+        width: 350px;
+        height: 350px;
+    }
+    
+    .gallery-btn {
+        padding: 7px 14px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 768px) {
+    .section {
+        padding: 15px;
+    }
+    
+    .photo-gallery {
+        height: 280px;
+    }
+    
+    .photo-gallery img {
+        width: 280px;
+        height: 280px;
+        margin-right: 15px;
+    }
+    
+    .activities-header h1 {
+        font-size: 1.8em;
+    }
+    
+    .patent-list li, .award-list li {
+        font-size: 0.9em;
+        padding: 12px 14px;
+    }
+    
+    .gallery-btn {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+    
+    .gallery-indicators {
+        gap: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .patent-list li, .award-list li {
+        padding: 12px;
+    }
+    
+    .show-more-button button {
+        padding: 8px 16px;
+        font-size: 0.9em;
+    }
+    
+    .photo-gallery {
+        height: 220px;
+    }
+    
+    .photo-gallery img {
+        width: 220px;
+        height: 220px;
+        margin-right: 12px;
+    }
+    
+    .activities-header {
+        padding: 20px 12px 15px;
+    }
+    
+    .activities-header h1 {
+        font-size: 1.6em;
+    }
+    
+    .indicator {
+        width: 8px;
+        height: 8px;
+    }
+}

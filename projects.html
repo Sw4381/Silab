@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보안 지능 연구실 - 프로젝트</title>
+    <!-- 올바른 CSS 로딩 순서 적용 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="projects.css">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+        </div>
+        <nav class="menu">
+            <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./projects.html" class="active"><i class="fas fa-file-alt"></i> Project</a>
+            <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activity</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- 프로젝트 소개 섹션 -->
+        <div class="page-header hidden">
+            <h1>Research Projects</h1>
+            <p>보안지능연구실은 다양한 보안 관련 연구 프로젝트를 수행하고 있습니다.</p>
+        </div>
+
+        <!-- 현재 진행 중인 프로젝트 섹션 -->
+        <section class="project-section hidden">
+            <h2 class="section-title"><i class="fas fa-tasks"></i> Current Projects</h2>
+            
+            <div class="project-list">
+                <!-- 프로젝트 1 -->
+                <div class="project-item">
+                    <div class="project-icon">
+                        <img src="./project-icons/network.png" alt="네트워크" onerror="this.onerror=null; this.src='./project-icons/default.png';">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ43] 네트워크 이상행위 탐지 및 대응</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.7 ~ 2026.11</p>
+                        <p class="project-funding"><strong>Funding:</strong> XAI 기반 연구(KISTI)</p>
+                        <p class="project-desc"><strong>주요내용:</strong> 네트워크 이상행위 탐지 및 대응 관련 XAI 기반 연구</p>
+                    </div>
+                </div>
+
+                <!-- 프로젝트 2 -->
+                <div class="project-item">
+                    <div class="project-icon">
+                        <img src="./project-icons/encryption.png" alt="암호화" onerror="this.onerror=null; this.src='./project-icons/default.png';">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ42] 암호화 사이버위협 대응</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2023.4 ~ 2027.12</p>
+                        <p class="project-funding"><strong>Funding:</strong> ICT 융합 공공 서비스 보안 관제 기술 (IITP)</p>
+                        <p class="project-desc"><strong>주요내용:</strong> 암호화된 사이버 위협에 대한 탐지 및 대응 기술 연구</p>
+                    </div>
+                </div>
+
+                <!-- 프로젝트 3 -->
+                <div class="project-item">
+                    <div class="project-icon">
+                        <img src="./project-icons/attack.png" alt="공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ41] Life-cycle 공격 그룹 분석</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2022.4 ~ 2025.12</p>
+                        <p class="project-funding"><strong>Funding:</strong> 공격 그룹 식별 및 유형 분석 기술 (IITP)</p>
+                        <p class="project-desc"><strong>주요내용:</strong> 공격 그룹 라이프사이클 분석 및 패턴 연구</p>
+                    </div>
+                </div>
+
+                <!-- 프로젝트 4 -->
+                <div class="project-item">
+                    <div class="project-icon">
+                        <img src="./project-icons/ai-safety.png" alt="AI 안전성" onerror="this.onerror=null; this.src='./project-icons/default.png';">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ40] 국가·공공기관 인공지능 안전성 기준 연구</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.7 ~ 2024.11</p>
+                        <p class="project-funding"><strong>Funding:</strong> 한국암호포럼, 아주대</p>
+                        <p class="project-desc"><strong>주요내용:</strong> 국가 및 공공기관을 위한 인공지능 안전성 기준 수립 연구</p>
+                    </div>
+                </div>
+
+                <!-- 프로젝트 5 -->
+                <div class="project-item">
+                    <div class="project-icon">
+                        <img src="./project-icons/cyber-attack.png" alt="사이버 공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ39] 사이버 공격 그룹 예측 및 TTPs 연관성 분석 연구</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.4 ~ 2025.2</p>
+                        <p class="project-funding"><strong>Funding:</strong> 호서대</p>
+                        <p class="project-desc"><strong>주요내용:</strong> 사이버 공격 그룹의 행동 패턴 예측 및 전술, 기술, 절차(TTPs) 분석</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 과거 프로젝트 섹션 -->
+        <section class="project-section past-projects hidden">
+            <h2 class="section-title"><i class="fas fa-history"></i> Past Projects</h2>
+            
+            <div class="project-list past">
+                <!-- 과거 프로젝트 1 -->
+                <div class="project-item past-item">
+                    <div class="project-icon small">
+                        <span class="project-year">2024</span>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ38] K-RMF 보안통제항목 고도화 연구</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.5 ~ 2024.10</p>
+                        <p class="project-funding"><strong>Funding:</strong> 방첩사, 아주대</p>
+                    </div>
+                </div>
+        
+                <!-- 과거 프로젝트 2 -->
+                <div class="project-item past-item">
+                    <div class="project-icon small">
+                        <span class="project-year">2023</span>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ37] 데이터청년캠퍼스(호서대)</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2023.5 ~ 2023.11</p>
+                        <p class="project-funding"><strong>Funding:</strong> 호서대</p>
+                    </div>
+                </div>
+        
+                <!-- 과거 프로젝트 3 -->
+                <div class="project-item past-item">
+                    <div class="project-icon small">
+                        <span class="project-year">2023</span>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ36] security 분야에 적합한 AI decision support 기술 연구</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2023.3 ~ 2024.2</p>
+                        <p class="project-funding"><strong>Funding:</strong> 호서대</p>
+                    </div>
+                </div>
+        
+                <!-- 과거 프로젝트 4 -->
+                <div class="project-item past-item">
+                    <div class="project-icon small">
+                        <span class="project-year">2021</span>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-name">[PJ35] 침해공격 의심트래픽 분류 및 보호 서비스 자동 생성 모듈 개발</h3>
+                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.10 ~ 2023.5</p>
+                        <p class="project-funding"><strong>Funding:</strong> 민군협력진흥원, 앰진</p>
+                    </div>
+                </div>
+        
+                <!-- 더 많은 과거 프로젝트 (초기에는 숨겨짐) -->
+                <div class="more-projects">
+                    <!-- 과거 프로젝트 5 -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2022</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ34] 분석가를 위한 AI 예측결과 해석 및 오류 정정 지원기술 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2022.3 ~ 2023.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 6 -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2022</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ33] 알려지지 않은 시스템 및 네트워크 이상행위 탐지 도구 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2022.4 ~ 2022.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> ADD, 쏘마</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 7 -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2022</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ32] 제어시스템 운전정보 이상행위 데이터 분석기술 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2022.4 ~ 2022.10</p>
+                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 8 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2021</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ31] 4단계 BK21사업 재난안전 스마트시티를 위한 창의혁신 인재양성사업</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.3 ~ 2022.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> BK21</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 9 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2018</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ30] 딥러닝 기반 악성코드 패턴룰셋 생성 자동화 원천기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.4 ~ 2023.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP, 연세대</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 10 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2019</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ29] 지능화된 악성코드 위협으로부터 ICT 인프라 보호</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.4 ~ 2022.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP, ETRI/이스트시큐리티/하우리</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 11 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2021</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ28] XAI 기반 AI분석결과에 대한 해석기술 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.3 ~ 2022.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 12 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2021</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ27] 공작기계장비 고장진단을 위한 학습 데이터 제작 및 설명 가능한 인공지능 모델 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.10 ~ 2021.11</p>
+                            <p class="project-funding"><strong>Funding:</strong> ETRI</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 13 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2021</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ26] AI 기반 침해공격 분석연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.8 ~ 2021.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> 산업체</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 14 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2019</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ25] AI/SW 중심대학사업</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.9 ~ 2025.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 15 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2019</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ24] 저작권 침해사이트의 생애주기 프로파일링 기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.4 ~ 2021.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> 저작권위원회, 아주대/앰진</p>
+                            <p class="project-achievement"><strong>Achievement:</strong> <span class="award">문체부 장관상 수상</span></p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 16 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2021</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ23] 제어시스템 운전정보 이상행위 탐지의 원인tag 분석 방안 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.4 ~ 2021.10</p>
+                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 17 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2021</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ22] IDS에서의 XAI 적용기술 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.5 ~ 2021.9</p>
+                            <p class="project-funding"><strong>Funding:</strong> KISTI</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 18 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2018</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ21] Malware Obfuscation 극복을 위한 CNN 및 LSH 기반 악성코드 분석 원천기술 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.3 ~ 2021.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> NRF</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 19 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2018</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ20] 인공지능 기반 악성코드 분석기술 고도화 및 EDR 기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.2 ~ 2020.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> 지니언스</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 20 (추가) -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2020</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ19] 악성코드 분석 데이터 정제 기술 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2020.4 ~ 2020.10</p>
+                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
+                        </div>
+                    </div>
+        
+                    <!-- 과거 프로젝트 21+ (추가) - 이하 동일한 형식으로 추가 -->
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2019</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ18] TF-IDF 기반 변종 악성코드 분석기술 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.3 ~ 2020.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2019</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ17] Payload 기반 IDS log 분석 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.4 ~ 2019.11</p>
+                            <p class="project-funding"><strong>Funding:</strong> KISTI</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2019</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ16] 지능정보기술을 활용한 금융서비스 보호 기술 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.1 ~ 2019.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP, 충남대</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2018</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ15] 악성코드 Section Feature 및 Convolutional Neural Network 기반 악성코드 그룹분류 분석 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.3 ~ 2019.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2018</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ14] 경량 블록암호 차분 전력분석 대응기법 적용방안 및 효율성 분석</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.4 ~ 2018.10</p>
+                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2018</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ13] IoT 기기 보안기술 및 신규위협 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.4 ~ 2018.10</p>
+                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2017</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ12] PE 및 DLL파일의 호출구조 분석에 기반한 악성코드 변형관계 분석</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2017.3 ~ 2018.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2017</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ11] 오류 주입분석 취약점 평가검증 기술에 관한 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2017.4 ~ 2017.10</p>
+                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2017</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ10] 멀웨어 분류를 위한 악성코드 핵심Feature 연구</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2017.6 ~ 2018.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP, 윈스</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2017</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ9] 인공지능 기반 실시간 악성코드 분석기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2017.7 ~ 2018.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> 지니언스</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2014</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ8] 사이버 블랙박스 및 통합보안상황 분석기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2014.3 ~ 2017.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2015</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ7] 모바일 결제사기 탐지 및 프로파일링 기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2015.3 ~ 2017.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2013</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ6] 악성코드 프로파일링 및 이상징후 탐지기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2013.3 ~ 2016.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2011</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ5] 지능형 악성코드 자동분석 및 경유/유포지 탐지기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2011.3 ~ 2014.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
+                            <p class="project-achievement"><strong>Achievement:</strong> <span class="award">국가연구개발우수성과 100선 선정</span></p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2009</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ4] 응용서비스에서의 DDoS 공격 대응기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2009.3 ~ 2011.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2007</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ3] VoIP 암호통신 기술, 스팸대응기술, 세션처리기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2007.3 ~ 2009.2</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2006</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ2] 와이브로 정보보호기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2006.1 ~ 2006.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> -</p>
+                        </div>
+                    </div>
+        
+                    <div class="project-item past-item">
+                        <div class="project-icon small">
+                            <span class="project-year">2003</span>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-name">[PJ1] 침입감내기술 개발</h3>
+                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2003.1 ~ 2005.12</p>
+                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- 더 보기 버튼 -->
+                <div class="show-more-button">
+                    <button id="load-more">
+                        <span class="show-text">더 많은 프로젝트 보기</span>
+                        <span class="hide-text">접기</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:kinjecs0@gmail.com">kinjecs0@gmail.com</a>
+                </div>
+                <div class="divider"></div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>가천대학교 정보보호학과</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 스크롤 애니메이션
+            const hiddenElements = document.querySelectorAll(".hidden");
+            
+            const handleScroll = () => {
+                hiddenElements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    
+                    if (elementTop < windowHeight - 50) {
+                        element.classList.add("visible");
+                    } else {
+                        element.classList.remove("visible");
+                    }
+                });
+            };
+            
+            window.addEventListener("scroll", handleScroll);
+            
+            // 초기 호출로 애니메이션 활성화
+            handleScroll();
+            
+            // 더 보기 버튼 기능
+            const loadMoreBtn = document.getElementById("load-more");
+            const moreProjects = document.querySelector(".more-projects");
+            
+            loadMoreBtn.addEventListener("click", function() {
+                moreProjects.classList.toggle("visible");
+                this.classList.toggle("active");
+            });
+        });
+    </script>
+</body>
+</html>
