@@ -1,0 +1,345 @@
+/* publications.css - 논문 목록 페이지 전용 스타일 (세련되고 간결한 버전) */
+
+/* 전체 컨테이너 너비 제한 */
+/* .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 15px;
+} */
+
+/* 페이지 헤더 스타일 - 간결하게 */
+.page-header {
+    text-align: center;
+    padding: 25px 15px 20px;
+    margin-bottom: 25px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
+}
+
+.page-header h1 {
+    color: #005792;
+    font-size: 2.2em;
+    margin-bottom: 12px;
+    position: relative;
+    display: inline-block;
+}
+
+.page-header h1::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background-color: #4facfe;
+}
+
+.page-header p {
+    color: #555;
+    font-size: 1em;
+    max-width: 600px;
+    margin: 15px auto 0;
+}
+
+/* 논문 네비게이션 버튼 스타일 - 더 작고 가벼운 디자인 */
+.publication-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.nav-button {
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.95em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(79, 172, 254, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3);
+}
+
+.nav-button i {
+    font-size: 1em;
+}
+
+/* 논문 섹션 스타일 - 패딩 축소 */
+.publication-section {
+    margin-bottom: 35px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+}
+
+.section-header h2 {
+    color: #005792;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-header i {
+    color: #4facfe;
+}
+
+.count {
+    background-color: #f0f7ff;
+    color: #005792;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.85em;
+    border: 1px solid #e0f0ff;
+}
+
+/* 각 섹션별 왼쪽 보더 색상 차별화 - 더 얇게 */
+.sci-section {
+    border-left: 3px solid #4facfe; /* Blue */
+}
+
+.kci-section {
+    border-left: 3px solid #28a745; /* Green */
+}
+
+.other-section {
+    border-left: 3px solid #6c757d; /* Gray */
+}
+
+/* 논문 목록 스타일 - 간결하게 */
+.publication-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.publication-item {
+    display: flex;
+    padding: 15px;
+    margin-bottom: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.publication-item:hover {
+    background-color: #f0f7ff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
+}
+
+.publication-id {
+    min-width: 50px;
+    font-weight: bold;
+    color: #005792;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 2px;
+    font-size: 0.9em;
+}
+
+.publication-content {
+    flex: 1;
+}
+
+.publication-title {
+    margin: 0 0 6px 0;
+    font-size: 1em;
+    line-height: 1.4;
+    color: #333;
+}
+
+.publication-title strong {
+    font-weight: 600;
+}
+
+.publication-title a {
+    color: #005792;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.publication-title a:hover {
+    color: #4facfe;
+    text-decoration: underline;
+}
+
+.publication-authors {
+    margin: 0 0 4px 0;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.publication-journal {
+    margin: 0;
+    font-size: 0.85em;
+    font-style: italic;
+    color: #666;
+}
+
+/* 수상 내역 강조 */
+.publication-journal .award {
+    color: #dc3545;
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* 더 보기 버튼 스타일 - 간결하게 */
+.more-publications {
+    margin-top: 20px;
+}
+
+.show-more-button {
+    background-color: transparent;
+    color: #005792;
+    border: 1px solid #4facfe;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 auto;
+}
+
+.show-more-button:hover {
+    background-color: #f0f7ff;
+}
+
+.show-more-button i {
+    transition: transform 0.3s ease;
+}
+
+.hidden-publications {
+    display: none;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.hidden-publications.show {
+    display: block;
+}
+
+/* 애니메이션 효과 - 부드럽게 */
+.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+}
+
+.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 반응형 디자인 - 더 세밀하게 조정 */
+@media (max-width: 992px) {
+    .publication-nav {
+        gap: 12px;
+    }
+    
+    .nav-button {
+        padding: 8px 16px;
+        font-size: 0.95em;
+    }
+    
+    .section-header h2 {
+        font-size: 1.4em;
+    }
+}
+
+@media (max-width: 768px) {
+    .publication-section {
+        padding: 18px 15px;
+    }
+    
+    .publication-item {
+        padding: 12px;
+        flex-direction: column;
+    }
+    
+    .publication-id {
+        margin-bottom: 6px;
+    }
+    
+    .page-header h1 {
+        font-size: 1.8em;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .count {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 576px) {
+    .publication-nav {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .nav-button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .publication-section {
+        padding: 15px 12px;
+    }
+    
+    .publication-title {
+        font-size: 0.95em;
+    }
+    
+    .publication-authors, .publication-journal {
+        font-size: 0.8em;
+    }
+    
+    .page-header {
+        padding: 20px 12px 15px;
+    }
+}

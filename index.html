@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보안 지능 연구실</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 공통 CSS 파일 연결 -->
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="index.css">
+
+    <script>
+        // 페이지가 로드된 후 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 슬라이더 요소들 선택
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.dot');
+            let currentSlideIndex = 0;
+            const slideCount = slides.length;
+            
+            // dots에 인덱스가 2개 이상 표시되므로 실제 이미지 수에 맞게 조정
+            // 슬라이드 수보다 닷이 많으면 안 보이게 처리
+            for (let i = 0; i < dots.length; i++) {
+                if (i >= slideCount) {
+                    dots[i].style.display = 'none';
+                }
+            }
+            
+            // 슬라이드 보여주기 함수
+            function showSlide(index) {
+                // 모든 슬라이드 숨기기
+                slides.forEach(slide => {
+                    slide.classList.remove('active');
+                });
+                
+                // 모든 닷 비활성화
+                dots.forEach(dot => {
+                    dot.classList.remove('active');
+                });
+                
+                // 현재 슬라이드와 닷 활성화
+                slides[index].classList.add('active');
+                if (index < dots.length) {
+                    dots[index].classList.add('active');
+                }
+                
+                // 현재 슬라이드 인덱스 업데이트
+                currentSlideIndex = index;
+            }
+            
+            // 닷 클릭 이벤트 핸들러
+            dots.forEach((dot, index) => {
+                if (index < slideCount) {
+                    dot.addEventListener('click', function() {
+                        clearInterval(slideInterval); // 기존 자동 슬라이드 중지
+                        showSlide(index);
+                        // 클릭 후 자동 슬라이드 다시 시작
+                        slideInterval = setInterval(nextSlide, 5000);
+                    });
+                }
+            });
+            
+            // 다음 슬라이드 보여주기 함수
+            function nextSlide() {
+                let nextIndex = (currentSlideIndex + 1) % slideCount;
+                showSlide(nextIndex);
+            }
+            
+            // 5초마다 자동으로 슬라이드 변경
+            let slideInterval = setInterval(nextSlide, 2500);
+            
+            // 초기 슬라이드 표시
+            showSlide(0);
+            
+            // 마우스가 슬라이더 위에 있을 때 자동 전환 일시 중지
+            const sliderContainer = document.querySelector('.slider');
+            sliderContainer.addEventListener('mouseenter', function() {
+                clearInterval(slideInterval);
+            });
+            
+            // 마우스가 슬라이더에서 나갈 때 자동 전환 재개
+            sliderContainer.addEventListener('mouseleave', function() {
+                slideInterval = setInterval(nextSlide, 5000);
+            });
+            
+            // 왼쪽/오른쪽 화살표 키 누르면 슬라이드 변경
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft') {
+                    clearInterval(slideInterval);
+                    let prevIndex = (currentSlideIndex - 1 + slideCount) % slideCount;
+                    showSlide(prevIndex);
+                    slideInterval = setInterval(nextSlide, 5000);
+                } else if (e.key === 'ArrowRight') {
+                    clearInterval(slideInterval);
+                    let nextIndex = (currentSlideIndex + 1) % slideCount;
+                    showSlide(nextIndex);
+                    slideInterval = setInterval(nextSlide, 5000);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+        </div>
+        <nav class="menu">
+            <a href="index.html" class="active"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./projects.html"><i class="fas fa-file-alt"></i> Project</a>
+            <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activity</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- 메인 섹션 - 이미지와 환영 메시지 -->
+        <div class="main-section">
+            <div class="main-image">
+                <div class="slider">
+                    <div class="slides">
+                        <img src="./activity_img/2024년/240314_KISA워크숍.jpg" alt="KISA워크숍" class="slide active">
+                        <img src="./activity_img/2023년/2023_소개딩_한국인터넷진흥원장상.JPG" alt="소개딩_한국인터넷진흥원장상" class="slide">
+                        <img src="./activity_img/20200723_1.jpg" alt="aa" class="slide">
+                        <img src="./activity_img/20210827_2.jpg" alt="bb" class="slide">
+                        
+                        <!-- 추가 슬라이드 자리 -->
+                    </div>
+                </div>
+                
+                <div class="slider-dots">
+                    <span class="dot active" data-index="0"></span>
+                    <span class="dot" data-index="1"></span>
+                    <span class="dot" data-index="2"></span>
+                    <span class="dot" data-index="3"></span>
+                    <span class="dot" data-index="4"></span>
+                    <span class="dot" data-index="5"></span>
+                </div>
+            </div>
+            
+            <div class="main-text">
+                <h1>Welcome To Security Intelligence Lab. <span class="welcome-emoji">👋</span></h1>
+                
+                <ul class="bullet-list">
+                    <li>가천대 보안지능연구실에서는 최첨단 AI 기술과 심도 있는 데이터 분석을 융합하여 다양하고 복잡한 보안 위협에 맞서는 연구를 수행하고 있습니다.</li>
+                    <li>데이터 마이닝, 기계학습, 심층학습 등의 최신 기술을 활용하여 현장에서 직면하는 보안 문제에 대한 실용적이며 혁신적인 솔루션 개발에 주력하고 있습니다.</li>
+                </ul>
+                
+                <h2>학생 연구원 모집</h2>
+                <p>학부생 연구원, 석/박사 과정, 박사후 과정 연구원을 모집하고 있습니다. 관심있는 학생은 이메일로 연락 주세요.</p>
+                
+            </div>
+        </div>
+        
+        <!-- 푸터 -->
+        <footer>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:kinjecs0@gmail.com">kinjecs0@gmail.com</a>
+                </div>
+                <div class="divider"></div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>가천대학교 정보보호학과</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
