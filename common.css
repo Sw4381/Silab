@@ -32,7 +32,7 @@ body {
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
-    margin-right: 30px;
+    margin-right: 40px;
 }
 
 .menu a {
@@ -53,7 +53,7 @@ body {
 }
 
 .logo-picture {
-    width: 160px;
+    width: 200px;
     height: auto;
 }
 

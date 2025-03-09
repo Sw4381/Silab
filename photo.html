@@ -13,8 +13,10 @@
     <!-- 헤더 -->
     <header class="navbar">
         <div class="logo">
-            <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
-        </div>
+            <a href="index.html">
+                <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+                </a>
+            </div>
         <nav class="menu">
             <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
             <a href="./members.html"><i class="fas fa-users"></i> Members</a>
@@ -31,9 +33,21 @@
             <p>보안지능연구실의 특허, 수상 내역 및 연구실 활동을 소개합니다.</p>
         </div>
 
+        <div class="section-nav hidden">
+            <button class="section-nav-btn" data-target="patents">
+                <i class="fas fa-certificate"></i> Patents
+            </button>
+            <button class="section-nav-btn" data-target="awards">
+                <i class="fas fa-trophy"></i> Awards
+            </button>
+            <button class="section-nav-btn" data-target="photos">
+                <i class="fas fa-camera"></i> Photo
+            </button>
+        </div>
+
         <!-- 특허 섹션 -->
         <div class="section hidden" id="patents">
-            <h2><i class="fas fa-certificate"></i> Patents</h2>
+            <h2><i class="fas fa-certificate"></i>Patents</h2>
             <ul class="patent-list">
                 <!-- 기본으로 보여줄 10개 항목 -->
                 <li><strong>[PT39]</strong> 효율적인 악성위협 탐지를 위한 valuable alert 선별방법 (10-2548321, 2023.6)</li>
@@ -94,7 +108,7 @@
 
         <!-- 수상 내역 섹션 -->
         <div class="section hidden" id="awards">
-            <h2><i class="fas fa-trophy"></i> Awards</h2>
+            <h2><i class="fas fa-trophy"></i>Awards</h2>
             <ul class="award-list">
                 <!-- 기본으로 보여줄 10개 항목 -->
                 <li>이주영, 이선우, 황상연, 이태진 - 한국정보보학회 하계학술대회 <span class="award-highlight">2024 우수논문상</span> (2024.6)</li>
@@ -152,7 +166,7 @@
         <!-- 사진 갤러리 섹션 -->
         <div class="section hidden" id="photos">
             <h2>
-                <i class="fas fa-camera"></i> Photo Gallery
+                <i class="fas fa-camera"></i>Photo Gallery
                 <select id="yearSelector">
                     <option value="2024">2024</option>
                     <option value="2023">2023</option>
@@ -472,6 +486,82 @@
             // 갤러리 초기화
             initGallery();
         });
+    
+        // 섹션 네비게이션 버튼 기능
+    document.addEventListener("DOMContentLoaded", function() {
+        // 네비게이션 버튼 요소들
+        const navButtons = document.querySelectorAll('.section-nav-btn');
+        
+        // 각 섹션 요소
+        const sections = {
+            'patents': document.getElementById('patents'),
+            'awards': document.getElementById('awards'),
+            'photos': document.getElementById('photos')
+        };
+        
+        // 현재 활성화된 버튼 추적
+        let activeButton = null;
+        
+        // 버튼 클릭 이벤트 처리
+        navButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const targetSection = sections[targetId];
+                
+                if (targetSection) {
+                    // 스크롤 애니메이션
+                    window.scrollTo({
+                        top: targetSection.offsetTop - 100, // 상단에서 약간 여유 공간
+                        behavior: 'smooth'
+                    });
+                    
+                    // 버튼 활성화 상태 업데이트
+                    if (activeButton) {
+                        activeButton.classList.remove('active');
+                    }
+                    this.classList.add('active');
+                    activeButton = this;
+                }
+            });
+        });
+        
+        // 스크롤 시 현재 섹션에 따라 버튼 활성화 상태 변경
+        function updateActiveButton() {
+            const scrollPosition = window.scrollY + 100; // 약간의 오프셋 추가
+            
+            let currentSection = null;
+            
+            // 어떤 섹션이 현재 보이는지 확인
+            for (const [id, section] of Object.entries(sections)) {
+                if (section && scrollPosition >= section.offsetTop && 
+                    scrollPosition < (section.offsetTop + section.offsetHeight)) {
+                    currentSection = id;
+                    break;
+                }
+            }
+            
+            // 현재 보이는 섹션에 해당하는 버튼 활성화
+            if (currentSection) {
+                if (activeButton) {
+                    activeButton.classList.remove('active');
+                }
+                
+                const newActiveButton = document.querySelector(`.section-nav-btn[data-target="${currentSection}"]`);
+                if (newActiveButton) {
+                    newActiveButton.classList.add('active');
+                    activeButton = newActiveButton;
+                }
+            }
+        }
+        
+        // 스크롤 이벤트 리스너
+        window.addEventListener('scroll', updateActiveButton);
+        
+        // 초기 상태 설정
+        updateActiveButton();
+    });
+
+
     </script>
 </body>
 </html>

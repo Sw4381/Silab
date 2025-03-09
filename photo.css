@@ -77,6 +77,45 @@
     color: #4facfe;
 }
 
+
+.section-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.section-nav-btn {
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.95em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(79, 172, 254, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.section-nav-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(79, 172, 254, 0.35);
+}
+
+.section-nav-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(79, 172, 254, 0.3);
+}
+
+.section-nav-btn i {
+    font-size: 1.1em;
+}
+
 /* 특허 섹션 스타일 - 테두리 축소 */
 #patents {
     border-left: 3px solid #4facfe;
