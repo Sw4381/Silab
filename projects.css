@@ -1,4 +1,4 @@
-/* 페이지 헤더 스타일 - 크기 축소 */
+/* 페이지 헤더 스타일 - 두 번째 페이지와 일치 */
 .page-header {
     text-align: center;
     padding: 25px 15px 20px;
@@ -11,17 +11,30 @@
 .page-header h1 {
     color: #005792;
     font-size: 2.2em;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    position: relative;
+    display: inline-block;
+}
+
+.page-header h1::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background-color: #4facfe;
 }
 
 .page-header p {
     color: #555;
     font-size: 1em;
     max-width: 600px;
-    margin: 0 auto;
+    margin: 15px auto 0;
 }
 
-/* 프로젝트 섹션 공통 스타일 - 여백 축소 */
+/* 프로젝트 섹션 공통 스타일 - 두 번째 페이지 publication-section과 일치 */
 .project-section {
     margin-bottom: 35px;
     padding: 20px;
@@ -32,26 +45,18 @@
 
 .section-title {
     color: #005792;
-    font-size: 1.8em;
+    font-size: 1.5em;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #4facfe;
+    border-bottom: 1px solid #ddd;
     position: relative;
-}
-
-.section-title::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background-color: #005792;
+    display: flex;
+    align-items: center;
 }
 
 .section-title i {
-    margin-right: 8px;
     color: #4facfe;
+    margin-right: 8px;
 }
 
 /* 프로젝트 리스트 컨테이너 - 간격 축소 */
@@ -61,36 +66,37 @@
     gap: 20px;
 }
 
-
-/* 프로젝트 아이템 스타일 - 패딩 축소 */
+/* 프로젝트 아이템 스타일 - publication-item과 일치 */
 .project-item {
     display: flex;
-    padding: 18px;
-    background: linear-gradient(to right, #f9f9f9, #f5f5f5);
+    padding: 15px;
+    background-color: #f8f9fa;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
     position: relative;
     overflow: hidden;
     border-left: 3px solid #4facfe;
 }
 
 .project-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+    background-color: #f0f7ff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
 }
 
-/* 과거 프로젝트 아이템 차별화 - 더 간결하게 */
+/* 과거 프로젝트 아이템 차별화 */
 .project-item.past-item {
-    padding: 15px 18px;
-    background: linear-gradient(to right, #fafafa, #f8f8f8);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    padding: 15px;
+    background-color: #f8f9fa;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
     border-left: 2px solid #4facfe;
 }
 
 .project-item.past-item:hover {
+    background-color: #f0f7ff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
 /* 프로젝트 아이콘 숨기기 */
@@ -98,7 +104,7 @@
     display: none;
 }
 
-/* 프로젝트 내용 스타일 - 간격 축소 및 좌측 여백 제거 */
+/* 프로젝트 내용 스타일 */
 .project-content {
     margin-left: 0;
     width: 100%;
@@ -106,14 +112,15 @@
 
 .project-name {
     color: #005792;
-    font-size: 1.2em;
+    font-size: 1.1em;
     margin-bottom: 8px;
+    line-height: 1.4;
 }
 
 .project-period, .project-funding, .project-desc, .project-achievement {
     margin-bottom: 6px;
     color: #555;
-    font-size: 0.95em;
+    font-size: 0.9em;
     line-height: 1.5;
 }
 
@@ -128,13 +135,13 @@
     margin-right: 4px;
 }
 
-/* 더 많은 프로젝트 표시 관련 - 버튼 크기 축소 */
+/* 더 많은 프로젝트 표시 관련 - 두 번째 페이지 스타일과 일치 */
 .more-projects {
     display: none;
-
 }
+
 .more-projects .project-item:not(:first-child) {
-    margin-top: 20px; /* project-list의 gap과 동일 */
+    margin-top: 20px;
 }
 
 .more-projects.visible {
@@ -148,25 +155,22 @@
 }
 
 .show-more-button button {
-    background: linear-gradient(90deg, #4facfe, #00f2fe);
-    color: white;
-    border: none;
-    padding: 8px 18px;
+    background-color: transparent;
+    color: #005792;
+    border: 1px solid #4facfe;
+    padding: 8px 16px;
     border-radius: 20px;
-    font-size: 0.95em;
-    font-weight: bold;
+    font-size: 0.9em;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(79, 172, 254, 0.2);
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
     margin: 0 auto;
 }
 
 .show-more-button button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3);
+    background-color: #f0f7ff;
 }
 
 .show-more-button button i {
@@ -178,7 +182,7 @@
     transform: rotate(180deg);
 }
 
-/* 애니메이션 효과 - 더 자연스럽게 */
+/* 애니메이션 효과 - 동일하게 유지 */
 .hidden {
     opacity: 0;
     transform: translateY(20px);
@@ -201,28 +205,29 @@
     }
 }
 
-/* 반응형 디자인 - 더 세밀하게 조정 */
+/* 반응형 디자인 - 두 번째 페이지와 일치 */
 @media (max-width: 992px) {
     .section-title {
-        font-size: 1.6em;
+        font-size: 1.4em;
     }
     
     .project-name {
-        font-size: 1.15em;
+        font-size: 1.05em;
     }
 }
 
 @media (max-width: 768px) {
+    .project-section {
+        padding: 18px 15px;
+    }
+    
     .project-item {
-        padding: 15px;
+        padding: 12px;
+        flex-direction: column;
     }
     
     .page-header h1 {
-        font-size: 2em;
-    }
-    
-    .section-title {
-        font-size: 1.5em;
+        font-size: 1.8em;
     }
 }
 
@@ -240,10 +245,10 @@
     }
     
     .project-name {
-        font-size: 1.1em;
+        font-size: 0.95em;
     }
     
-    .section-title {
-        font-size: 1.4em;
+    .project-period, .project-funding, .project-desc, .project-achievement {
+        font-size: 0.8em;
     }
 }
