@@ -1,4 +1,3 @@
-/* 메인 콘텐츠 영역 스타일 - 더 간결하게 */
 .content-section {
     background-color: white;
     border-radius: 8px 8px 0 0;
@@ -222,6 +221,11 @@
     font-size: 0.85em;
     color: #4facfe;
 }
+.professor-card .email {
+    margin-top: 8px;
+    font-size: 0.85em;
+    color: #4facfe;
+}
 
 /* 졸업생 섹션 스타일 - 보다 간결하게 */
 .graduates-section h2 {
@@ -335,5 +339,59 @@
     .section-base {
         padding: 15px 12px;
     }
+}
+
+/* 새로 추가된 스타일 */
+
+/* 공통 텍스트 스타일 - full-bio와 research-desc에 동일하게 적용 */
+.professor-history .text-box {
+    font-size: 0.9em;
+    color: #444;
+    line-height: 1.5;
+    margin-top: 12px;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    border-left: 2px solid #4facfe;
+}
+
+/* 기존 research-desc 스타일 덮어쓰기 */
+.professor-history .research-desc {
+    font-weight: normal;
+}
+
+/* 모든 졸업생 엔트리에 동일한 스타일 적용 */
+.graduates-text .alumni-entry {
+    margin-bottom: 10px;
+    line-height: 1.5;
+    color: #444;
+    font-size: 0.9em;
+    break-inside: avoid-column;
+    padding: 6px 4px;
+    border-bottom: 1px dashed #eee;
+    transition: background-color 0.2s ease;
+}
+
+.graduates-text .alumni-entry:hover {
+    background-color: #f9f9f9;
+}
+
+/* 졸업생 이름 강조 */
+.alumni-name {
+    font-weight: bold;
+    color: #333;
+}
+
+/* 졸업 연도 스타일 */
+.alumni-year {
+    color: #005792;
+    font-weight: 500;
+    font-style: italic;
+}
+
+/* 졸업생 소속/이메일 스타일 */
+.alumni-info {
+    color: #666;
+    margin-left: 5px;
 }
 
