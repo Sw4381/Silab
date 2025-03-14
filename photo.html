@@ -167,41 +167,39 @@
         <div class="section hidden" id="photos">
             <h2>
                 <i class="fas fa-camera"></i>Photo Gallery
-                <select id="yearSelector">
-                    <option value="2024">2024</option>
-                    <option value="2023">2023</option>
-                    <option value="2022">2022</option>
-                    <option value="2021">2021</option>
-                    <option value="2020">2020</option>
-                    <option value="2019">2019</option>
-                    <option value="2018">2018</option>
-                    <option value="2017">2017</option>
-                </select>
             </h2>
             
             <div class="photo-gallery">
                 <div class="photo-gallery-inner">
-                    <!-- 2024 이미지 -->
-                    <img src="./activity_img/2024년/20240403_OpenLabDay_첫세미나1.jpg" alt="Activity 1" data-year="2024">
-                    <img src="./activity_img/2024년/20240403_OpenLabDay_첫세미나2.jpg" alt="Activity 2" data-year="2024">
-                    <img src="./activity_img/2024년/20240422_교수님생신.jpg" alt="Activity 3" data-year="2024">
-                    <img src="./activity_img/2024년/240206_송별회1.jpg" alt="Activity 4" data-year="2024">
-                    <img src="./activity_img/2024년/240206_송별회2.jpg" alt="Activity 5" data-year="2024">
-                    <img src="./activity_img/2024년/240206_송별회5.jpg" alt="Activity 6" data-year="2024">
-                    <img src="./activity_img/2024년/240216_졸업식2.jpg" alt="Activity 7" data-year="2024">
-                    <img src="./activity_img/2024년/240216_졸업식3.jpg" alt="Activity 8" data-year="2024">
-                    <img src="./activity_img/2024년/240306_신입생환영회.jpg" alt="Activity 9" data-year="2024">
-                    <img src="./activity_img/2024년/240206_송별회3.jpg" alt="Activity 10" data-year="2024">
-                    <img src="./activity_img/2024년/240206_송별회4.jpg" alt="Activity 11" data-year="2024">
-                    <img src="./activity_img/2024년/240314_KISA워크숍.jpg" alt="Activity 12" data-year="2024">
-                    
-                    <!-- 2023 이미지 -->
-                    <img src="./activity_img/2023년/2023 한국정보처리학회 추계학술대회 학부생논문 금상.jpg" alt="Activity 1" data-year="2023">
-                    <img src="./activity_img/2023년/2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상1.jpg" alt="Activity 2" data-year="2023">
-                    <img src="./activity_img/2023년/2023_WISA.jpeg" alt="Activity 3" data-year="2023">
-                    <img src="./activity_img/2023년/2023 한국정보처리학회 춘계학술대회.jpg" alt="Activity 4" data-year="2023">
-                    <img src="./activity_img/2023년/2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상2.jpg" alt="Activity 5" data-year="2023">
-                    <img src="./activity_img/2023년/2023_부산_정보처리학회.jpg" alt="Activity 6" data-year="2023">
+                    <!-- 이미지 목록 -->
+                    <img src="./activity_img/11월30일Silab하반기모임.jpg" alt="Silab 하반기 모임">
+                    <img src="./activity_img/23_11_11 Lab 모임.jpg" alt="2023년 11월 Lab 모임">
+                    <img src="./activity_img/스승의날_1.jpg" alt="스승의날 행사">
+                    <img src="./activity_img/교수님 구글 행사.jpg" alt="구글 행사">
+                    <img src="./activity_img/20210827_2.jpg" alt="2021년 8월 모임">
+                    <img src="./activity_img/2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상1.jpg" alt="2023 정보처리학회 은상">
+                    <img src="./activity_img/2023_부산_정보처리학회.jpg" alt="2023 부산 정보처리학회">
+                    <img src="./activity_img/2023_소개딩_한국인터넷진흥원장상.JPG" alt="2023 한국인터넷진흥원장상">
+                    <img src="./activity_img/20200723_1.jpg" alt="2020년 7월 모임">
+                    <img src="./activity_img/240314_KISA워크숍.jpg" alt="2024 KISA워크숍">
+                    <img src="./activity_img/2차년도 KISA 워크샵.jpg" alt="KISA 워크샵">
+                    <img src="activity_img/Netsec 수상(교수님).png" alt="Netsec 수상">
+
+                </div>
+                
+                <!-- 갤러리 컨트롤 -->
+                <div class="gallery-controls">
+                    <button class="gallery-btn prev-btn">
+                        <i class="fas fa-chevron-left"></i> 이전
+                    </button>
+                    <button class="gallery-btn next-btn">
+                        다음 <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <!-- 현재 위치 표시기 -->
+                <div class="gallery-indicator">
+                    <span class="current-page">1</span> / <span class="total-pages">3</span> 페이지
                 </div>
             </div>
         </div>
@@ -224,343 +222,222 @@
 
     <!-- JavaScript -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // 스크롤 애니메이션
-            const hiddenElements = document.querySelectorAll(".hidden");
-            
-            const handleScroll = () => {
-                hiddenElements.forEach(element => {
-                    const elementTop = element.getBoundingClientRect().top;
-                    const windowHeight = window.innerHeight;
-                    
-                    if (elementTop < windowHeight - 50) {
-                        element.classList.add("visible");
-                    } else {
-                        element.classList.remove("visible");
-                    }
-                });
-            };
-            
-            window.addEventListener("scroll", handleScroll);
-            
-            // 초기 호출로 애니메이션 활성화
-            handleScroll();
-            
-            // 더 보기 버튼 기능
-            const showMorePatents = document.getElementById("show-more-patents");
-            const showMoreAwards = document.getElementById("show-more-awards");
-            
-            showMorePatents.addEventListener("click", function() {
-                const hiddenSection = this.parentElement.previousElementSibling;
-                hiddenSection.classList.toggle("visible");
-                
-                if (hiddenSection.classList.contains("visible")) {
-                    this.querySelector("span").textContent = "특허 목록 접기";
-                    this.querySelector("i").classList.remove("fa-chevron-down");
-                    this.querySelector("i").classList.add("fa-chevron-up");
-                    this.parentElement.classList.add("active");
-                } else {
-                    this.querySelector("span").textContent = "더 많은 특허 보기";
-                    this.querySelector("i").classList.remove("fa-chevron-up");
-                    this.querySelector("i").classList.add("fa-chevron-down");
-                    this.parentElement.classList.remove("active");
-                }
-            });
-            
-            showMoreAwards.addEventListener("click", function() {
-                const hiddenSection = this.parentElement.previousElementSibling;
-                hiddenSection.classList.toggle("visible");
-                
-                if (hiddenSection.classList.contains("visible")) {
-                    this.querySelector("span").textContent = "수상내역 접기";
-                    this.querySelector("i").classList.remove("fa-chevron-down");
-                    this.querySelector("i").classList.add("fa-chevron-up");
-                    this.parentElement.classList.add("active");
-                } else {
-                    this.querySelector("span").textContent = "더 많은 수상내역 보기";
-                    this.querySelector("i").classList.remove("fa-chevron-up");
-                    this.querySelector("i").classList.add("fa-chevron-down");
-                    this.parentElement.classList.remove("active");
-                }
-            });
-        });
-
-
-        document.addEventListener("DOMContentLoaded", function() {
-            // 기본 변수 설정
-            const galleryInner = document.querySelector('.photo-gallery-inner');
-            const yearSelector = document.getElementById('yearSelector');
-            const allImages = document.querySelectorAll('.photo-gallery-inner img');
-            let currentGroup = 0; // 현재 보이는 이미지 그룹 인덱스
-            let images = [];
-            let imageWidth = 0;
-            let imagesPerGroup = 4; // 한 화면에 보이는 이미지 수
-            let totalGroups = 0;
-            let touchStartX = 0;
-            let touchEndX = 0;
-            
-            // 연도별 이미지 필터링
-            function filterImagesByYear(year) {
-                // 모든 이미지를 숨김
-                allImages.forEach(img => {
-                    img.style.display = 'none';
-                });
-                
-                // 선택한 연도의 이미지만 표시
-                images = Array.from(allImages).filter(img => img.dataset.year === year);
-                images.forEach(img => {
-                    img.style.display = 'block';
-                });
-                
-                // 갤러리 리셋
-                resetGallery();
-            }
-            
-            // 갤러리 리셋
-            function resetGallery() {
-                currentGroup = 0;
-                
-                // 이미지 크기 및 여백 계산
-                if (images.length > 0) {
-                    imageWidth = images[0].offsetWidth + parseInt(getComputedStyle(images[0]).marginRight);
-                }
-                
-                // 총 그룹 수 계산 (올림 처리)
-                totalGroups = Math.ceil(images.length / imagesPerGroup);
-                
-                updateGalleryPosition();
-            }
-            
-            // 갤러리 위치 업데이트
-            function updateGalleryPosition() {
-                if (images.length === 0) return;
-                
-                // 그룹 단위로 이동
-                const offsetX = currentGroup * (imageWidth * imagesPerGroup);
-                galleryInner.style.transform = `translateX(-${offsetX}px)`;
-            }
-            
-            // 다음 이미지 그룹으로 이동
-            function nextGroup() {
-                if (images.length === 0 || totalGroups <= 1) return;
-                
-                currentGroup++;
-                
-                // 마지막 그룹 이후에는 처음으로 순환
-                if (currentGroup >= totalGroups) {
-                    currentGroup = 0;
-                }
-                
-                updateGalleryPosition();
-            }
-            
-            // 이전 이미지 그룹으로 이동
-            function prevGroup() {
-                if (images.length === 0 || totalGroups <= 1) return;
-                
-                currentGroup--;
-                
-                // 첫 그룹 이전에는 마지막으로 순환
-                if (currentGroup < 0) {
-                    currentGroup = totalGroups - 1;
-                }
-                
-                updateGalleryPosition();
-            }
-            
-            // 터치 이벤트 처리
-            function handleTouchStart(e) {
-                touchStartX = e.changedTouches[0].screenX;
-            }
-            
-            function handleTouchEnd(e) {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-            }
-            
-            function handleSwipe() {
-                const swipeThreshold = 50;
-                if (touchEndX < touchStartX - swipeThreshold) {
-                    nextGroup();
-                } else if (touchEndX > touchStartX + swipeThreshold) {
-                    prevGroup();
-                }
-            }
-            
-            // UI 추가
-            function setupGalleryControls() {
-                const photosSection = document.getElementById('photos');
-                const photoGallery = document.querySelector('.photo-gallery');
-                
-                // 갤러리 스타일 설정
-                photoGallery.style.overflow = 'hidden';
-                
-                if (galleryInner) {
-                    galleryInner.style.display = 'flex';
-                    galleryInner.style.transition = 'transform 0.5s ease';
-                }
-                
-                // 터치 영역 추가
-                const touchArea = document.createElement('div');
-                touchArea.classList.add('touch-area');
-                touchArea.addEventListener('touchstart', handleTouchStart, false);
-                touchArea.addEventListener('touchend', handleTouchEnd, false);
-                photoGallery.appendChild(touchArea);
-                
-                // 컨트롤 버튼 추가
-                const controlsContainer = document.createElement('div');
-                controlsContainer.classList.add('gallery-controls');
-                controlsContainer.style.display = 'flex';
-                controlsContainer.style.justifyContent = 'center';
-                controlsContainer.style.marginTop = '15px';
-                
-                const prevButton = document.createElement('button');
-                prevButton.classList.add('gallery-btn', 'prev-btn');
-                prevButton.innerHTML = '<i class="fas fa-chevron-left"></i> 이전';
-                prevButton.addEventListener('click', prevGroup);
-                
-                const nextButton = document.createElement('button');
-                nextButton.classList.add('gallery-btn', 'next-btn');
-                nextButton.innerHTML = '다음 <i class="fas fa-chevron-right"></i>';
-                nextButton.addEventListener('click', nextGroup);
-                
-                // 버튼 스타일 설정
-                const buttonStyle = {
-                    'margin': '0 10px',
-                    'padding': '8px 15px',
-                    'background-color': '#4682B4',
-                    'color': 'white',
-                    'border': 'none',
-                    'border-radius': '4px',
-                    'cursor': 'pointer',
-                    'font-size': '14px'
-                };
-                
-                Object.assign(prevButton.style, buttonStyle);
-                Object.assign(nextButton.style, buttonStyle);
-                
-                // 호버 효과 추가
-                prevButton.addEventListener('mouseover', function() {
-                    this.style.backgroundColor = '#36648B';
-                });
-                prevButton.addEventListener('mouseout', function() {
-                    this.style.backgroundColor = '#4682B4';
-                });
-                
-                nextButton.addEventListener('mouseover', function() {
-                    this.style.backgroundColor = '#36648B';
-                });
-                nextButton.addEventListener('mouseout', function() {
-                    this.style.backgroundColor = '#4682B4';
-                });
-                
-                controlsContainer.appendChild(prevButton);
-                controlsContainer.appendChild(nextButton);
-                
-                photosSection.appendChild(controlsContainer);
-            }
-            
-            // 초기화 함수
-            function initGallery() {
-                if (!galleryInner || !yearSelector) return;
-                
-                // 기본 셋업
-                setupGalleryControls();
-                
-                // 연도 선택에 따른 이미지 필터링
-                const initialYear = yearSelector.value || '2024';
-                filterImagesByYear(initialYear);
-                
-                // 연도 선택 변경 이벤트
-                yearSelector.addEventListener('change', function() {
-                    filterImagesByYear(this.value);
-                });
-                
-                // 창 크기 변경 시 갤러리 재설정
-                window.addEventListener('resize', () => {
-                    // 반응형 처리: 화면 크기에 따라 이미지 그룹 개수 조정 가능
-                    resetGallery();
-                });
-            }
-            
-            // 갤러리 초기화
-            initGallery();
-        });
+document.addEventListener("DOMContentLoaded", function() {
+    // 스크롤 애니메이션
+    const hiddenElements = document.querySelectorAll(".hidden");
     
-        // 섹션 네비게이션 버튼 기능
-    document.addEventListener("DOMContentLoaded", function() {
-        // 네비게이션 버튼 요소들
-        const navButtons = document.querySelectorAll('.section-nav-btn');
+    const handleScroll = () => {
+        hiddenElements.forEach(element => {
+            const elementTop = element.getBoundingClientRect().top;
+            const windowHeight = window.innerHeight;
+            
+            if (elementTop < windowHeight - 50) {
+                element.classList.add("visible");
+            } else {
+                element.classList.remove("visible");
+            }
+        });
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    
+    // 초기 호출로 애니메이션 활성화
+    handleScroll();
+    
+    // 더 보기 버튼 기능
+    const showMorePatents = document.getElementById("show-more-patents");
+    const showMoreAwards = document.getElementById("show-more-awards");
+    
+    if (showMorePatents) {
+        showMorePatents.addEventListener("click", function() {
+            const hiddenSection = this.parentElement.previousElementSibling;
+            hiddenSection.classList.toggle("visible");
+            
+            if (hiddenSection.classList.contains("visible")) {
+                this.querySelector("span").textContent = "특허 목록 접기";
+                this.querySelector("i").classList.remove("fa-chevron-down");
+                this.querySelector("i").classList.add("fa-chevron-up");
+                this.parentElement.classList.add("active");
+            } else {
+                this.querySelector("span").textContent = "더 많은 특허 보기";
+                this.querySelector("i").classList.remove("fa-chevron-up");
+                this.querySelector("i").classList.add("fa-chevron-down");
+                this.parentElement.classList.remove("active");
+            }
+        });
+    }
+    
+    if (showMoreAwards) {
+        showMoreAwards.addEventListener("click", function() {
+            const hiddenSection = this.parentElement.previousElementSibling;
+            hiddenSection.classList.toggle("visible");
+            
+            if (hiddenSection.classList.contains("visible")) {
+                this.querySelector("span").textContent = "수상내역 접기";
+                this.querySelector("i").classList.remove("fa-chevron-down");
+                this.querySelector("i").classList.add("fa-chevron-up");
+                this.parentElement.classList.add("active");
+            } else {
+                this.querySelector("span").textContent = "더 많은 수상내역 보기";
+                this.querySelector("i").classList.remove("fa-chevron-up");
+                this.querySelector("i").classList.add("fa-chevron-down");
+                this.parentElement.classList.remove("active");
+            }
+        });
+    }
+    
+    // 갤러리 슬라이더 기능 - 한 화면에 4개씩 표시
+    function initGallerySlider() {
+        const galleryInner = document.querySelector('.photo-gallery-inner');
+        const prevBtn = document.querySelector('.gallery-btn.prev-btn');
+        const nextBtn = document.querySelector('.gallery-btn.next-btn');
+        const currentPageEl = document.querySelector('.current-page');
+        const totalPagesEl = document.querySelector('.total-pages');
         
-        // 각 섹션 요소
-        const sections = {
-            'patents': document.getElementById('patents'),
-            'awards': document.getElementById('awards'),
-            'photos': document.getElementById('photos')
-        };
+        if (!galleryInner || !prevBtn || !nextBtn) return;
         
-        // 현재 활성화된 버튼 추적
-        let activeButton = null;
+        const allImages = galleryInner.querySelectorAll('img');
+        const imagesPerPage = 3; // 한 페이지에 표시할 이미지 수
+        const totalImages = allImages.length;
+        const totalPages = Math.ceil(totalImages / imagesPerPage);
+        let currentPage = 0;
         
-        // 버튼 클릭 이벤트 처리
-        navButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const targetId = this.getAttribute('data-target');
-                const targetSection = sections[targetId];
+        // 초기 설정
+        if (totalPagesEl) totalPagesEl.textContent = totalPages;
+        if (currentPageEl) currentPageEl.textContent = currentPage + 1;
+        
+        // 이미지 초기 설정 (처음에 첫 페이지만 표시)
+        setupImages();
+        
+        function setupImages() {
+            // 모든 이미지 숨기기/표시하기
+            allImages.forEach((img, index) => {
+                // 4개씩 묶어서 페이지로 처리
+                const pageIndex = Math.floor(index / imagesPerPage);
                 
-                if (targetSection) {
-                    // 스크롤 애니메이션
-                    window.scrollTo({
-                        top: targetSection.offsetTop - 100, // 상단에서 약간 여유 공간
-                        behavior: 'smooth'
-                    });
-                    
-                    // 버튼 활성화 상태 업데이트
-                    if (activeButton) {
-                        activeButton.classList.remove('active');
-                    }
-                    this.classList.add('active');
-                    activeButton = this;
+                if (pageIndex === currentPage) {
+                    img.style.display = 'block'; // 현재 페이지 이미지만 표시
+                } else {
+                    img.style.display = 'none'; // 다른 페이지 이미지는 숨김
                 }
             });
+        }
+        
+        // 페이지 이동 함수
+        function goToPage(page) {
+            if (page < 0) page = totalPages - 1;
+            if (page >= totalPages) page = 0;
+            
+            currentPage = page;
+            
+            // 페이지 변경에 따른 이미지 업데이트
+            setupImages();
+            
+            // 현재 페이지 표시 업데이트
+            if (currentPageEl) currentPageEl.textContent = currentPage + 1;
+        }
+        
+        // 다음 페이지로 이동
+        function nextPage() {
+            goToPage(currentPage + 1);
+        }
+        
+        // 이전 페이지로 이동
+        function prevPage() {
+            goToPage(currentPage - 1);
+        }
+        
+        // 이벤트 리스너 설정
+        if (prevBtn) prevBtn.addEventListener('click', prevPage);
+        if (nextBtn) nextBtn.addEventListener('click', nextPage);
+        
+        // 키보드 이벤트 설정
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                prevPage();
+            } else if (e.key === 'ArrowRight') {
+                nextPage();
+            }
         });
         
-        // 스크롤 시 현재 섹션에 따라 버튼 활성화 상태 변경
-        function updateActiveButton() {
-            const scrollPosition = window.scrollY + 100; // 약간의 오프셋 추가
+        // 초기 이미지 설정
+        goToPage(0);
+    }
+    
+    // 섹션 네비게이션 버튼 기능
+    const navButtons = document.querySelectorAll('.section-nav-btn');
+    
+    // 각 섹션 요소
+    const sections = {
+        'patents': document.getElementById('patents'),
+        'awards': document.getElementById('awards'),
+        'photos': document.getElementById('photos')
+    };
+    
+    // 현재 활성화된 버튼 추적
+    let activeButton = null;
+    
+    // 버튼 클릭 이벤트 처리
+    navButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetSection = sections[targetId];
             
-            let currentSection = null;
-            
-            // 어떤 섹션이 현재 보이는지 확인
-            for (const [id, section] of Object.entries(sections)) {
-                if (section && scrollPosition >= section.offsetTop && 
-                    scrollPosition < (section.offsetTop + section.offsetHeight)) {
-                    currentSection = id;
-                    break;
-                }
-            }
-            
-            // 현재 보이는 섹션에 해당하는 버튼 활성화
-            if (currentSection) {
+            if (targetSection) {
+                // 스크롤 애니메이션
+                window.scrollTo({
+                    top: targetSection.offsetTop - 100, // 상단에서 약간 여유 공간
+                    behavior: 'smooth'
+                });
+                
+                // 버튼 활성화 상태 업데이트
                 if (activeButton) {
                     activeButton.classList.remove('active');
                 }
-                
-                const newActiveButton = document.querySelector(`.section-nav-btn[data-target="${currentSection}"]`);
-                if (newActiveButton) {
-                    newActiveButton.classList.add('active');
-                    activeButton = newActiveButton;
-                }
+                this.classList.add('active');
+                activeButton = this;
+            }
+        });
+    });
+    
+    // 스크롤 시 현재 섹션에 따라 버튼 활성화 상태 변경
+    function updateActiveButton() {
+        const scrollPosition = window.scrollY + 100; // 약간의 오프셋 추가
+        
+        let currentSection = null;
+        
+        // 어떤 섹션이 현재 보이는지 확인
+        for (const [id, section] of Object.entries(sections)) {
+            if (section && scrollPosition >= section.offsetTop && 
+                scrollPosition < (section.offsetTop + section.offsetHeight)) {
+                currentSection = id;
+                break;
             }
         }
         
-        // 스크롤 이벤트 리스너
-        window.addEventListener('scroll', updateActiveButton);
-        
-        // 초기 상태 설정
-        updateActiveButton();
-    });
-
+        // 현재 보이는 섹션에 해당하는 버튼 활성화
+        if (currentSection) {
+            if (activeButton) {
+                activeButton.classList.remove('active');
+            }
+            
+            const newActiveButton = document.querySelector(`.section-nav-btn[data-target="${currentSection}"]`);
+            if (newActiveButton) {
+                newActiveButton.classList.add('active');
+                activeButton = newActiveButton;
+            }
+        }
+    }
+    
+    // 스크롤 이벤트 리스너
+    window.addEventListener('scroll', updateActiveButton);
+    
+    // 초기 상태 설정
+    updateActiveButton();
+    
+    // 갤러리 슬라이더 초기화
+    initGallerySlider();
+});
 
     </script>
 </body>
