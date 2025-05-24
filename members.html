@@ -32,6 +32,47 @@
             // 초기 호출로 애니메이션 활성화
             handleScroll();
         });
+
+        // 페이지 로드 후 실행
+        document.addEventListener("DOMContentLoaded", function() {
+            const alumniEntries = document.querySelectorAll('.alumni-entry');
+            
+            alumniEntries.forEach(entry => {
+                const infoText = entry.querySelector('.alumni-info').textContent;
+                
+                if (infoText.includes('랩장')) {
+                    entry.classList.add('alumni-leader');
+                } else if (infoText.includes('M.S')) {
+                    entry.classList.add('alumni-masters');
+                } else if (infoText.includes('Assistant')) {
+                    entry.classList.add('alumni-assistant');
+                } else {
+                    entry.classList.add('alumni-bachelors');
+                }
+            });
+        });
+
+
+        // 기존 스크립트에 이 코드를 추가
+        document.addEventListener("DOMContentLoaded", function () {
+            // 기존 스크롤 애니메이션 코드...
+            
+            // Alumni 색상 구분 자동 적용
+            const alumniEntries = document.querySelectorAll('.alumni-entry');
+            
+            alumniEntries.forEach(entry => {
+                const infoText = entry.querySelector('.alumni-info').textContent;
+                
+                if (infoText.includes('랩장')) {
+                    entry.classList.add('alumni-leader');
+                } else if (infoText.includes('M.S')) {
+                    entry.classList.add('alumni-masters');
+                } else if (infoText.includes('Assistant')) {
+                    entry.classList.add('alumni-assistant');
+                }
+                // B.S는 기본 스타일 사용
+            });
+        });
     </script>
 </head>
 <body>
