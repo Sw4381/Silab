@@ -33,25 +33,6 @@
             handleScroll();
         });
 
-        // 페이지 로드 후 실행
-        document.addEventListener("DOMContentLoaded", function() {
-            const alumniEntries = document.querySelectorAll('.alumni-entry');
-            
-            alumniEntries.forEach(entry => {
-                const infoText = entry.querySelector('.alumni-info').textContent;
-                
-                if (infoText.includes('랩장')) {
-                    entry.classList.add('alumni-leader');
-                } else if (infoText.includes('M.S')) {
-                    entry.classList.add('alumni-masters');
-                } else if (infoText.includes('Assistant')) {
-                    entry.classList.add('alumni-assistant');
-                } else {
-                    entry.classList.add('alumni-bachelors');
-                }
-            });
-        });
-
     </script>
 </head>
 <body>
