@@ -52,27 +52,6 @@
             });
         });
 
-
-        // 기존 스크립트에 이 코드를 추가
-        document.addEventListener("DOMContentLoaded", function () {
-            // 기존 스크롤 애니메이션 코드...
-            
-            // Alumni 색상 구분 자동 적용
-            const alumniEntries = document.querySelectorAll('.alumni-entry');
-            
-            alumniEntries.forEach(entry => {
-                const infoText = entry.querySelector('.alumni-info').textContent;
-                
-                if (infoText.includes('랩장')) {
-                    entry.classList.add('alumni-leader');
-                } else if (infoText.includes('M.S')) {
-                    entry.classList.add('alumni-masters');
-                } else if (infoText.includes('Assistant')) {
-                    entry.classList.add('alumni-assistant');
-                }
-                // B.S는 기본 스타일 사용
-            });
-        });
     </script>
 </head>
 <body>
@@ -276,37 +255,40 @@
             <section class="graduates-section hidden section-base">
                 <h2 class="section-title"><i class="fas fa-award"></i> Alumni</h2>
                 <div class="graduates-text" id="graduates-list">
-                    <p class="alumni-entry"><span class="alumni-name">황상연</span> <span class="alumni-year">(2023~2024)</span><span class="alumni-info">, B.S, 시큐레이어, hwangsangyeon1941@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">윤주한</span> <span class="alumni-year">(2024~2024)</span><span class="alumni-info">, B.S, 핀시큐리티, 20171247@vision.hoseo.edu</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">이예은</span> <span class="alumni-year">(2021~2024)</span><span class="alumni-info">, M.S, 이글루시큐리티, judiaye4477@gmail.com, Silab 4대랩장</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">임승범</span> <span class="alumni-year">(2021~2024)</span><span class="alumni-info">, M.S, 샌즈랩, gksrkdmftkfkd@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">이현우</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, KISTI, 20171247@vision.hoseo.edu</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김익선</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, qhfkdt9599@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">정시온</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, 엔피코어, 20181263@vision.hoseo.edu</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김진강</span> <span class="alumni-year">(2020~2023)</span><span class="alumni-info">, M.S, KISA, krch9707@gmail.com, Silab 3대랩장</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">이용수</span> <span class="alumni-year">(2020~2023)</span><span class="alumni-info">, M.S, 덕유산cc, sooky2001@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">이은규</span> <span class="alumni-year">(2020~2023)</span><span class="alumni-info">, M.S, 이노룰스, legleg1216@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">송현진</span> <span class="alumni-year">(2021~2023)</span><span class="alumni-info">, Assistant, PMC, wlstlqwert@naver.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">박영지</span> <span class="alumni-year">(2022~2023)</span><span class="alumni-info">, B.S, 20201035@vision.hoseo.edu</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">송준영</span> <span class="alumni-year">(2023~2023)</span><span class="alumni-info">, B.S, pubacc1214@naver.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">이현나</span> <span class="alumni-year">(2021~2022)</span><span class="alumni-info">, B.S, 인포섹, jinnajjang1@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">배성호</span> <span class="alumni-year">(2021~2021)</span><span class="alumni-info">, B.S, 안랩, baesungho21@naver.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김형래</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 이글루시큐리티, kkd04310@naver.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">정아연</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 안랩, j1117j71@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김보미</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 텔레칩스, 010-5732-7493</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">황찬웅</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, KISA, hcw85123@gmail.com, Silab 2대랩장</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김홍비</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, 이글루시큐리티, tlp3a1@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김도연</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, ICB, ehdus3342@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김세진</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, B.S, tpwls224@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">이영주</span> <span class="alumni-year">(2019~2019)</span><span class="alumni-info">, B.S, 한국시스템보증, yjlee2@kosyas.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">안준연</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, 윈스, lommy101@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">신현석</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, Philasso, 010-4121-9224</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김인호</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, 하이브, mono995@naver.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">황준호</span> <span class="alumni-year">(2017~2020)</span><span class="alumni-info">, M.S, Philasso, hwangso93@gmail.com, Silab 1대랩장</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">하지희</span> <span class="alumni-year">(2017~2020)</span><span class="alumni-info">, M.S, hjh1590@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김수정</span> <span class="alumni-year">(2017~2020)</span><span class="alumni-info">, M.S, KISA, sjkim395@gmail.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">김호경</span> <span class="alumni-year">(2017~2018)</span><span class="alumni-info">, B.S, 인포인, khgyeong0129@naver.com</span></p>
-                    <p class="alumni-entry"><span class="alumni-name">황선빈</span> <span class="alumni-year">(2017~2018)</span><span class="alumni-info">, B.S, 충남척수장애인협회, tjsqlsdl2@naver.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">윤주한</span> <span class="alumni-year">(2024~2024)</span><span class="alumni-info">, B.S, 핀시큐리티, 20171247@vision.hoseo.edu</span></p>
+        <p class="alumni-entry"><span class="alumni-name">황상연</span> <span class="alumni-year">(2023~2024)</span><span class="alumni-info">, B.S, 시큐레이어, hwangsangyeon1941@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">송준영</span> <span class="alumni-year">(2023~2023)</span><span class="alumni-info">, B.S, pubacc1214@naver.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">박영지</span> <span class="alumni-year">(2022~2023)</span><span class="alumni-info">, B.S, 20201035@vision.hoseo.edu</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김익선</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, qhfkdt9599@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">송현진</span> <span class="alumni-year">(2021~2023)</span><span class="alumni-info">, Assistant, wlstlqwert@naver.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">정시온</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, 엔피코어, 20181263@vision.hoseo.edu</span></p>
+        <p class="alumni-entry"><span class="alumni-name">박정욱</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, 안랩</span></p>
+        <p class="alumni-entry"><span class="alumni-name">이현우</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, KISTI, 20171247@vision.hoseo.edu</span></p>
+        <p class="alumni-entry"><span class="alumni-name">임승범</span> <span class="alumni-year">(2021~2024)</span><span class="alumni-info">, M.S, 샌즈랩, gksrkdmftkfkd@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">이현나</span> <span class="alumni-year">(2021~2022)</span><span class="alumni-info">, B.S, 인포섹, jinnajjang1@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">이예은</span> <span class="alumni-year">(2021~2024)</span><span class="alumni-info">, M.S, 이글루시큐리티, judiaye4477@gmail.com, Silab 4대랩장</span></p>
+        <p class="alumni-entry"><span class="alumni-name">배성호</span> <span class="alumni-year">(2021~2021)</span><span class="alumni-info">, B.S, 안랩, baesungho21@naver.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김형래</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 이글루시큐리티, kkd04310@naver.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">정아연</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 안랩, j1117j71@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">이은규</span> <span class="alumni-year">(2020~2023)</span><span class="alumni-info">, M.S, 이노룰스, legleg1216@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">이용수</span> <span class="alumni-year">(2020~2023)</span><span class="alumni-info">, M.S, 덕유산cc, sooky2001@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김진강</span> <span class="alumni-year">(2020~2023)</span><span class="alumni-info">, M.S, KISA, krch9707@gmail.com, Silab 3대랩장</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김보미</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 텔레칩스, 010-5732-7493</span></p>
+        <p class="alumni-entry"><span class="alumni-name">윤재헌</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, 이글루시큐리티 </span></p>
+        <p class="alumni-entry"><span class="alumni-name">김선진</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, 롯데정보통신</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김효식</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, 시큐레터</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김도연</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, ICB, ehdus3342@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김세진</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, B.S, tpwls224@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김홍비</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, 이글루시큐리티, tlp3a1@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">안준연</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, 윈스, lommy101@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">신현석</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, Philasso, 010-4121-9224</span></p>
+        <p class="alumni-entry"><span class="alumni-name">황선빈</span> <span class="alumni-year">(2017~2018)</span><span class="alumni-info">, B.S, 충남척수장애인협회, tjsqlsdl2@naver.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김호경</span> <span class="alumni-year">(2017~2018)</span><span class="alumni-info">, B.S, 인포인, khgyeong0129@naver.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김인호</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, 하이브, mono995@naver.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">이영주</span> <span class="alumni-year">(2019~2019)</span><span class="alumni-info">, B.S, 한국시스템보증, yjlee2@kosyas.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">김수정</span> <span class="alumni-year">(2017~2020)</span><span class="alumni-info">, M.S, KISA, sjkim395@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">하지희</span> <span class="alumni-year">(2017~2020)</span><span class="alumni-info">, M.S, hjh1590@gmail.com</span></p>
+        <p class="alumni-entry"><span class="alumni-name">황준호</span> <span class="alumni-year">(2017~2020)</span><span class="alumni-info">, M.S, Philasso, hwangso93@gmail.com, Silab 1대랩장</span></p>
                 </div>
             </section>
         </div>

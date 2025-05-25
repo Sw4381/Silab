@@ -62,8 +62,25 @@
                         <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2025.05.01 ~ 2025.11.30</p>
                         <p class="project-funding"><strong>Funding:</strong>사이버안보위협대응연구회(가천대)</p>
                         <p class="project-desc"><strong>주요내용:  </strong> 국가안보 침해 행위의 우선순위 지표화를 통해 국제 및 국가배후 해킹조직의 사고조사와 유관기관 이관 판단 지원 연구</p>
+                        <button class="project-photo-btn" onclick="openModal('project47')">
+                            <i class="fas fa-images"></i> 프로젝트 사진 보기
+                        </button>
                     </div>
                 </div>
+   <!-- 프로젝트 47 모달 -->
+    <div id="project47Modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">해킹사고별 심각도 판단 기준에 관한 연구</span>
+                <span class="close" onclick="closeModal('project47')">&times;</span>
+            </div>
+            <div class="photo-gallery">
+                <div class="photo-item">
+                    <img src="./Project_photo/Project_47.jpg" alt="심각도 평가 모델">
+                </div>
+            </div>
+        </div>
+    </div>
 
                 <div class="project-item">
                     <div class="project-icon">
@@ -74,8 +91,27 @@
                         <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.5 ~ 2025.12</p>
                         <p class="project-funding"><strong>Funding:</strong> AI보안연구회(가천대)</p>
                         <p class="project-desc"><strong>주요내용:  </strong> 그래프 AI와 LLM을 활용한 내부 네트워크 위협 탐지 및 TTP 연계 해석 시스템 개발 </p>
+                        <button class="project-photo-btn" onclick="openModal('project46')">
+                            <i class="fas fa-images"></i> 프로젝트 사진 보기
+                        </button>
                     </div>
                 </div>
+
+
+   <!-- 프로젝트 46 모달 -->
+    <div id="project46Modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">내부 네트워크에서의 알려지지 않은 Threat hunting 및 TTP 분석기술 연구</span>
+                <span class="close" onclick="closeModal('project46')">&times;</span>
+            </div>
+            <div class="photo-gallery">
+                <div class="photo-item">
+                    <img src="./Project_photo/Project_46.png" alt="통합한 보안 프레임워크 개발">
+                </div>
+            </div>
+        </div>
+    </div>
                 <!-- 프로젝트 3 -->
                 <div class="project-item">
                     <div class="project-icon">
@@ -646,6 +682,46 @@
 
     <!-- JavaScript -->
     <script>
+
+
+    function openModal(projectId) {
+        const modal = document.getElementById(projectId + 'Modal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+
+    function closeModal(projectId) {
+        const modal = document.getElementById(projectId + 'Modal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // 배경 스크롤 복원
+        }
+    }
+
+    // 모달 외부 클릭 시 닫기
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (modal.style.display === 'block') {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+    });
+
+
+
         document.addEventListener("DOMContentLoaded", function() {
             // 스크롤 애니메이션
             const hiddenElements = document.querySelectorAll(".hidden");

@@ -242,144 +242,68 @@
 }
 
 /* 졸업생 개별 항목 - 기본 스타일 (학사) */
-.alumni-entry {
-    position: relative;
-    margin-bottom: 8px;
-    line-height: 1.7;
-    color: #2c3e50;
-    font-size: 1.1em;
-    padding: 16px 20px;
-    border-radius: 12px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    break-inside: avoid-column;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    overflow: hidden;
-    /* 기본 학사 스타일 - 연한 그라데이션 */
-    background: linear-gradient(135deg, #f0f8ff 0%, #f8fbff 50%, #ffffff 100%);
-    border-left: 4px solid #4facfe;
-    border: 1px solid #e0f0ff;
-}
+        .alumni-entry {
+            position: relative;
+            margin-bottom: 8px;
+            line-height: 1.7;
+            color: #2c3e50;
+            font-size: 1.1em;
+            padding: 16px 20px;
+            border-radius: 12px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            break-inside: avoid-column;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+            /* 모든 항목 동일한 스타일 */
+            background: linear-gradient(135deg, #f0f8ff 0%, #f8fbff 50%, #ffffff 100%);
+            border-left: 4px solid #4facfe;
+            border: 1px solid #e0f0ff;
+        }
 
-.alumni-entry:hover {
-    background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 50%, #f8fbff 100%);
-    border-color: #4facfe;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.15);
-}
+        .alumni-entry:hover {
+            background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 50%, #f8fbff 100%);
+            border-color: #4facfe;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.15);
+        }
 
-/* 석사과정 - 중간 톤 */
-.alumni-entry.alumni-masters {
-    background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 50%, #f8fbff 100%);
-    border-left: 4px solid #2b8aeb;
-    border-color: #7bb3f0;
-}
+        /* 졸업생 이름 */
+        .alumni-name {
+            font-weight: 700;
+            color: #005792;
+            font-size: 1em;
+            min-width: 80px;
+            flex-shrink: 0;
+        }
 
-.alumni-entry.alumni-masters:hover {
-    background: linear-gradient(135deg, #cce7ff 0%, #e6f3ff 50%, #f0f8ff 100%);
-    border-color: #2b8aeb;
-    box-shadow: 0 8px 20px rgba(43, 138, 235, 0.2);
-}
+        /* 졸업 연도 */
+        .alumni-year {
+            color: #005792;
+            font-weight: 600;
+            font-size: 0.9em;
+            background: rgba(79, 172, 254, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            min-width: 120px;
+            text-align: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(79, 172, 254, 0.2);
+        }
 
-.alumni-entry.alumni-masters .alumni-year {
-    background: rgba(43, 138, 235, 0.1);
-    color: #005792;
-    border-color: rgba(43, 138, 235, 0.3);
-}
+        /* 졸업생 정보 */
+        .alumni-info {
+            color: #555;
+            font-size: 0.95em;
+            flex: 1;
+            margin-left: 0;
+        }
 
-/* 랩장 - 진한 브랜드 색상 */
-.alumni-entry.alumni-leader {
-    background: linear-gradient(135deg, #005792 0%, #2b8aeb 50%, #4facfe 100%);
-    border-left: 4px solid #003d6b;
-    border-color: #005792;
-    color: white;
-}
-
-.alumni-entry.alumni-leader:hover {
-    background: linear-gradient(135deg, #003d6b 0%, #005792 50%, #2b8aeb 100%);
-    border-color: #003d6b;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 87, 146, 0.3);
-}
-
-.alumni-entry.alumni-leader .alumni-name {
-    color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.alumni-entry.alumni-leader .alumni-info {
-    color: rgba(255, 255, 255, 0.95);
-}
-
-.alumni-entry.alumni-leader .alumni-year {
-    background: rgba(255, 255, 255, 0.25);
-    color: white;
-    border-color: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
-}
-
-/* Assistant - 하늘색 계열 */
-.alumni-entry.alumni-assistant {
-    background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 50%, #ffffff 100%);
-    border-left: 4px solid #87ceeb;
-    border-color: #b3d9f2;
-}
-
-.alumni-entry.alumni-assistant:hover {
-    background: linear-gradient(135deg, #e6f3ff 0%, #cce7ff 50%, #f0f8ff 100%);
-    border-color: #87ceeb;
-    box-shadow: 0 8px 20px rgba(135, 206, 235, 0.15);
-}
-
-.alumni-entry.alumni-assistant .alumni-year {
-    background: rgba(135, 206, 235, 0.1);
-    color: #005792;
-    border-color: rgba(135, 206, 235, 0.3);
-}
-
-/* 졸업생 이름 */
-.alumni-name {
-    font-weight: 700;
-    color: #005792;
-    font-size: 1em;
-    min-width: 80px;
-    flex-shrink: 0;
-}
-
-/* 졸업 연도 */
-.alumni-year {
-    color: #005792;
-    font-weight: 600;
-    font-size: 0.9em;
-    background: rgba(79, 172, 254, 0.1);
-    padding: 4px 10px;
-    border-radius: 20px;
-    min-width: 120px;
-    text-align: center;
-    flex-shrink: 0;
-    border: 1px solid rgba(79, 172, 254, 0.2);
-}
-
-/* 졸업생 정보 */
-.alumni-info {
-    color: #555;
-    font-size: 0.95em;
-    flex: 1;
-    margin-left: 0;
-}
-
-/* 자동 클래스 적용을 위한 JavaScript */
-.graduates-text::before {
-    content: "";
-    display: block;
-    height: 0;
-}
-
-/* 간격 조정 */
-.alumni-entry:last-child {
-    margin-bottom: 0;
-}
+        /* 간격 조정 */
+        .alumni-entry:last-child {
+            margin-bottom: 0;
+        }
 
 
 
