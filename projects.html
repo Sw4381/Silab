@@ -8,8 +8,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="projects.css">
+
+        <!-- 기존 Firestore SDK 대신 Realtime Database SDK 사용 -->
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    
+    
 </head>
 <body>
+
+
+           
     <!-- 헤더 -->
     <header class="navbar">
         <div class="logo">
@@ -24,9 +35,130 @@
             <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
             <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
         </nav>
+        </div>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i>
+                로그아웃
+            </button>
+        </div>
+
     </header>
 
+
+        <!-- Firebase 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fab fa-firebase"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">
+                    연구실 멤버만 접근 가능합니다. 계정이 없으면 자동으로 생성됩니다.
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+
     <div class="container">
+
+        <!-- 관리자 패널 -->
+        <div class="admin-panel" id="adminPanel">
+            <h3><i class="fas fa-tools"></i> 프로젝트 관리</h3>
+            <div class="admin-buttons">
+                <button class="admin-btn" id="addProjectBtn">
+                    <i class="fas fa-plus"></i>
+                    새 프로젝트 추가
+                </button>
+                <button class="admin-btn delete" id="toggleDeleteMode">
+                    <i class="fas fa-trash"></i>
+                    삭제 모드 토글
+                </button>
+            </div>
+        </div>
+
+        <!-- 프로젝트 추가 폼 -->
+<!-- 프로젝트 추가 폼 -->
+<div class="add-project-form" id="addProjectForm">
+    <h4><i class="fas fa-plus-circle"></i> 새 프로젝트 추가</h4>
+    <form id="projectForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="projectName">프로젝트명</label>
+                <input type="text" id="projectName" name="projectName" required>
+            </div>
+            <div class="form-group">
+                <label for="projectPeriod">연구기간</label>
+                <input type="text" id="projectPeriod" name="projectPeriod" 
+                       placeholder="예: 2024.01 ~ 2025.12" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="projectFunding">Funding</label>
+                <input type="text" id="projectFunding" name="projectFunding" required>
+            </div>
+            <div class="form-group">
+                <label for="projectType">프로젝트 타입</label>
+                <select id="projectType" name="projectType">
+                    <option value="current">현재 진행 중</option>
+                    <option value="past">과거 프로젝트</option>
+                </select>
+            </div>
+        </div>
+        <!-- 새로 추가: 위치 선택 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="insertPosition">추가 위치</label>
+                <select id="insertPosition" name="insertPosition">
+                    <option value="end">맨 끝에 추가</option>
+                    <option value="beginning">맨 앞에 추가</option>
+                    <option value="specific">특정 위치에 추가</option>
+                </select>
+            </div>
+            <div class="form-group" id="specificPositionGroup" style="display: none;">
+                <label for="specificPosition">위치 번호</label>
+                <input type="number" id="specificPosition" name="specificPosition" 
+                       min="0" placeholder="0부터 시작 (0=첫번째)">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="projectDesc">주요내용</label>
+            <textarea id="projectDesc" name="projectDesc" required></textarea>
+        </div>
+        <div class="form-buttons">
+            <button type="button" class="cancel-btn" id="cancelAddProject">취소</button>
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-save"></i> 저장
+            </button>
+        </div>
+    </form>
+</div>
+
+
         <!-- 프로젝트 소개 섹션 -->
         <div class="page-header hidden">
             <h1>Projects</h1>
@@ -39,130 +171,8 @@
             
             <div class="project-list">
                 <!-- 프로젝트 1 -->
-
-                <div class="project-item">
-                    <div class="project-icon">
-                        <img src="./project-icons/attack.png" alt="공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ48] 선박 사이버 침해사고 분석 기술 및 탐지·대응 기술 개발 </h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2025.04.01 ~ 2027.12.31</p>
-                        <p class="project-funding"><strong>Funding:</strong>과기부/IITP/(KISA,지니언스,이스트시큐리티,포스텍,가천대)</p>
-                        <p class="project-desc"><strong>주요내용: </strong> 선박 OT·IT 시스템의 비정상 행위 탐지 및 대응 기술 개발을 통해 해양 환경에서 발생하는 사이버 위협을 실시간으로 모니터링하고 대응하는 기술 확보 </p>
-                    </div>
-                </div>
-
-
-                <div class="project-item">
-                    <div class="project-icon">
-                        <img src="./project-icons/attack.png" alt="공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ47] 해킹사고별 심각도 판단 기준에 관한 연구 </h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2025.05.01 ~ 2025.11.30</p>
-                        <p class="project-funding"><strong>Funding:</strong>사이버안보위협대응연구회(가천대)</p>
-                        <p class="project-desc"><strong>주요내용:  </strong> 국가안보 침해 행위의 우선순위 지표화를 통해 국제 및 국가배후 해킹조직의 사고조사와 유관기관 이관 판단 지원 연구</p>
-                        <button class="details-btn" onclick="openModal('project47')">세부사항</button>
-                    </div>
-                </div>
-   <!-- 프로젝트 47 모달 -->
-    <div id="project47Modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">해킹사고별 심각도 판단 기준에 관한 연구</span>
-                <span class="close" onclick="closeModal('project47')">&times;</span>
             </div>
-            <div class="photo-gallery">
-                <div class="photo-item">
-                    <img src="./Project_photo/Project_47.jpg" alt="심각도 평가 모델">
-                </div>
-            </div>
-        </div>
-    </div>
 
-                <div class="project-item">
-                    <div class="project-icon">
-                        <img src="./project-icons/attack.png" alt="공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ46] 내부 네트워크에서의 알려지지 않은 Threat hunting 및 TTP 분석기술 연구 </h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.5 ~ 2025.12</p>
-                        <p class="project-funding"><strong>Funding:</strong> AI보안연구회(가천대)</p>
-                        <p class="project-desc"><strong>주요내용:  </strong> 그래프 AI와 LLM을 활용한 내부 네트워크 위협 탐지 및 TTP 연계 해석 시스템 개발 </p>
-                        <button class="details-btn" onclick="openModal('project46')">세부사항</button>
-                        </button>
-                    </div>
-                </div>
-
-
-   <!-- 프로젝트 46 모달 -->
-    <div id="project46Modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">내부 네트워크에서의 알려지지 않은 Threat hunting 및 TTP 분석기술 연구</span>
-                <span class="close" onclick="closeModal('project46')">&times;</span>
-            </div>
-            <div class="photo-gallery">
-                <div class="photo-item">
-                    <img src="./Project_photo/Project_46.png" alt="통합한 보안 프레임워크 개발">
-                </div>
-            </div>
-        </div>
-    </div>
-                <!-- 프로젝트 3 -->
-                <div class="project-item">
-                    <div class="project-icon">
-                        <img src="./project-icons/attack.png" alt="공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ45] 신뢰 AI 구축을 위한 컨셉 중심의 사용자 친화적인 XAI 기술 연구</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.12 ~ 2027.6</p>
-                        <p class="project-funding"><strong>Funding:</strong>가천대</p>
-                        <p class="project-desc"><strong>주요내용: </strong> 인공지능 모델의 동작 및 결과를 직관적으로 설명하는 신뢰할 수 있는 AI 시스템 개발 연구</p>
-                    </div>
-                </div>
-
-                
-                <!-- 프로젝트 3 -->
-                <div class="project-item">
-                    <div class="project-icon">
-                        <img src="./project-icons/attack.png" alt="공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ44] 생성형 AI 모델의 프라이버시 취약성 평가 및 보호 수준 진단 기술 개발</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2025.04 ~ 2027. 12</p>
-                        <p class="project-funding"><strong>Funding:</strong> 개보위/KISA(가천대,창원대, 연세대, KETI, 다이퀘스트, 이로운앤컴퍼니) </p>
-                        <p class="project-desc"><strong>주요내용:</strong> 멀티모달 생성형 AI 모델의 프라이버시 취약성 평가 및 진단 기술 개발 / 개인식별정보 보호 강화 연구</p>
-                    </div>
-                </div>
-
-
-                <!-- 프로젝트 2 -->
-                <div class="project-item">
-                    <div class="project-icon">
-                        <img src="./project-icons/encryption.png" alt="암호화" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ43] ICT융합 공공 서비스/인프라의 암호화 사이버위협에 대한 네트워크 행위기반 보안관제 기술 개발</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2023.4 ~ 2027.12</p>
-                        <p class="project-funding"><strong>Funding:</strong> 다부처/IITP/(KISTI, KAIST, 윈스, 시스메이트, 엔키,가천대, 인하대, 국민대)</p>
-                        <p class="project-desc"><strong>주요내용:</strong> 암호화된 트래픽 환경에서 network topology, ip behavior, graph ai에 기반한 침해공격 분석 및 해석 연구</p>
-                    </div>
-                </div>
-
-                <!-- 프로젝트 3 -->
-                <div class="project-item">
-                    <div class="project-icon">
-                        <img src="./project-icons/attack.png" alt="공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ42] 사이버공격 대응을 위한 Life-cycle 기반 공격그룹 식별 및 유형분석 기술 개발</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2022.4 ~ 2025.12</p>
-                        <p class="project-funding"><strong>Funding:</strong> 과기부/IITP/(KISA, 안랩, 나루시큐리티, 가천대)</p>
-                        <p class="project-desc"><strong>주요내용:</strong> edr/ndr 기반 침해공격 semantic 분석 및 공격그룹 등 ttp 분석 기술 연구</p>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <!-- 과거 프로젝트 섹션 -->
@@ -170,494 +180,7 @@
             <h2 class="section-title"><i class="fas fa-history"></i> Past Projects</h2>
             
             <div class="project-list past">
-            
-
-                <div class="project-item past-item">
-                    <div class="project-icon small">
-                        <img src="./project-icons/network.png" alt="네트워크" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ41] 네트워크 이상행위 탐지 및 대응을 위한 XAI기반 연구</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.7 ~ 2024.12</p>
-                        <p class="project-funding"><strong>Funding:</strong> KISTI</p>
-                    </div>
-                </div>
-
-
-                <div class="project-item past-item">
-                    <div class="project-icon small">
-                        <img src="./project-icons/ai-safety.png" alt="AI 안전성" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ40] 국가·공공기관 인공지능 안전성 기준 연구</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.7 ~ 2024.11</p>
-                        <p class="project-funding"><strong>Funding:</strong> 한국암호포럼, 아주대</p>
-                    </div>
-                </div>
-
         
-                <div class="project-item past-item">
-                    <div class="project-icon small">
-                        <img src="./project-icons/cyber-attack.png" alt="사이버 공격" onerror="this.onerror=null; this.src='./project-icons/default.png';">
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ39] 사이버 공격 그룹 예측 및 TTPs 연관성 분석 연구</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.4 ~ 2025.2</p>
-                        <p class="project-funding"><strong>Funding:</strong> 호서대</p>
-                    </div>
-                </div>
-                <!-- 과거 프로젝트 1 -->
-                <div class="project-item past-item">
-                    <div class="project-icon small">
-                        <span class="project-year">2024</span>
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ38] K-RMF 보안통제항목 고도화 연구</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2024.5 ~ 2024.10</p>
-                        <p class="project-funding"><strong>Funding:</strong> 방첩사, 아주대</p>
-                    </div>
-                </div>
-        
-                <!-- 과거 프로젝트 2 -->
-                <div class="project-item past-item">
-                    <div class="project-icon small">
-                        <span class="project-year">2023</span>
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ37] 데이터청년캠퍼스(호서대)</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2023.5 ~ 2023.11</p>
-                        <p class="project-funding"><strong>Funding:</strong> 호서대</p>
-                    </div>
-                </div>
-        
-                <!-- 과거 프로젝트 3 -->
-                <div class="project-item past-item">
-                    <div class="project-icon small">
-                        <span class="project-year">2023</span>
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ36] security 분야에 적합한 AI decision support 기술 연구</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2023.3 ~ 2024.2</p>
-                        <p class="project-funding"><strong>Funding:</strong> 호서대</p>
-                    </div>
-                </div>
-        
-                <!-- 과거 프로젝트 4 -->
-                <div class="project-item past-item">
-                    <div class="project-icon small">
-                        <span class="project-year">2021</span>
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-name">[PJ35] 침해공격 의심트래픽 분류 및 보호 서비스 자동 생성 모듈 개발</h3>
-                        <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.10 ~ 2023.5</p>
-                        <p class="project-funding"><strong>Funding:</strong> 민군협력진흥원, 앰진</p>
-                    </div>
-                </div>
-        
-                <!-- 더 많은 과거 프로젝트 (초기에는 숨겨짐) -->
-                <div class="more-projects">
-                    <!-- 과거 프로젝트 5 -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2022</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ34] 분석가를 위한 AI 예측결과 해석 및 오류 정정 지원기술 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2022.3 ~ 2023.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 6 -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2022</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ33] 알려지지 않은 시스템 및 네트워크 이상행위 탐지 도구 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2022.4 ~ 2022.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> ADD, 쏘마</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 7 -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2022</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ32] 제어시스템 운전정보 이상행위 데이터 분석기술 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2022.4 ~ 2022.10</p>
-                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 8 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2021</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ31] 4단계 BK21사업 재난안전 스마트시티를 위한 창의혁신 인재양성사업</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.3 ~ 2022.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> BK21</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 9 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2018</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ30] 딥러닝 기반 악성코드 패턴룰셋 생성 자동화 원천기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.4 ~ 2023.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP, 연세대</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 10 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2019</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ29] 지능화된 악성코드 위협으로부터 ICT 인프라 보호</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.4 ~ 2022.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP, ETRI/이스트시큐리티/하우리</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 11 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2021</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ28] XAI 기반 AI분석결과에 대한 해석기술 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.3 ~ 2022.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 12 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2021</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ27] 공작기계장비 고장진단을 위한 학습 데이터 제작 및 설명 가능한 인공지능 모델 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.10 ~ 2021.11</p>
-                            <p class="project-funding"><strong>Funding:</strong> ETRI</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 13 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2021</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ26] AI 기반 침해공격 분석연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.8 ~ 2021.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> 산업체</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 14 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2019</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ25] AI/SW 중심대학사업</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.9 ~ 2025.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 15 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2019</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ24] 저작권 침해사이트의 생애주기 프로파일링 기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.4 ~ 2021.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> 저작권위원회, 아주대/앰진</p>
-                            <p class="project-achievement"><strong>Achievement:</strong> <span class="award">문체부 장관상 수상</span></p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 16 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2021</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ23] 제어시스템 운전정보 이상행위 탐지의 원인tag 분석 방안 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.4 ~ 2021.10</p>
-                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 17 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2021</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ22] IDS에서의 XAI 적용기술 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2021.5 ~ 2021.9</p>
-                            <p class="project-funding"><strong>Funding:</strong> KISTI</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 18 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2018</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ21] Malware Obfuscation 극복을 위한 CNN 및 LSH 기반 악성코드 분석 원천기술 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.3 ~ 2021.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> NRF</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 19 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2018</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ20] 인공지능 기반 악성코드 분석기술 고도화 및 EDR 기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.2 ~ 2020.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> 지니언스</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 20 (추가) -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2020</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ19] 악성코드 분석 데이터 정제 기술 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2020.4 ~ 2020.10</p>
-                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
-                        </div>
-                    </div>
-        
-                    <!-- 과거 프로젝트 21+ (추가) - 이하 동일한 형식으로 추가 -->
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2019</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ18] TF-IDF 기반 변종 악성코드 분석기술 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.3 ~ 2020.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2019</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ17] Payload 기반 IDS log 분석 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.4 ~ 2019.11</p>
-                            <p class="project-funding"><strong>Funding:</strong> KISTI</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2019</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ16] 지능정보기술을 활용한 금융서비스 보호 기술 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2019.1 ~ 2019.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP, 충남대</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2018</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ15] 악성코드 Section Feature 및 Convolutional Neural Network 기반 악성코드 그룹분류 분석 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.3 ~ 2019.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2018</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ14] 경량 블록암호 차분 전력분석 대응기법 적용방안 및 효율성 분석</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.4 ~ 2018.10</p>
-                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2018</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ13] IoT 기기 보안기술 및 신규위협 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2018.4 ~ 2018.10</p>
-                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2017</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ12] PE 및 DLL파일의 호출구조 분석에 기반한 악성코드 변형관계 분석</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2017.3 ~ 2018.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> 호서대</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2017</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ11] 오류 주입분석 취약점 평가검증 기술에 관한 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2017.4 ~ 2017.10</p>
-                            <p class="project-funding"><strong>Funding:</strong> NSR</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2017</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ10] 멀웨어 분류를 위한 악성코드 핵심Feature 연구</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2017.6 ~ 2018.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP, 윈스</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2017</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ9] 인공지능 기반 실시간 악성코드 분석기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2017.7 ~ 2018.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> 지니언스</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2014</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ8] 사이버 블랙박스 및 통합보안상황 분석기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2014.3 ~ 2017.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2015</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ7] 모바일 결제사기 탐지 및 프로파일링 기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2015.3 ~ 2017.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2013</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ6] 악성코드 프로파일링 및 이상징후 탐지기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2013.3 ~ 2016.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2011</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ5] 지능형 악성코드 자동분석 및 경유/유포지 탐지기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2011.3 ~ 2014.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
-                            <p class="project-achievement"><strong>Achievement:</strong> <span class="award">국가연구개발우수성과 100선 선정</span></p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2009</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ4] 응용서비스에서의 DDoS 공격 대응기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2009.3 ~ 2011.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2007</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ3] VoIP 암호통신 기술, 스팸대응기술, 세션처리기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2007.3 ~ 2009.2</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2006</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ2] 와이브로 정보보호기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2006.1 ~ 2006.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> -</p>
-                        </div>
-                    </div>
-        
-                    <div class="project-item past-item">
-                        <div class="project-icon small">
-                            <span class="project-year">2003</span>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-name">[PJ1] 침입감내기술 개발</h3>
-                            <p class="project-period"><i class="far fa-calendar-alt"></i> 연구기간: 2003.1 ~ 2005.12</p>
-                            <p class="project-funding"><strong>Funding:</strong> IITP</p>
-                        </div>
-                    </div>
-                </div>
-        
-                <!-- 더 보기 버튼 -->
-                <div class="show-more-button">
-                    <button id="load-more">
-                        <span class="show-text">더 많은 프로젝트 보기</span>
-                        <span class="hide-text">접기</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                </div>
             </div>
         </section>
 
@@ -678,78 +201,663 @@
     </div>
 
     <!-- JavaScript -->
-    <script>
 
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
+    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
+    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
+    projectId: "security-lab-projects-4d1cb",
+    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
+    messagingSenderId: "1075416037204",
+    appId: "1:1075416037204:web:89db47137971d40485bac1",
+    measurementId: "G-JH2LH2CS3K"
+};
 
-    function openModal(projectId) {
-        const modal = document.getElementById(projectId + 'Modal');
-        if (modal) {
-            modal.style.display = 'block';
-        }
+// ==================== 전역 변수 선언 ====================
+let app, auth, database;
+let currentUser = null;
+let deleteMode = false;
+
+// ==================== 허용된 사용자 목록 ====================
+const ALLOWED_USERS = ['kinjecs0@gmail.com'];
+
+// ==================== DOM 요소들 ====================
+let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
+let userInfo, userName, adminPanel, addProjectBtn, addProjectForm;
+let projectForm, cancelAddProject, toggleDeleteMode;
+
+// ==================== 기본 함수들 ====================
+function deleteProject(projectId) {
+    if (!currentUser || !deleteMode) {
+        showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
+        return;
     }
-
-    function closeModal(projectId) {
-        const modal = document.getElementById(projectId + 'Modal');
-        if (modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto'; // 배경 스크롤 복원
-        }
+    
+    if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) return;
+    
+    const projectElement = document.querySelector(`[data-project-id="${projectId}"]`);
+    if (projectElement) {
+        projectElement.remove();
+        showAlert('프로젝트가 삭제되었습니다.', 'success');
+    } else {
+        showAlert('프로젝트를 찾을 수 없습니다.', 'error');
     }
+}
 
-    // 모달 외부 클릭 시 닫기
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
+function openModal(projectId) {
+    const modal = document.getElementById(projectId + 'Modal');
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
     }
+}
 
-    // ESC 키로 모달 닫기
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
-                if (modal.style.display === 'block') {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
+function closeModal(projectId) {
+    const modal = document.getElementById(projectId + 'Modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.className = `alert ${type}`;
+    alert.textContent = message;
+    alert.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1002; max-width: 400px;
+        padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+        alert.style.background = '#d4edda';
+        alert.style.color = '#155724';
+        alert.style.border = '1px solid #c3e6cb';
+    } else if (type === 'error') {
+        alert.style.background = '#f8d7da';
+        alert.style.color = '#721c24';
+        alert.style.border = '1px solid #f5c6cb';
+    } else if (type === 'warning') {
+        alert.style.background = '#fff3cd';
+        alert.style.color = '#856404';
+        alert.style.border = '1px solid #ffeaa7';
+    }
+    
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 3000);
+}
+
+// ==================== Firebase 관련 함수들 ====================
+async function loadProjectsFromRealtimeDB() {
+    if (!database) {
+        console.error('Realtime Database가 초기화되지 않았습니다.');
+        return;
+    }
+    
+    try {
+        console.log('🔄 Realtime Database에서 프로젝트 로드 중...');
+        
+        // current projects 로드
+        const currentRef = database.ref('current projects');
+        const currentSnapshot = await currentRef.once('value');
+        const currentData = currentSnapshot.val() || {};
+        
+        // past projects 로드
+        const pastRef = database.ref('past projects');
+        const pastSnapshot = await pastRef.once('value');
+        const pastData = pastSnapshot.val() || {};
+        
+        console.log('📊 현재 프로젝트 Raw 데이터:', currentData);
+        console.log('📊 과거 프로젝트 Raw 데이터:', pastData);
+        
+        // 기존 Firebase 프로젝트 제거
+        const dynamicProjects = document.querySelectorAll('[data-firebase="true"]');
+        dynamicProjects.forEach(item => item.remove());
+        
+        let currentCount = 0;
+        let pastCount = 0;
+        
+        // 현재 프로젝트 처리
+        if (currentData && typeof currentData === 'object') {
+            Object.keys(currentData).forEach((firebaseKey, index) => {
+                const project = currentData[firebaseKey];
+                if (project && project.name) {
+                    project.id = `current_${index}`;
+                    project.firebaseKey = firebaseKey; // Firebase 키 저장
+                    project.type = 'current';
+                    addProjectToDOM(project);
+                    currentCount++;
                 }
             });
+        }
+        
+        // 과거 프로젝트 처리
+        if (pastData && typeof pastData === 'object') {
+            Object.keys(pastData).forEach((firebaseKey, index) => {
+                const project = pastData[firebaseKey];
+                if (project && project.name) {
+                    project.id = `past_${index}`;
+                    project.firebaseKey = firebaseKey; // Firebase 키 저장
+                    project.type = 'past';
+                    addProjectToDOM(project);
+                    pastCount++;
+                }
+            });
+        }
+        
+        console.log('✅ 프로젝트 로드 완료');
+        showAlert(`데이터 로드 완료: 현재 ${currentCount}개, 과거 ${pastCount}개`, 'success');
+        
+    } catch (error) {
+        console.error('❌ 프로젝트 로드 실패:', error);
+        showAlert('프로젝트 로드 실패: ' + error.message, 'error');
+    }
+}
+
+function addProjectToDOM(project) {
+    console.log('🎯 DOM에 프로젝트 추가:', project.name);
+    
+    let container;
+    if (project.type === 'current') {
+        container = document.querySelector('.project-list:not(.past)');
+    } else {
+        container = document.querySelector('.project-list.past .more-projects');
+        if (!container) {
+            container = document.querySelector('.project-list.past');
+        }
+    }
+    
+    if (container) {
+        const projectElement = createProjectElement(project);
+        container.appendChild(projectElement);
+        console.log('✅ DOM 추가 성공');
+    } else {
+        console.error('❌ 컨테이너를 찾을 수 없습니다:', project.type);
+    }
+}
+
+function createProjectElement(project) {
+    const projectDiv = document.createElement('div');
+    projectDiv.className = project.type === 'current' ? 'project-item' : 'project-item past-item';
+    projectDiv.setAttribute('data-project-id', project.id);
+    projectDiv.setAttribute('data-firebase', 'true');
+    
+    // Firebase 키가 있으면 사용, 없으면 인덱스 사용
+    const deleteId = project.firebaseKey || project.id;
+    
+    projectDiv.innerHTML = `
+        <div class="project-content">
+            <div class="project-header">
+                <div class="project-info">
+                    <h3 class="project-name">${project.name}</h3>
+                    <p class="project-period">
+                        <i class="far fa-calendar-alt"></i> 연구기간: ${project.period}
+                    </p>
+                    <p class="project-funding">
+                        <strong>Funding:</strong> ${project.funding}
+                    </p>
+                    ${project.description ? `
+                        <p class="project-desc">
+                            <strong>주요내용:</strong> ${project.description}
+                        </p>
+                    ` : ''}
+                </div>
+                <div class="project-actions" style="display: none;">
+                    <button class="delete-project-btn" onclick="deleteFirebaseProject('${deleteId}', '${project.type}')">
+                        <i class="fas fa-trash"></i> 삭제
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return projectDiv;
+}
+
+async function addProjectToRealtimeDB(projectData) {
+    try {
+        const insertPosition = document.getElementById('insertPosition').value;
+        const specificPosition = parseInt(document.getElementById('specificPosition').value) || 0;
+        
+        const refPath = projectData.type === 'current' ? 'current projects' : 'past projects';
+        const ref = database.ref(refPath);
+        
+        // 현재 데이터 가져오기
+        const snapshot = await ref.once('value');
+        const currentData = snapshot.val() || {};
+        const dataArray = Object.keys(currentData).map(key => ({
+            key: key,
+            ...currentData[key]
+        }));
+        
+        console.log('현재 데이터 배열:', dataArray);
+        
+        if (insertPosition === 'end') {
+            // 맨 끝에 추가 (기본 push 방식)
+            await ref.push(projectData);
+            showAlert('프로젝트가 맨 끝에 추가되었습니다!', 'success');
+            
+        } else if (insertPosition === 'beginning') {
+            // 맨 앞에 추가
+            await insertProjectAtPosition(refPath, projectData, 0, dataArray);
+            showAlert('프로젝트가 맨 앞에 추가되었습니다!', 'success');
+            
+        } else if (insertPosition === 'specific') {
+            // 특정 위치에 추가
+            const position = Math.max(0, Math.min(specificPosition, dataArray.length));
+            await insertProjectAtPosition(refPath, projectData, position, dataArray);
+            showAlert(`프로젝트가 ${position + 1}번째 위치에 추가되었습니다!`, 'success');
+        }
+        
+        // 데이터 다시 로드
+        setTimeout(() => {
+            loadProjectsFromRealtimeDB();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('프로젝트 추가 실패:', error);
+        showAlert('프로젝트 추가 실패: ' + error.message, 'error');
+    }
+}
+
+
+async function insertProjectAtPosition(refPath, newProject, position, currentDataArray) {
+    try {
+        // 전체 데이터 배열 재구성
+        const newDataArray = [...currentDataArray];
+        newDataArray.splice(position, 0, newProject);
+        
+        // 기존 데이터 모두 삭제
+        await database.ref(refPath).remove();
+        
+        // 새로운 순서로 데이터 다시 추가
+        const ref = database.ref(refPath);
+        for (let i = 0; i < newDataArray.length; i++) {
+            const item = { ...newDataArray[i] };
+            delete item.key; // Firebase 키 제거
+            await ref.push(item);
+        }
+        
+        console.log(`✅ ${position + 1}번째 위치에 프로젝트 추가 완료`);
+        
+    } catch (error) {
+        console.error('위치별 추가 실패:', error);
+        throw error;
+    }
+}
+
+
+window.deleteFirebaseProject = async function(projectId, projectType) {
+    if (!currentUser || !deleteMode) {
+        showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
+        return;
+    }
+    
+    if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) return;
+    
+    try {
+        console.log('🗑️ 프로젝트 삭제 시도:', projectId, projectType);
+        
+        // Firebase 키인지 인덱스인지 확인
+        let refPath;
+        if (projectId.includes('current_') || projectId.includes('past_')) {
+            // 기존 인덱스 방식 (정적 데이터)
+            const [type, index] = projectId.split('_');
+            refPath = `${type === 'current' ? 'current projects' : 'past projects'}/${index}`;
+        } else {
+            // Firebase 키 방식 (동적 데이터)
+            refPath = `${projectType === 'current' ? 'current projects' : 'past projects'}/${projectId}`;
+        }
+        
+        console.log('🎯 삭제 경로:', refPath);
+        
+        await database.ref(refPath).remove();
+        showAlert('프로젝트가 삭제되었습니다.', 'success');
+        
+        // DOM에서도 제거
+        const projectElement = document.querySelector(`[data-project-id*="${projectId}"]`);
+        if (projectElement) {
+            projectElement.remove();
+        }
+        
+        // 데이터 다시 로드
+        setTimeout(() => {
+            loadProjectsFromRealtimeDB();
+        }, 500);
+        
+    } catch (error) {
+        console.error('프로젝트 삭제 실패:', error);
+        showAlert('프로젝트 삭제 실패: ' + error.message, 'error');
+    }
+};
+
+// ==================== 인증 관련 함수들 ====================
+async function loginUser(email, password) {
+    if (!ALLOWED_USERS.includes(email)) {
+        throw new Error('접근 권한이 없습니다. 연구실 멤버만 사용할 수 있습니다.');
+    }
+    
+    try {
+        const result = await auth.signInWithEmailAndPassword(email, password);
+        return result;
+    } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+            return await auth.createUserWithEmailAndPassword(email, password);
+        } else if (error.code === 'auth/wrong-password') {
+            throw new Error('비밀번호가 틀렸습니다.');
+        } else if (error.code === 'auth/invalid-email') {
+            throw new Error('이메일 형식이 올바르지 않습니다.');
+        }
+        throw error;
+    }
+}
+
+async function logoutUser() {
+    await auth.signOut();
+    currentUser = null;
+    updateAuthUI();
+    showAlert('로그아웃되었습니다.', 'success');
+}
+
+function updateAuthUI() {
+    if (currentUser) {
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'flex';
+        userInfo.style.display = 'flex';
+        userName.textContent = currentUser.email;
+        adminPanel.style.display = 'block';
+    } else {
+        loginBtn.style.display = 'flex';
+        logoutBtn.style.display = 'none';
+        userInfo.style.display = 'none';
+        adminPanel.style.display = 'none';
+        addProjectForm.style.display = 'none';
+        deleteMode = false;
+    }
+    updateDeleteButtonsVisibility();
+}
+
+function updateDeleteButtonsVisibility() {
+    const deleteButtons = document.querySelectorAll('.project-actions');
+    deleteButtons.forEach(button => {
+        button.style.display = (currentUser && deleteMode) ? 'block' : 'none';
+    });
+}
+
+// ==================== 메인 초기화 ====================
+document.addEventListener("DOMContentLoaded", function() {
+    console.log('🔥 Firebase 초기화 시작...');
+    
+    // DOM 요소들 초기화
+    loginBtn = document.getElementById('loginBtn');
+    logoutBtn = document.getElementById('logoutBtn');
+    loginModal = document.getElementById('loginModal');
+    loginClose = document.getElementById('loginClose');
+    loginForm = document.getElementById('loginForm');
+    userInfo = document.getElementById('userInfo');
+    userName = document.getElementById('userName');
+    adminPanel = document.getElementById('adminPanel');
+    addProjectBtn = document.getElementById('addProjectBtn');
+    addProjectForm = document.getElementById('addProjectForm');
+    projectForm = document.getElementById('projectForm');
+    cancelAddProject = document.getElementById('cancelAddProject');
+    toggleDeleteMode = document.getElementById('toggleDeleteMode');
+    
+    // Firebase 초기화
+    try {
+        app = firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        database = firebase.database();
+        
+        console.log('✅ Firebase 초기화 성공');
+        
+        // 인증 상태 변화 리스너
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            updateAuthUI();
+            
+            if (user) {
+                console.log('✅ 사용자 로그인:', user.email);
+                // 로그인 후 데이터 로드
+                loadProjectsFromRealtimeDB();
+            } else {
+                console.log('ℹ️ 사용자 미로그인');
+                // 비로그인 상태에서도 데이터 로드 (읽기 권한이 있는 경우)
+                loadProjectsFromRealtimeDB();
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Firebase 초기화 실패:', error);
+        showAlert('Firebase 초기화 실패: ' + error.message, 'error');
+    }
+    
+    // 이벤트 리스너들 설정
+    setupEventListeners();
+    
+    // 스크롤 애니메이션
+    setupScrollAnimation();
+    
+    // 더 보기 버튼
+    setupMoreButton();
+});
+
+function setupEventListeners() {
+        // 위치 선택 설정 추가
+    setupPositionSelector();
+    
+    // 프로젝트 타입 변경 시 위치 옵션 업데이트
+    const projectTypeSelect = document.getElementById('projectType');
+    if (projectTypeSelect) {
+        projectTypeSelect.addEventListener('change', () => {
+            const insertPosition = document.getElementById('insertPosition');
+            if (insertPosition && insertPosition.value === 'specific') {
+                updatePositionOptions();
+            }
+        });
+    }
+    
+    // 로그인 관련
+    loginBtn.addEventListener('click', () => {
+        loginModal.style.display = 'block';
+    });
+    
+    loginClose.addEventListener('click', () => {
+        loginModal.style.display = 'none';
+    });
+    
+    logoutBtn.addEventListener('click', logoutUser);
+    
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        try {
+            const result = await loginUser(email, password);
+            currentUser = result.user;
+            updateAuthUI();
+            showAlert('로그인 성공!', 'success');
+            loginModal.style.display = 'none';
+            loginForm.reset();
+        } catch (error) {
+            console.error('로그인 실패:', error);
+            showAlert('로그인 실패: ' + error.message, 'error');
+        }
+    });
+    loginBtn.addEventListener('click', () => {
+        loginModal.style.display = 'block';
+    });
+
+    // 프로젝트 관리
+    addProjectBtn.addEventListener('click', () => {
+        addProjectForm.style.display = addProjectForm.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    cancelAddProject.addEventListener('click', () => {
+        addProjectForm.style.display = 'none';
+        projectForm.reset();
+    });
+    
+    projectForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(projectForm);
+        
+        const projectData = {
+            name: formData.get('projectName'),
+            period: formData.get('projectPeriod'),
+            funding: formData.get('projectFunding'),
+            description: formData.get('projectDesc'),
+            type: formData.get('projectType')
+        };
+        
+        await addProjectToRealtimeDB(projectData);
+        addProjectForm.style.display = 'none';
+        projectForm.reset();
+    });
+    
+    toggleDeleteMode.addEventListener('click', () => {
+        deleteMode = !deleteMode;
+        updateDeleteButtonsVisibility();
+        showAlert(deleteMode ? '삭제 모드 활성화' : '삭제 모드 비활성화', 'success');
+    });
+    
+    // 모달 외부 클릭 시 닫기
+    window.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+            loginModal.style.display = 'none';
         }
     });
 
 
 
-        document.addEventListener("DOMContentLoaded", function() {
-            // 스크롤 애니메이션
-            const hiddenElements = document.querySelectorAll(".hidden");
+
+
+}
+
+function setupScrollAnimation() {
+    const hiddenElements = document.querySelectorAll(".hidden");
+    
+    const handleScroll = () => {
+        hiddenElements.forEach(element => {
+            const elementTop = element.getBoundingClientRect().top;
+            const windowHeight = window.innerHeight;
             
-            const handleScroll = () => {
-                hiddenElements.forEach(element => {
-                    const elementTop = element.getBoundingClientRect().top;
-                    const windowHeight = window.innerHeight;
-                    
-                    if (elementTop < windowHeight - 50) {
-                        element.classList.add("visible");
-                    } else {
-                        element.classList.remove("visible");
-                    }
-                });
-            };
-            
-            window.addEventListener("scroll", handleScroll);
-            
-            // 초기 호출로 애니메이션 활성화
-            handleScroll();
-            
-            // 더 보기 버튼 기능
-            const loadMoreBtn = document.getElementById("load-more");
-            const moreProjects = document.querySelector(".more-projects");
-            
-            loadMoreBtn.addEventListener("click", function() {
-                moreProjects.classList.toggle("visible");
-                this.classList.toggle("active");
-            });
+            if (elementTop < windowHeight - 50) {
+                element.classList.add("visible");
+            } else {
+                element.classList.remove("visible");
+            }
         });
-    </script>
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+}
+
+function setupMoreButton() {
+    const loadMoreBtn = document.getElementById("load-more");
+    const moreProjects = document.querySelector(".more-projects");
+    
+    if (loadMoreBtn && moreProjects) {
+        loadMoreBtn.addEventListener("click", function() {
+            moreProjects.classList.toggle("visible");
+            this.classList.toggle("active");
+        });
+    }
+}
+
+
+
+// 디버깅 함수 추가
+window.debugFirebaseStructure = async function() {
+    console.log('🔍 Firebase 구조 확인...');
+    
+    try {
+        const currentRef = database.ref('current projects');
+        const pastRef = database.ref('past projects');
+        
+        const currentSnapshot = await currentRef.once('value');
+        const pastSnapshot = await pastRef.once('value');
+        
+        const currentData = currentSnapshot.val();
+        const pastData = pastSnapshot.val();
+        
+        console.log('=== 현재 프로젝트 구조 ===');
+        if (currentData) {
+            Object.keys(currentData).forEach(key => {
+                console.log(`키: ${key}`, currentData[key].name || '이름 없음');
+            });
+        }
+        
+        console.log('\n=== 과거 프로젝트 구조 ===');
+        if (pastData) {
+            Object.keys(pastData).forEach(key => {
+                console.log(`키: ${key}`, pastData[key].name || '이름 없음');
+            });
+        }
+        
+    } catch (error) {
+        console.error('구조 확인 실패:', error);
+    }
+};
+
+
+function setupPositionSelector() {
+    const insertPosition = document.getElementById('insertPosition');
+    const specificPositionGroup = document.getElementById('specificPositionGroup');
+    
+    if (insertPosition) {
+        insertPosition.addEventListener('change', function() {
+            if (this.value === 'specific') {
+                specificPositionGroup.style.display = 'block';
+                updatePositionOptions();
+            } else {
+                specificPositionGroup.style.display = 'none';
+            }
+        });
+    }
+}
+
+async function updatePositionOptions() {
+    const projectType = document.getElementById('projectType').value;
+    const specificPositionInput = document.getElementById('specificPosition');
+    
+    try {
+        const ref = database.ref(projectType === 'current' ? 'current projects' : 'past projects');
+        const snapshot = await ref.once('value');
+        const data = snapshot.val() || {};
+        
+        const count = Object.keys(data).length;
+        specificPositionInput.setAttribute('max', count);
+        specificPositionInput.setAttribute('placeholder', `0부터 ${count}까지 (총 ${count + 1}개 위치)`);
+        
+    } catch (error) {
+        console.error('위치 옵션 업데이트 실패:', error);
+    }
+}
+
+
+// 전역 함수 노출
+window.deleteProject = deleteProject;
+window.openModal = openModal;
+window.closeModal = closeModal;
+
+// 디버깅 함수
+window.debugData = function() {
+    console.log('현재 상태:');
+    console.log('- currentUser:', currentUser);
+    console.log('- deleteMode:', deleteMode);
+    console.log('- database:', database);
+    loadProjectsFromRealtimeDB();
+};
+
+console.log('🎯 스크립트 로드 완료');
+</script>
+
+
+
 </body>
 </html>
