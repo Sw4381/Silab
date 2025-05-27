@@ -348,11 +348,9 @@ async function loadProjectsFromRealtimeDB() {
         }
         
         console.log('✅ 프로젝트 로드 완료');
-        showAlert(`데이터 로드 완료: 현재 ${currentCount}개, 과거 ${pastCount}개`, 'success');
         
     } catch (error) {
         console.error('❌ 프로젝트 로드 실패:', error);
-        showAlert('프로젝트 로드 실패: ' + error.message, 'error');
     }
 }
 
