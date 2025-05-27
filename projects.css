@@ -428,6 +428,7 @@
 
 .form-group {
     margin-bottom: 20px;
+
 }
 
 .form-group label {
@@ -548,12 +549,14 @@
 
 .form-row {
     display: flex;
-    gap: 15px;
-    margin-bottom: 15px;
+    gap: 20px; /* 기존 15px에서 20px로 증가 */
+    margin-bottom: 20px; /* 기존 15px에서 20px로 증가 */
+    align-items: flex-end; /* 요소들을 아래쪽으로 정렬 */
 }
 
 .form-row .form-group {
     flex: 1;
+    min-width: 0; /* flex 아이템이 너무 작아지는 것 방지 */
 }
 
 .form-group textarea {
@@ -563,17 +566,23 @@
 
 .form-buttons {
     display: flex;
-    gap: 10px;
+    gap: 12px; /* 기존 10px에서 12px로 증가 */
     justify-content: flex-end;
+    margin-top: 25px; /* 위쪽 여백 추가 */
+    padding-top: 20px; /* 경계선 역할 */
+    border-top: 1px solid #dee2e6; /* 구분선 추가 */
 }
 
+
 .submit-btn, .cancel-btn {
-    padding: 10px 20px;
+    padding: 12px 24px; /* 기존 10px 20px에서 증가 */
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 500;
     transition: all 0.3s ease;
+    min-width: 100px; /* 최소 너비 설정 */
 }
 
 .submit-btn {
@@ -583,6 +592,7 @@
 
 .submit-btn:hover {
     background: #218838;
+    transform: translateY(-1px);
 }
 
 .cancel-btn {
@@ -592,7 +602,9 @@
 
 .cancel-btn:hover {
     background: #545b62;
+    transform: translateY(-1px);
 }
+
 
 /* 프로젝트 아이템에 삭제 버튼 추가 */
 .project-header {
@@ -780,29 +792,34 @@
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 18px; /* 기존 20px에서 18px로 약간 감소 */
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px; /* 기존 5px에서 8px로 증가 */
     color: #555;
     font-weight: bold;
+    font-size: 14px;
 }
 
 .form-group input, .form-group select, .form-group textarea {
     width: 100%;
-    padding: 12px;
+    padding: 10px 12px; /* 기존 12px에서 세로 패딩 약간 감소 */
     border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
+    border-radius: 6px; /* 기존 8px에서 6px로 약간 감소 */
+    font-size: 14px; /* 기본 16px에서 14px로 감소 */
     transition: border-color 0.3s ease;
+    box-sizing: border-box;
 }
 
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
     outline: none;
     border-color: #4facfe;
+    box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
 }
+
+
 
 .login-submit {
     width: 100%;
@@ -938,8 +955,10 @@
 }
 
 .form-group textarea {
-    min-height: 80px;
+    min-height: 70px; /* 기존 80px에서 70px로 감소 */
     resize: vertical;
+    font-family: inherit;
+    line-height: 1.4;
 }
 
 .form-buttons {
@@ -1065,16 +1084,24 @@
 /* 위치 선택 관련 스타일 */
 #specificPositionGroup {
     transition: all 0.3s ease;
+    opacity: 1;
+}
+
+#specificPositionGroup.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
 }
 
 #specificPosition {
     background-color: #f8f9fa;
     border: 2px solid #4facfe;
+    font-weight: 500;
 }
 
 #insertPosition {
     background-color: #fff;
     border: 2px solid #ddd;
+    font-weight: 500;
 }
 
 #insertPosition:focus, #specificPosition:focus {
@@ -1088,4 +1115,41 @@
     color: #666;
     margin-top: 5px;
     font-style: italic;
+    padding: 5px 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-row .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .add-project-form {
+        padding: 20px 15px;
+    }
+    
+    .form-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .submit-btn, .cancel-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .add-project-form {
+        padding: 15px 12px;
+    }
+    
+    .form-group input, .form-group select, .form-group textarea {
+        font-size: 16px; /* 모바일에서 확대 방지 */
+    }
 }
