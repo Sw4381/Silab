@@ -10,9 +10,11 @@
     <link rel="stylesheet" href="projects.css">
 
         <!-- 기존 Firestore SDK 대신 Realtime Database SDK 사용 -->
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+        <!-- Firebase SDK - Storage 추가 -->
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     
     
@@ -74,34 +76,35 @@
                     <i class="fas fa-sign-in-alt"></i> 로그인
                 </button>
                 <div class="login-help">
-                    연구실 멤버만 접근 가능합니다. 계정이 없으면 자동으로 생성됩니다.
+                    연구실 멤버만 접근 가능합니다. 
                 </div>
             </form>
         </div>
     </div>
 
 
-
-
     <div class="container">
 
         <!-- 관리자 패널 -->
-        <div class="admin-panel" id="adminPanel">
-            <h3><i class="fas fa-tools"></i> 프로젝트 관리</h3>
-            <div class="admin-buttons">
-                <button class="admin-btn" id="addProjectBtn">
-                    <i class="fas fa-plus"></i>
-                    새 프로젝트 추가
-                </button>
-                <button class="admin-btn delete" id="toggleDeleteMode">
-                    <i class="fas fa-trash"></i>
-                    삭제 모드 토글
-                </button>
-            </div>
+    <div class="admin-panel" id="adminPanel">
+        <h3><i class="fas fa-tools"></i> 프로젝트 관리</h3>
+        <div class="admin-buttons">
+            <button class="admin-btn" id="addProjectBtn">
+                <i class="fas fa-plus"></i>
+                새 프로젝트 추가
+            </button>
+            <button class="admin-btn edit" id="toggleEditMode">
+                <i class="fas fa-edit"></i>
+                수정 모드 토글
+            </button>
+            <button class="admin-btn delete" id="toggleDeleteMode">
+                <i class="fas fa-trash"></i>
+                삭제 모드 토글
+            </button>
         </div>
+    </div>
 
-        <!-- 프로젝트 추가 폼 -->
-<!-- 프로젝트 추가 폼 -->
+<!-- 프로젝트 추가 폼 - 이미지 관련 부분 제거 -->
 <div class="add-project-form" id="addProjectForm">
     <h4><i class="fas fa-plus-circle"></i> 새 프로젝트 추가</h4>
     <form id="projectForm">
@@ -129,25 +132,6 @@
                 </select>
             </div>
         </div>
-        <!-- 새로 추가: 위치 선택 -->
-        <div class="form-row">
-            <div class="form-group">
-                <label for="insertPosition">추가 위치</label>
-                <select id="insertPosition" name="insertPosition">
-                    <option value="end">맨 끝에 추가</option>
-                    <option value="beginning">맨 앞에 추가</option>
-                    <option value="specific">특정 위치에 추가</option>
-                </select>
-            </div>
-            <div class="form-group" id="specificPositionGroup" style="display: none;">
-                <label for="specificPosition">위치 번호</label>
-                <input type="number" id="specificPosition" name="specificPosition" 
-                       min="0" placeholder="0부터 시작 (0=첫번째)">
-            </div>
-            <div class="position-help" id="positionHelp">
-                💡 0=첫번째, 1=두번째 순서입니다
-            </div>
-        </div>
         <div class="form-group">
             <label for="projectDesc">주요내용</label>
             <textarea id="projectDesc" name="projectDesc" required></textarea>
@@ -160,6 +144,55 @@
         </div>
     </form>
 </div>
+
+
+
+
+<!-- 프로젝트 수정 폼 - 이미지 관련 부분 제거 -->
+<div class="edit-project-form" id="editProjectForm">
+    <h4><i class="fas fa-edit"></i> 프로젝트 수정</h4>
+    <form id="projectEditForm">
+        <input type="hidden" id="editProjectId" name="editProjectId">
+        <input type="hidden" id="editProjectFirebaseKey" name="editProjectFirebaseKey">
+        <input type="hidden" id="editProjectCurrentType" name="editProjectCurrentType">
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="editProjectName">프로젝트명</label>
+                <input type="text" id="editProjectName" name="editProjectName" required>
+            </div>
+            <div class="form-group">
+                <label for="editProjectPeriod">연구기간</label>
+                <input type="text" id="editProjectPeriod" name="editProjectPeriod" 
+                       placeholder="예: 2024.01 ~ 2025.12" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="editProjectFunding">Funding</label>
+                <input type="text" id="editProjectFunding" name="editProjectFunding" required>
+            </div>
+            <div class="form-group">
+                <label for="editProjectType">프로젝트 타입</label>
+                <select id="editProjectType" name="editProjectType">
+                    <option value="current">현재 진행 중</option>
+                    <option value="past">과거 프로젝트</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="editProjectDesc">주요내용</label>
+            <textarea id="editProjectDesc" name="editProjectDesc" required></textarea>
+        </div>
+        <div class="form-buttons">
+            <button type="button" class="cancel-btn" id="cancelEditProject">취소</button>
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-save"></i> 수정 완료
+            </button>
+        </div>
+    </form>
+</div>
+
 
 
         <!-- 프로젝트 소개 섹션 -->
@@ -203,661 +236,30 @@
         </footer>
     </div>
 
-    <!-- JavaScript -->
 
-<script>
-const firebaseConfig = {
-    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
-    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
-    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
-    projectId: "security-lab-projects-4d1cb",
-    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
-    messagingSenderId: "1075416037204",
-    appId: "1:1075416037204:web:89db47137971d40485bac1",
-    measurementId: "G-JH2LH2CS3K"
-};
-
-// ==================== 전역 변수 선언 ====================
-let app, auth, database;
-let currentUser = null;
-let deleteMode = false;
-
-// ==================== 허용된 사용자 목록 ====================
-const ALLOWED_USERS = ['kinjecs0@gmail.com'];
-
-// ==================== DOM 요소들 ====================
-let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
-let userInfo, userName, adminPanel, addProjectBtn, addProjectForm;
-let projectForm, cancelAddProject, toggleDeleteMode;
-
-// ==================== 기본 함수들 ====================
-function deleteProject(projectId) {
-    if (!currentUser || !deleteMode) {
-        showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
-        return;
-    }
     
-    if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) return;
-    
-    const projectElement = document.querySelector(`[data-project-id="${projectId}"]`);
-    if (projectElement) {
-        projectElement.remove();
-        showAlert('프로젝트가 삭제되었습니다.', 'success');
-    } else {
-        showAlert('프로젝트를 찾을 수 없습니다.', 'error');
-    }
-}
+    <!-- 외부 JavaScript 파일 로드 -->
+<script src="projects.js"></script>
 
-function openModal(projectId) {
-    const modal = document.getElementById(projectId + 'Modal');
-    if (modal) {
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-    }
-}
 
-function closeModal(projectId) {
-    const modal = document.getElementById(projectId + 'Modal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-}
-
-function showAlert(message, type) {
-    const alert = document.createElement('div');
-    alert.className = `alert ${type}`;
-    alert.textContent = message;
-    alert.style.cssText = `
-        position: fixed; top: 20px; right: 20px; z-index: 1002; max-width: 400px;
-        padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        animation: slideInRight 0.3s ease;
-    `;
-    
-    if (type === 'success') {
-        alert.style.background = '#d4edda';
-        alert.style.color = '#155724';
-        alert.style.border = '1px solid #c3e6cb';
-    } else if (type === 'error') {
-        alert.style.background = '#f8d7da';
-        alert.style.color = '#721c24';
-        alert.style.border = '1px solid #f5c6cb';
-    } else if (type === 'warning') {
-        alert.style.background = '#fff3cd';
-        alert.style.color = '#856404';
-        alert.style.border = '1px solid #ffeaa7';
-    }
-    
-    document.body.appendChild(alert);
-    setTimeout(() => alert.remove(), 3000);
-}
-
-// ==================== Firebase 관련 함수들 ====================
-async function loadProjectsFromRealtimeDB() {
-    if (!database) {
-        console.error('Realtime Database가 초기화되지 않았습니다.');
-        return;
-    }
-    
-    try {
-        console.log('🔄 Realtime Database에서 프로젝트 로드 중...');
-        
-        // current projects 로드
-        const currentRef = database.ref('current projects');
-        const currentSnapshot = await currentRef.once('value');
-        const currentData = currentSnapshot.val() || {};
-        
-        // past projects 로드
-        const pastRef = database.ref('past projects');
-        const pastSnapshot = await pastRef.once('value');
-        const pastData = pastSnapshot.val() || {};
-        
-        console.log('📊 현재 프로젝트 Raw 데이터:', currentData);
-        console.log('📊 과거 프로젝트 Raw 데이터:', pastData);
-        
-        // 기존 Firebase 프로젝트 제거
-        const dynamicProjects = document.querySelectorAll('[data-firebase="true"]');
-        dynamicProjects.forEach(item => item.remove());
-        
-        let currentCount = 0;
-        let pastCount = 0;
-        
-        // 현재 프로젝트 처리
-        if (currentData && typeof currentData === 'object') {
-            Object.keys(currentData).forEach((firebaseKey, index) => {
-                const project = currentData[firebaseKey];
-                if (project && project.name) {
-                    project.id = `current_${index}`;
-                    project.firebaseKey = firebaseKey; // Firebase 키 저장
-                    project.type = 'current';
-                    addProjectToDOM(project);
-                    currentCount++;
-                }
-            });
-        }
-        
-        // 과거 프로젝트 처리
-        if (pastData && typeof pastData === 'object') {
-            Object.keys(pastData).forEach((firebaseKey, index) => {
-                const project = pastData[firebaseKey];
-                if (project && project.name) {
-                    project.id = `past_${index}`;
-                    project.firebaseKey = firebaseKey; // Firebase 키 저장
-                    project.type = 'past';
-                    addProjectToDOM(project);
-                    pastCount++;
-                }
-            });
-        }
-        
-        console.log('✅ 프로젝트 로드 완료');
-        
-    } catch (error) {
-        console.error('❌ 프로젝트 로드 실패:', error);
-    }
-}
-
-function addProjectToDOM(project) {
-    console.log('🎯 DOM에 프로젝트 추가:', project.name);
-    
-    let container;
-    if (project.type === 'current') {
-        container = document.querySelector('.project-list:not(.past)');
-    } else {
-        container = document.querySelector('.project-list.past .more-projects');
-        if (!container) {
-            container = document.querySelector('.project-list.past');
-        }
-    }
-    
-    if (container) {
-        const projectElement = createProjectElement(project);
-        container.appendChild(projectElement);
-        console.log('✅ DOM 추가 성공');
-    } else {
-        console.error('❌ 컨테이너를 찾을 수 없습니다:', project.type);
-    }
-}
-
-function createProjectElement(project) {
-    const projectDiv = document.createElement('div');
-    projectDiv.className = project.type === 'current' ? 'project-item' : 'project-item past-item';
-    projectDiv.setAttribute('data-project-id', project.id);
-    projectDiv.setAttribute('data-firebase', 'true');
-    
-    // Firebase 키가 있으면 사용, 없으면 인덱스 사용
-    const deleteId = project.firebaseKey || project.id;
-    
-    projectDiv.innerHTML = `
-        <div class="project-content">
-            <div class="project-header">
-                <div class="project-info">
-                    <h3 class="project-name">${project.name}</h3>
-                    <p class="project-period">
-                        <i class="far fa-calendar-alt"></i> 연구기간: ${project.period}
-                    </p>
-                    <p class="project-funding">
-                        <strong>Funding:</strong> ${project.funding}
-                    </p>
-                    ${project.description ? `
-                        <p class="project-desc">
-                            <strong>주요내용:</strong> ${project.description}
-                        </p>
-                    ` : ''}
-                </div>
-                <div class="project-actions" style="display: none;">
-                    <button class="delete-project-btn" onclick="deleteFirebaseProject('${deleteId}', '${project.type}')">
-                        <i class="fas fa-trash"></i> 삭제
-                    </button>
-                </div>
+<!-- 이미지 세부사항 모달 -->
+<div class="image-modal" id="imageModal">
+    <div class="image-modal-content">
+        <div class="image-modal-header">
+            <h3 class="image-modal-title" id="imageModalTitle">프로젝트 세부사항</h3>
+            <span class="image-modal-close" id="imageModalClose">&times;</span>
+        </div>
+        <div class="image-modal-body">
+            <div class="image-gallery" id="imageGallery">
+                <!-- 이미지들이 여기에 표시됨 -->
+            </div>
+            <div class="no-images" id="noImages" style="display: none;">
+                <i class="fas fa-image"></i>
+                <p>등록된 이미지가 없습니다.</p>
             </div>
         </div>
-    `;
-    
-    return projectDiv;
-}
-
-async function addProjectToRealtimeDB(projectData) {
-    try {
-        const insertPosition = document.getElementById('insertPosition').value;
-        const specificPosition = parseInt(document.getElementById('specificPosition').value) || 0;
-        
-        const refPath = projectData.type === 'current' ? 'current projects' : 'past projects';
-        const ref = database.ref(refPath);
-        
-        // 현재 데이터 가져오기
-        const snapshot = await ref.once('value');
-        const currentData = snapshot.val() || {};
-        const dataArray = Object.keys(currentData).map(key => ({
-            key: key,
-            ...currentData[key]
-        }));
-        
-        console.log('현재 데이터 배열:', dataArray);
-        
-        if (insertPosition === 'end') {
-            // 맨 끝에 추가 (기본 push 방식)
-            await ref.push(projectData);
-            showAlert('프로젝트가 맨 끝에 추가되었습니다!', 'success');
-            
-        } else if (insertPosition === 'beginning') {
-            // 맨 앞에 추가
-            await insertProjectAtPosition(refPath, projectData, 0, dataArray);
-            showAlert('프로젝트가 맨 앞에 추가되었습니다!', 'success');
-            
-        } else if (insertPosition === 'specific') {
-            // 특정 위치에 추가
-            const position = Math.max(0, Math.min(specificPosition, dataArray.length));
-            await insertProjectAtPosition(refPath, projectData, position, dataArray);
-            showAlert(`프로젝트가 ${position + 1}번째 위치에 추가되었습니다!`, 'success');
-        }
-        
-        // 데이터 다시 로드
-        setTimeout(() => {
-            loadProjectsFromRealtimeDB();
-        }, 1000);
-        
-    } catch (error) {
-        console.error('프로젝트 추가 실패:', error);
-        showAlert('프로젝트 추가 실패: ' + error.message, 'error');
-    }
-}
-
-
-async function insertProjectAtPosition(refPath, newProject, position, currentDataArray) {
-    try {
-        // 전체 데이터 배열 재구성
-        const newDataArray = [...currentDataArray];
-        newDataArray.splice(position, 0, newProject);
-        
-        // 기존 데이터 모두 삭제
-        await database.ref(refPath).remove();
-        
-        // 새로운 순서로 데이터 다시 추가
-        const ref = database.ref(refPath);
-        for (let i = 0; i < newDataArray.length; i++) {
-            const item = { ...newDataArray[i] };
-            delete item.key; // Firebase 키 제거
-            await ref.push(item);
-        }
-        
-        console.log(`✅ ${position + 1}번째 위치에 프로젝트 추가 완료`);
-        
-    } catch (error) {
-        console.error('위치별 추가 실패:', error);
-        throw error;
-    }
-}
-
-
-window.deleteFirebaseProject = async function(projectId, projectType) {
-    if (!currentUser || !deleteMode) {
-        showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
-        return;
-    }
-    
-    if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) return;
-    
-    try {
-        console.log('🗑️ 프로젝트 삭제 시도:', projectId, projectType);
-        
-        // Firebase 키인지 인덱스인지 확인
-        let refPath;
-        if (projectId.includes('current_') || projectId.includes('past_')) {
-            // 기존 인덱스 방식 (정적 데이터)
-            const [type, index] = projectId.split('_');
-            refPath = `${type === 'current' ? 'current projects' : 'past projects'}/${index}`;
-        } else {
-            // Firebase 키 방식 (동적 데이터)
-            refPath = `${projectType === 'current' ? 'current projects' : 'past projects'}/${projectId}`;
-        }
-        
-        console.log('🎯 삭제 경로:', refPath);
-        
-        await database.ref(refPath).remove();
-        showAlert('프로젝트가 삭제되었습니다.', 'success');
-        
-        // DOM에서도 제거
-        const projectElement = document.querySelector(`[data-project-id*="${projectId}"]`);
-        if (projectElement) {
-            projectElement.remove();
-        }
-        
-        // 데이터 다시 로드
-        setTimeout(() => {
-            loadProjectsFromRealtimeDB();
-        }, 500);
-        
-    } catch (error) {
-        console.error('프로젝트 삭제 실패:', error);
-        showAlert('프로젝트 삭제 실패: ' + error.message, 'error');
-    }
-};
-
-// ==================== 인증 관련 함수들 ====================
-async function loginUser(email, password) {
-    if (!ALLOWED_USERS.includes(email)) {
-        throw new Error('접근 권한이 없습니다. 연구실 멤버만 사용할 수 있습니다.');
-    }
-    
-    try {
-        const result = await auth.signInWithEmailAndPassword(email, password);
-        return result;
-    } catch (error) {
-        if (error.code === 'auth/user-not-found') {
-            return await auth.createUserWithEmailAndPassword(email, password);
-        } else if (error.code === 'auth/wrong-password') {
-            throw new Error('비밀번호가 틀렸습니다.');
-        } else if (error.code === 'auth/invalid-email') {
-            throw new Error('이메일 형식이 올바르지 않습니다.');
-        }
-        throw error;
-    }
-}
-
-async function logoutUser() {
-    await auth.signOut();
-    currentUser = null;
-    updateAuthUI();
-    showAlert('로그아웃되었습니다.', 'success');
-}
-
-function updateAuthUI() {
-    if (currentUser) {
-        loginBtn.style.display = 'none';
-        logoutBtn.style.display = 'flex';
-        userInfo.style.display = 'flex';
-        userName.textContent = currentUser.email;
-        adminPanel.style.display = 'block';
-    } else {
-        loginBtn.style.display = 'flex';
-        logoutBtn.style.display = 'none';
-        userInfo.style.display = 'none';
-        adminPanel.style.display = 'none';
-        addProjectForm.style.display = 'none';
-        deleteMode = false;
-    }
-    updateDeleteButtonsVisibility();
-}
-
-function updateDeleteButtonsVisibility() {
-    const deleteButtons = document.querySelectorAll('.project-actions');
-    deleteButtons.forEach(button => {
-        button.style.display = (currentUser && deleteMode) ? 'block' : 'none';
-    });
-}
-
-// ==================== 메인 초기화 ====================
-document.addEventListener("DOMContentLoaded", function() {
-    console.log('🔥 Firebase 초기화 시작...');
-    
-    // DOM 요소들 초기화
-    loginBtn = document.getElementById('loginBtn');
-    logoutBtn = document.getElementById('logoutBtn');
-    loginModal = document.getElementById('loginModal');
-    loginClose = document.getElementById('loginClose');
-    loginForm = document.getElementById('loginForm');
-    userInfo = document.getElementById('userInfo');
-    userName = document.getElementById('userName');
-    adminPanel = document.getElementById('adminPanel');
-    addProjectBtn = document.getElementById('addProjectBtn');
-    addProjectForm = document.getElementById('addProjectForm');
-    projectForm = document.getElementById('projectForm');
-    cancelAddProject = document.getElementById('cancelAddProject');
-    toggleDeleteMode = document.getElementById('toggleDeleteMode');
-    
-    // Firebase 초기화
-    try {
-        app = firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        database = firebase.database();
-        
-        console.log('✅ Firebase 초기화 성공');
-        
-        // 인증 상태 변화 리스너
-        auth.onAuthStateChanged((user) => {
-            currentUser = user;
-            updateAuthUI();
-            
-            if (user) {
-                console.log('✅ 사용자 로그인:', user.email);
-                // 로그인 후 데이터 로드
-                loadProjectsFromRealtimeDB();
-            } else {
-                console.log('ℹ️ 사용자 미로그인');
-                // 비로그인 상태에서도 데이터 로드 (읽기 권한이 있는 경우)
-                loadProjectsFromRealtimeDB();
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Firebase 초기화 실패:', error);
-        showAlert('Firebase 초기화 실패: ' + error.message, 'error');
-    }
-    
-    // 이벤트 리스너들 설정
-    setupEventListeners();
-    
-    // 스크롤 애니메이션
-    setupScrollAnimation();
-    
-    // 더 보기 버튼
-    setupMoreButton();
-});
-
-function setupEventListeners() {
-        // 위치 선택 설정 추가
-    setupPositionSelector();
-    
-    // 프로젝트 타입 변경 시 위치 옵션 업데이트
-    const projectTypeSelect = document.getElementById('projectType');
-    if (projectTypeSelect) {
-        projectTypeSelect.addEventListener('change', () => {
-            const insertPosition = document.getElementById('insertPosition');
-            if (insertPosition && insertPosition.value === 'specific') {
-                updatePositionOptions();
-            }
-        });
-    }
-    
-    // 로그인 관련
-    loginBtn.addEventListener('click', () => {
-        loginModal.style.display = 'block';
-    });
-    
-    loginClose.addEventListener('click', () => {
-        loginModal.style.display = 'none';
-    });
-    
-    logoutBtn.addEventListener('click', logoutUser);
-    
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        
-        try {
-            const result = await loginUser(email, password);
-            currentUser = result.user;
-            updateAuthUI();
-            showAlert('로그인 성공!', 'success');
-            loginModal.style.display = 'none';
-            loginForm.reset();
-        } catch (error) {
-            console.error('로그인 실패:', error);
-            showAlert('로그인 실패: ' + error.message, 'error');
-        }
-    });
-    loginBtn.addEventListener('click', () => {
-        loginModal.style.display = 'block';
-    });
-
-    // 프로젝트 관리
-    addProjectBtn.addEventListener('click', () => {
-        addProjectForm.style.display = addProjectForm.style.display === 'none' ? 'block' : 'none';
-    });
-    
-    cancelAddProject.addEventListener('click', () => {
-        addProjectForm.style.display = 'none';
-        projectForm.reset();
-    });
-    
-    projectForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(projectForm);
-        
-        const projectData = {
-            name: formData.get('projectName'),
-            period: formData.get('projectPeriod'),
-            funding: formData.get('projectFunding'),
-            description: formData.get('projectDesc'),
-            type: formData.get('projectType')
-        };
-        
-        await addProjectToRealtimeDB(projectData);
-        addProjectForm.style.display = 'none';
-        projectForm.reset();
-    });
-    
-    toggleDeleteMode.addEventListener('click', () => {
-        deleteMode = !deleteMode;
-        updateDeleteButtonsVisibility();
-        showAlert(deleteMode ? '삭제 모드 활성화' : '삭제 모드 비활성화', 'success');
-    });
-    
-    // 모달 외부 클릭 시 닫기
-    window.addEventListener('click', (e) => {
-        if (e.target === loginModal) {
-            loginModal.style.display = 'none';
-        }
-    });
-
-
-
-
-
-}
-
-function setupScrollAnimation() {
-    const hiddenElements = document.querySelectorAll(".hidden");
-    
-    const handleScroll = () => {
-        hiddenElements.forEach(element => {
-            const elementTop = element.getBoundingClientRect().top;
-            const windowHeight = window.innerHeight;
-            
-            if (elementTop < windowHeight - 50) {
-                element.classList.add("visible");
-            } else {
-                element.classList.remove("visible");
-            }
-        });
-    };
-    
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-}
-
-function setupMoreButton() {
-    const loadMoreBtn = document.getElementById("load-more");
-    const moreProjects = document.querySelector(".more-projects");
-    
-    if (loadMoreBtn && moreProjects) {
-        loadMoreBtn.addEventListener("click", function() {
-            moreProjects.classList.toggle("visible");
-            this.classList.toggle("active");
-        });
-    }
-}
-
-
-
-// 디버깅 함수 추가
-window.debugFirebaseStructure = async function() {
-    console.log('🔍 Firebase 구조 확인...');
-    
-    try {
-        const currentRef = database.ref('current projects');
-        const pastRef = database.ref('past projects');
-        
-        const currentSnapshot = await currentRef.once('value');
-        const pastSnapshot = await pastRef.once('value');
-        
-        const currentData = currentSnapshot.val();
-        const pastData = pastSnapshot.val();
-        
-        console.log('=== 현재 프로젝트 구조 ===');
-        if (currentData) {
-            Object.keys(currentData).forEach(key => {
-                console.log(`키: ${key}`, currentData[key].name || '이름 없음');
-            });
-        }
-        
-        console.log('\n=== 과거 프로젝트 구조 ===');
-        if (pastData) {
-            Object.keys(pastData).forEach(key => {
-                console.log(`키: ${key}`, pastData[key].name || '이름 없음');
-            });
-        }
-        
-    } catch (error) {
-        console.error('구조 확인 실패:', error);
-    }
-};
-
-
-function setupPositionSelector() {
-    const insertPosition = document.getElementById('insertPosition');
-    const specificPositionGroup = document.getElementById('specificPositionGroup');
-    
-    if (insertPosition) {
-        insertPosition.addEventListener('change', function() {
-            if (this.value === 'specific') {
-                specificPositionGroup.style.display = 'block';
-                updatePositionOptions();
-            } else {
-                specificPositionGroup.style.display = 'none';
-            }
-        });
-    }
-}
-
-async function updatePositionOptions() {
-    const projectType = document.getElementById('projectType').value;
-    const specificPositionInput = document.getElementById('specificPosition');
-    
-    try {
-        const ref = database.ref(projectType === 'current' ? 'current projects' : 'past projects');
-        const snapshot = await ref.once('value');
-        const data = snapshot.val() || {};
-        
-        const count = Object.keys(data).length;
-        specificPositionInput.setAttribute('max', count);
-        specificPositionInput.setAttribute('placeholder', `0부터 ${count}까지 (총 ${count + 1}개 위치)`);
-        
-    } catch (error) {
-        console.error('위치 옵션 업데이트 실패:', error);
-    }
-}
-
-
-// 전역 함수 노출
-window.deleteProject = deleteProject;
-window.openModal = openModal;
-window.closeModal = closeModal;
-
-// 디버깅 함수
-window.debugData = function() {
-    console.log('현재 상태:');
-    console.log('- currentUser:', currentUser);
-    console.log('- deleteMode:', deleteMode);
-    console.log('- database:', database);
-    loadProjectsFromRealtimeDB();
-};
-
-console.log('🎯 스크립트 로드 완료');
-</script>
-
+    </div>
+</div>
 
 
 </body>
