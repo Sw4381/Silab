@@ -104,7 +104,7 @@
         </div>
     </div>
 
-<!-- 프로젝트 추가 폼 - 이미지 관련 부분 제거 -->
+<!-- 프로젝트 추가 폼 - 위치 지정 기능 추가 -->
 <div class="add-project-form" id="addProjectForm">
     <h4><i class="fas fa-plus-circle"></i> 새 프로젝트 추가</h4>
     <form id="projectForm">
@@ -130,6 +130,25 @@
                     <option value="current">현재 진행 중</option>
                     <option value="past">과거 프로젝트</option>
                 </select>
+            </div>
+        </div>
+        <!-- 위치 지정 기능 추가 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="insertPosition">삽입 위치</label>
+                <select id="insertPosition" name="insertPosition" required>
+                    <option value="first">맨 위 (최신)</option>
+                    <option value="last">맨 아래 (가장 오래된)</option>
+                    <option value="specific">특정 위치</option>
+                </select>
+            </div>
+            <div class="form-group" id="specificPositionGroup" style="display: none;">
+                <label for="specificPosition">위치 지정</label>
+                <input type="number" id="specificPosition" name="specificPosition" 
+                       min="1" placeholder="삽입할 위치 (1부터 시작)">
+                <div class="position-help">
+                    1 = 맨 위, 숫자가 클수록 아래쪽 위치
+                </div>
             </div>
         </div>
         <div class="form-group">
