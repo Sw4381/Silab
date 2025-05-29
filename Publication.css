@@ -175,7 +175,7 @@
     color: #666;
 }
 
-/* 관리자 패널 - 프로젝트와 동일한 스타일 */
+/* 관리자 패널 - 프로젝트와 완전히 동일한 스타일 */
 .admin-panel {
     display: none;
     background: white;
@@ -191,6 +191,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    font-size: 1.25em; /* projects와 동일한 크기 */
+    font-weight: 600;
 }
 
 .admin-buttons {
@@ -207,10 +209,13 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.9em;
+    font-weight: 500; /* projects와 동일 */
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 8px;
+    min-height: 40px; /* 최소 높이 설정 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
 }
 
 .admin-btn:hover {
@@ -245,7 +250,14 @@
     box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.3);
 }
 
-/* 논문 추가 폼 - 프로젝트와 동일한 스타일 */
+/* 관리자 버튼 아이콘 크기 통일 */
+.admin-btn i {
+    font-size: 0.9em;
+    width: 16px; /* 아이콘 너비 고정 */
+    text-align: center;
+}
+
+/* 논문 추가 폼 - 프로젝트와 완전히 동일한 스타일 */
 .add-publication-form {
     display: none;
     background: #f8f9fa;
@@ -258,9 +270,19 @@
 .add-publication-form h4 {
     color: #005792;
     margin-bottom: 20px;
+    font-size: 1.1em; /* projects와 동일 */
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* 논문 수정 폼 - 프로젝트와 동일한 스타일 */
+.add-publication-form h4 i {
+    color: #4facfe;
+    font-size: 1em;
+}
+
+/* 논문 수정 폼 - 프로젝트와 완전히 동일한 스타일 */
 .edit-publication-form {
     display: none;
     background: #fff3cd;
@@ -273,6 +295,16 @@
 .edit-publication-form h4 {
     color: #856404;
     margin-bottom: 20px;
+    font-size: 1.1em; /* projects와 동일 */
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.edit-publication-form h4 i {
+    color: #d39e00;
+    font-size: 1em;
 }
 
 .form-row {
@@ -362,7 +394,7 @@
     box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
 }
 
-/* 위치 안내 텍스트 */
+/* 위치 안내 텍스트 - projects와 동일한 스타일 */
 .position-help {
     font-size: 0.8em;
     color: #666;
@@ -371,6 +403,60 @@
     padding: 5px 8px;
     background: #e9ecef;
     border-radius: 4px;
+    line-height: 1.3;
+}
+
+/* 폼 그룹 라벨 크기 통일 */
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+/* 폼 입력 요소들 크기 통일 */
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+/* 버튼 그룹 스타일 통일 */
+.form-buttons {
+    display: flex;
+    gap: 12px; /* 프로젝트와 동일하게 12px */
+    justify-content: flex-end;
+    margin-top: 25px; /* 위쪽 여백 추가 */
+    padding-top: 20px; /* 경계선 역할 */
+    border-top: 1px solid #dee2e6; /* 구분선 추가 */
+}
+
+.submit-btn, .cancel-btn {
+    padding: 12px 24px; /* 프로젝트와 동일하게 패딩 증가 */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 100px; /* 최소 너비 설정 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px; /* 아이콘과 텍스트 간격 */
+    line-height: 1;
+}
+
+.submit-btn i, .cancel-btn i {
+    font-size: 0.9em;
 }
 
 /* 알림 메시지 */
@@ -701,7 +787,7 @@
     }
 }
 
-/* 반응형 디자인 - 프로젝트와 통일 */
+/* 반응형 디자인 - 프로젝트와 완전히 통일 */
 @media (max-width: 992px) {
     .publication-nav {
         gap: 12px;
@@ -714,6 +800,16 @@
     
     .section-header h2 {
         font-size: 1.4em;
+    }
+    
+    /* 관리자 패널 반응형 */
+    .admin-panel h3 {
+        font-size: 1.2em;
+    }
+    
+    .admin-btn {
+        font-size: 0.85em;
+        padding: 9px 18px;
     }
 }
 
@@ -764,8 +860,17 @@
         margin-bottom: 15px;
     }
 
+    /* 관리자 패널 모바일 스타일 */
     .admin-buttons {
         flex-direction: column;
+        gap: 12px;
+    }
+    
+    .admin-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
+        font-size: 0.9em;
     }
 
     .publication-actions {
@@ -782,6 +887,12 @@
     
     .submit-btn, .cancel-btn {
         width: 100%;
+        justify-content: center;
+    }
+    
+    /* 폼 제목 모바일 크기 */
+    .add-publication-form h4, .edit-publication-form h4 {
+        font-size: 1em;
     }
 }
 
@@ -818,5 +929,25 @@
 
     .form-group input, .form-group select, .form-group textarea {
         font-size: 16px; /* 모바일에서 확대 방지 */
+    }
+    
+    /* 관리자 패널 최소 화면 크기 */
+    .admin-panel {
+        padding: 15px 12px;
+    }
+    
+    .admin-panel h3 {
+        font-size: 1.1em;
+        margin-bottom: 15px;
+    }
+    
+    .admin-btn {
+        padding: 10px 16px;
+        font-size: 0.85em;
+        min-height: 36px;
+    }
+    
+    .admin-btn i {
+        font-size: 0.8em;
     }
 }
