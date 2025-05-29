@@ -63,23 +63,21 @@ async function getAllPublicationsSorted(publicationType) {
     try {
         const refPath = `publications/${publicationType}`;
         const ref = database.ref(refPath);
-        const snapshot = await ref.orderByChild('displayOrder').once('value');
+        const snapshot = await ref.once('value');
         const data = snapshot.val() || {};
         
-        // displayOrder가 없는 기존 항목들은 createdAt으로 정렬
         const publications = Object.entries(data)
             .filter(([key, value]) => value && value.title)
             .map(([key, value]) => ({
                 key,
-                ...value,
-                displayOrder: value.displayOrder !== undefined ? value.displayOrder : value.createdAt || 0
+                ...value
             }))
-            .sort((a, b) => a.displayOrder - b.displayOrder);
-        
-        console.log(`📊 ${publicationType} 논문 정렬 결과:`, publications.length, '개');
-        publications.forEach((publication, index) => {
-            console.log(`  ${index + 1}. ${publication.title} (order: ${publication.displayOrder})`);
-        });
+            .sort((a, b) => {
+                // publicationId 숫자 기준 내림차순 정렬
+                const idA = parseInt(a.publicationId.replace(/[^\d]/g, ''), 10);
+                const idB = parseInt(b.publicationId.replace(/[^\d]/g, ''), 10);
+                return idB - idA;
+            });
         
         return publications;
     } catch (error) {
