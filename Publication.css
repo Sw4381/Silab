@@ -1,11 +1,4 @@
-/* publications.css - 논문 목록 페이지 전용 스타일 (세련되고 간결한 버전) */
-
-/* 전체 컨테이너 너비 제한 */
-/* .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 15px;
-} */
+/* publications.css - 논문 목록 페이지 전용 스타일 (프로젝트와 통일된 관리 기능 포함) */
 
 /* 페이지 헤더 스타일 - 간결하게 */
 .page-header {
@@ -42,6 +35,377 @@
     max-width: 600px;
     margin: 15px auto 0;
 }
+
+/* ==================== 통일된 로그인 및 관리 기능 CSS ==================== */
+
+/* 헤더 수정 */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+/* 로그인 버튼 */
+.auth-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-right: 20px;
+}
+
+.login-btn, .logout-btn {
+    background: #4facfe;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.login-btn:hover, .logout-btn:hover {
+    background: #005792;
+    transform: translateY(-2px);
+}
+
+.user-info {
+    color: #005792;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 로그인 모달 */
+.login-modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    animation: fadeIn 0.3s ease;
+}
+
+.login-modal-content {
+    background: white;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    animation: slideIn 0.3s ease;
+}
+
+.login-form h2 {
+    color: #005792;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
+}
+
+.login-submit {
+    width: 100%;
+    background: #4facfe;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.login-submit:hover {
+    background: #005792;
+}
+
+.login-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.login-close:hover {
+    color: #005792;
+}
+
+.login-help {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* 관리자 패널 - 프로젝트와 동일한 스타일 */
+.admin-panel {
+    display: none;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.admin-panel h3 {
+    color: #005792;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.admin-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.admin-btn.delete {
+    background: #dc3545;
+}
+
+.admin-btn.delete:hover {
+    background: #c82333;
+}
+
+.admin-btn.edit {
+    background: #ffc107;
+    color: #212529;
+}
+
+.admin-btn.edit:hover {
+    background: #e0a800;
+}
+
+.admin-btn.edit.active {
+    background: #d39e00;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
+}
+
+.admin-btn.delete.active {
+    background: #c82333;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.3);
+}
+
+/* 논문 추가 폼 - 프로젝트와 동일한 스타일 */
+.add-publication-form {
+    display: none;
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border: 2px solid #4facfe;
+}
+
+.add-publication-form h4 {
+    color: #005792;
+    margin-bottom: 20px;
+}
+
+/* 논문 수정 폼 - 프로젝트와 동일한 스타일 */
+.edit-publication-form {
+    display: none;
+    background: #fff3cd;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border: 2px solid #ffc107;
+}
+
+.edit-publication-form h4 {
+    color: #856404;
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px; /* 프로젝트와 동일하게 20px */
+    margin-bottom: 20px; /* 프로젝트와 동일하게 20px */
+    align-items: flex-end; /* 요소들을 아래쪽으로 정렬 */
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 0; /* flex 아이템이 너무 작아지는 것 방지 */
+}
+
+.form-group textarea {
+    min-height: 70px;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 12px; /* 프로젝트와 동일하게 12px */
+    justify-content: flex-end;
+    margin-top: 25px; /* 위쪽 여백 추가 */
+    padding-top: 20px; /* 경계선 역할 */
+    border-top: 1px solid #dee2e6; /* 구분선 추가 */
+}
+
+.submit-btn, .cancel-btn {
+    padding: 12px 24px; /* 프로젝트와 동일하게 패딩 증가 */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 100px; /* 최소 너비 설정 */
+}
+
+.submit-btn {
+    background: #28a745;
+    color: white;
+}
+
+.submit-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: #545b62;
+    transform: translateY(-1px);
+}
+
+/* 위치 선택 관련 스타일 - 프로젝트와 동일 */
+#specificPositionGroup {
+    transition: all 0.3s ease;
+    opacity: 1;
+}
+
+#specificPositionGroup.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+#specificPosition {
+    background-color: #f8f9fa;
+    border: 2px solid #4facfe;
+    font-weight: 500;
+}
+
+#insertPosition {
+    background-color: #fff;
+    border: 2px solid #ddd;
+    font-weight: 500;
+}
+
+#insertPosition:focus, #specificPosition:focus {
+    border-color: #4facfe;
+    box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
+}
+
+/* 위치 안내 텍스트 */
+.position-help {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+    font-style: italic;
+    padding: 5px 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+}
+
+/* 알림 메시지 */
+.alert {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1002;
+    max-width: 400px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.3s ease;
+}
+
+.alert.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert.warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* ==================== 기존 논문 스타일 ==================== */
 
 /* 논문 네비게이션 버튼 스타일 - 더 작고 가벼운 디자인 */
 .publication-nav {
@@ -146,6 +510,7 @@
     border-radius: 8px;
     transition: all 0.3s ease;
     box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    position: relative;
 }
 
 .publication-item:hover {
@@ -167,6 +532,7 @@
 
 .publication-content {
     flex: 1;
+    position: relative;
 }
 
 .publication-title {
@@ -209,6 +575,48 @@
     color: #dc3545;
     font-weight: bold;
     font-style: normal;
+}
+
+/* 논문 아이템 액션 버튼 - 프로젝트와 동일한 스타일 */
+.publication-actions {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    gap: 5px;
+}
+
+.edit-publication-btn {
+    background: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+    margin-right: 8px;
+}
+
+.edit-publication-btn:hover {
+    background: #e0a800;
+    transform: scale(1.05);
+}
+
+.delete-publication-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+}
+
+.delete-publication-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
 }
 
 /* 더 보기 버튼 스타일 - 간결하게 */
@@ -271,7 +679,29 @@
     }
 }
 
-/* 반응형 디자인 - 더 세밀하게 조정 */
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 반응형 디자인 - 프로젝트와 통일 */
 @media (max-width: 992px) {
     .publication-nav {
         gap: 12px;
@@ -288,6 +718,16 @@
 }
 
 @media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .auth-section {
+        margin-right: 0;
+    }
+
     .publication-section {
         padding: 18px 15px;
     }
@@ -313,6 +753,35 @@
     
     .count {
         align-self: flex-start;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-row .form-group {
+        margin-bottom: 15px;
+    }
+
+    .admin-buttons {
+        flex-direction: column;
+    }
+
+    .publication-actions {
+        position: static;
+        margin-top: 10px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .form-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .submit-btn, .cancel-btn {
+        width: 100%;
     }
 }
 
@@ -341,5 +810,13 @@
     
     .page-header {
         padding: 20px 12px 15px;
+    }
+
+    .add-publication-form, .edit-publication-form {
+        padding: 15px 12px;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+        font-size: 16px; /* 모바일에서 확대 방지 */
     }
 }
