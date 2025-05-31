@@ -102,9 +102,18 @@
             <form id="publicationForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="publicationId">논문 ID</label>
-                        <input type="text" id="publicationId" name="publicationId" 
-                               placeholder="예: P179" required>
+                        <label for="publicationId">
+                            논문 ID 
+                            <i class="fas fa-info-circle" title="P + 숫자 형식으로 입력하세요 (예: P179)"></i>
+                        </label>
+                        <div class="publication-id-container">
+                            <input type="text" id="publicationId" name="publicationId" 
+                                placeholder="예: P179 (자동 제안 로딩 중...)" 
+                                pattern="^P\d+$" 
+                                title="P + 숫자 형식으로 입력하세요 (예: P179)"
+                                required>
+                        </div>
+                        <!-- 여기에 자동으로 도움말과 자동입력 버튼이 추가됩니다 -->
                     </div>
                     <div class="form-group">
                         <label for="publicationType">논문 타입</label>
@@ -127,7 +136,7 @@
                     <div class="form-group" id="specificPositionGroup" style="display: none;">
                         <label for="specificPosition">위치 지정</label>
                         <input type="number" id="specificPosition" name="specificPosition" 
-                               min="1" placeholder="삽입할 위치 (1부터 시작)">
+                            min="1" placeholder="삽입할 위치 (1부터 시작)">
                         <div class="position-help">
                             1 = 맨 위, 숫자가 클수록 아래쪽 위치
                         </div>
@@ -140,7 +149,7 @@
                 <div class="form-group">
                     <label for="publicationAuthors">저자</label>
                     <input type="text" id="publicationAuthors" name="publicationAuthors" 
-                           placeholder="예: 홍길동, 김철수, 이태진" required>
+                        placeholder="예: 홍길동, 김철수, 이태진" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -150,13 +159,13 @@
                     <div class="form-group">
                         <label for="publicationUrl">논문 URL (선택사항)</label>
                         <input type="url" id="publicationUrl" name="publicationUrl" 
-                               placeholder="https://...">
+                            placeholder="https://...">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="publicationAward">수상 내역 (선택사항)</label>
                     <input type="text" id="publicationAward" name="publicationAward" 
-                           placeholder="예: 우수논문상, 최우수논문상">
+                        placeholder="예: 우수논문상, 최우수논문상">
                 </div>
                 <div class="form-buttons">
                     <button type="button" class="cancel-btn" id="cancelAddPublication">취소</button>
