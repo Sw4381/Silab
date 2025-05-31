@@ -1,4 +1,4 @@
-// publications.js - 개선된 논문 관리 JavaScript 파일
+// publications.js - 논문 번호 자동 제안 기능이 포함된 완전한 논문 관리 JavaScript 파일
 
 const firebaseConfig = {
     apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
@@ -54,6 +54,275 @@ function showAlert(message, type) {
     
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 3000);
+}
+
+// ==================== 논문 번호 관련 함수들 (새로 추가) ====================
+
+// 모든 논문에서 가장 높은 번호 찾기
+async function getHighestPublicationNumber() {
+    try {
+        console.log('🔍 가장 높은 논문 번호 검색 중...');
+        
+        let highestNumber = 0;
+        const types = ['sci', 'kci', 'other'];
+        
+        for (const type of types) {
+            const refPath = `publications/${type}`;
+            const ref = database.ref(refPath);
+            const snapshot = await ref.once('value');
+            const data = snapshot.val() || {};
+            
+            Object.values(data).forEach(publication => {
+                if (publication && publication.publicationId) {
+                    // P 뒤의 숫자만 추출 (예: P179 -> 179)
+                    const match = publication.publicationId.match(/P(\d+)/i);
+                    if (match) {
+                        const number = parseInt(match[1], 10);
+                        if (number > highestNumber) {
+                            highestNumber = number;
+                        }
+                    }
+                }
+            });
+        }
+        
+        console.log('📊 현재 가장 높은 논문 번호:', highestNumber);
+        return highestNumber;
+        
+    } catch (error) {
+        console.error('❌ 논문 번호 검색 실패:', error);
+        return 0;
+    }
+}
+
+// 다음 논문 번호 제안
+async function suggestNextPublicationNumber() {
+    try {
+        const highestNumber = await getHighestPublicationNumber();
+        const nextNumber = highestNumber + 1;
+        const suggestedId = `P${nextNumber}`;
+        
+        console.log('💡 제안하는 다음 논문 번호:', suggestedId);
+        return suggestedId;
+        
+    } catch (error) {
+        console.error('❌ 논문 번호 제안 실패:', error);
+        return 'P1'; // 기본값
+    }
+}
+
+// 논문 ID 입력 필드 업데이트
+async function updatePublicationIdSuggestion() {
+    try {
+        const publicationIdInput = document.getElementById('publicationId');
+        if (!publicationIdInput) return;
+        
+        const suggestedId = await suggestNextPublicationNumber();
+        
+        // placeholder에 제안 번호 표시
+        publicationIdInput.placeholder = `예: ${suggestedId} (다음 추천 번호)`;
+        
+        // 입력 필드 옆에 도움말 추가
+        let helpElement = document.querySelector('.publication-id-help');
+        if (!helpElement) {
+            helpElement = document.createElement('div');
+            helpElement.className = 'publication-id-help';
+            helpElement.style.cssText = `
+                font-size: 12px;
+                color: #666;
+                margin-top: 4px;
+                padding: 8px 12px;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 6px;
+                border-left: 4px solid #007bff;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                animation: slideInDown 0.3s ease;
+            `;
+            publicationIdInput.parentNode.appendChild(helpElement);
+        }
+        
+        helpElement.innerHTML = `
+            <i class="fas fa-lightbulb" style="color: #ffc107;"></i>
+            <strong>제안 번호: ${suggestedId}</strong> (현재 가장 높은 번호 기준)
+        `;
+        
+        // 자동 입력 버튼 추가 또는 업데이트
+        let autoFillBtn = document.querySelector('.auto-fill-btn');
+        if (!autoFillBtn) {
+            // 입력 필드를 컨테이너로 감싸기
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'input-with-button';
+            inputContainer.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+            
+            publicationIdInput.parentNode.insertBefore(inputContainer, publicationIdInput);
+            inputContainer.appendChild(publicationIdInput);
+            
+            // 자동 입력 버튼 생성
+            autoFillBtn = document.createElement('button');
+            autoFillBtn.type = 'button';
+            autoFillBtn.className = 'auto-fill-btn';
+            autoFillBtn.style.cssText = `
+                padding: 6px 12px;
+                font-size: 12px;
+                background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+                white-space: nowrap;
+            `;
+            autoFillBtn.innerHTML = '<i class="fas fa-magic"></i> 자동입력';
+            
+            autoFillBtn.addEventListener('mouseenter', () => {
+                autoFillBtn.style.background = 'linear-gradient(135deg, #0056b3 0%, #004085 100%)';
+                autoFillBtn.style.transform = 'translateY(-1px)';
+                autoFillBtn.style.boxShadow = '0 4px 8px rgba(0,123,255,0.4)';
+            });
+            
+            autoFillBtn.addEventListener('mouseleave', () => {
+                autoFillBtn.style.background = 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)';
+                autoFillBtn.style.transform = 'translateY(0)';
+                autoFillBtn.style.boxShadow = '0 2px 4px rgba(0,123,255,0.3)';
+            });
+            
+            inputContainer.appendChild(autoFillBtn);
+        }
+        
+        // 자동 입력 버튼 클릭 이벤트 업데이트
+        autoFillBtn.onclick = () => {
+            publicationIdInput.value = suggestedId;
+            showAlert(`논문 번호 ${suggestedId}가 자동 입력되었습니다.`, 'success');
+            
+            // 실시간 검증 트리거
+            const event = new Event('input', { bubbles: true });
+            publicationIdInput.dispatchEvent(event);
+        };
+        
+        console.log('✅ 논문 번호 제안 업데이트 완료');
+        
+    } catch (error) {
+        console.error('❌ 논문 번호 제안 업데이트 실패:', error);
+    }
+}
+
+// 논문 번호 중복 체크
+async function checkDuplicatePublicationId(publicationId) {
+    try {
+        const types = ['sci', 'kci', 'other'];
+        
+        for (const type of types) {
+            const refPath = `publications/${type}`;
+            const ref = database.ref(refPath);
+            const snapshot = await ref.once('value');
+            const data = snapshot.val() || {};
+            
+            const duplicate = Object.values(data).find(publication => 
+                publication && publication.publicationId === publicationId
+            );
+            
+            if (duplicate) {
+                return {
+                    isDuplicate: true,
+                    type: type,
+                    title: duplicate.title
+                };
+            }
+        }
+        
+        return { isDuplicate: false };
+        
+    } catch (error) {
+        console.error('❌ 중복 체크 실패:', error);
+        return { isDuplicate: false };
+    }
+}
+
+// 실시간 중복 체크 및 검증
+function setupPublicationIdValidation() {
+    const publicationIdInput = document.getElementById('publicationId');
+    if (!publicationIdInput) return;
+    
+    // 기존 검증 요소 제거
+    const existingValidation = document.querySelector('.publication-id-validation');
+    if (existingValidation) {
+        existingValidation.remove();
+    }
+    
+    let validationTimeout;
+    
+    publicationIdInput.addEventListener('input', function() {
+        clearTimeout(validationTimeout);
+        
+        const value = this.value.trim();
+        let validationElement = document.querySelector('.publication-id-validation');
+        
+        if (!validationElement) {
+            validationElement = document.createElement('div');
+            validationElement.className = 'publication-id-validation';
+            validationElement.style.cssText = `
+                font-size: 12px;
+                margin-top: 6px;
+                padding: 8px 12px;
+                border-radius: 6px;
+                transition: all 0.3s ease;
+                animation: fadeIn 0.3s ease;
+            `;
+            this.parentNode.appendChild(validationElement);
+        }
+        
+        if (!value) {
+            validationElement.style.display = 'none';
+            return;
+        }
+        
+        // P 형식 검증
+        const isValidFormat = /^P\d+$/i.test(value);
+        
+        if (!isValidFormat) {
+            validationElement.style.display = 'block';
+            validationElement.style.background = '#fff3cd';
+            validationElement.style.color = '#856404';
+            validationElement.style.borderLeft = '4px solid #ffc107';
+            validationElement.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                올바른 형식: P + 숫자 (예: P179)
+            `;
+            return;
+        }
+        
+        // 중복 체크 (디바운싱 적용)
+        validationTimeout = setTimeout(async () => {
+            try {
+                const result = await checkDuplicatePublicationId(value);
+                
+                if (result.isDuplicate) {
+                    validationElement.style.display = 'block';
+                    validationElement.style.background = '#f8d7da';
+                    validationElement.style.color = '#721c24';
+                    validationElement.style.borderLeft = '4px solid #dc3545';
+                    validationElement.innerHTML = `
+                        <i class="fas fa-times-circle"></i>
+                        이미 사용 중인 번호입니다 (${result.type.toUpperCase()}: ${result.title.substring(0, 30)}...)
+                    `;
+                } else {
+                    validationElement.style.display = 'block';
+                    validationElement.style.background = '#d4edda';
+                    validationElement.style.color = '#155724';
+                    validationElement.style.borderLeft = '4px solid #28a745';
+                    validationElement.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        사용 가능한 번호입니다
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ 실시간 검증 실패:', error);
+            }
+        }, 500); // 500ms 후 검증 실행
+    });
+    
+    console.log('✅ 논문 번호 실시간 검증 설정 완료');
 }
 
 // ==================== 새로운 위치 삽입 시스템 ====================
@@ -630,6 +899,31 @@ async function updatePublication() {
         const newType = newPublicationData.type;
         const firebaseKey = formData.get('editPublicationKey');
         
+        // 논문 번호 형식 검증
+        if (!/^P\d+$/i.test(newPublicationData.publicationId)) {
+            showAlert('논문 번호는 P + 숫자 형식이어야 합니다 (예: P179)', 'error');
+            return;
+        }
+        
+        // 중복 체크 (자기 자신 제외)
+        const duplicateCheck = await checkDuplicatePublicationId(newPublicationData.publicationId);
+        if (duplicateCheck.isDuplicate) {
+            // 자기 자신인지 확인
+            const refPath = `publications/${duplicateCheck.type}`;
+            const ref = database.ref(refPath);
+            const snapshot = await ref.once('value');
+            const data = snapshot.val() || {};
+            
+            const isSelf = Object.entries(data).some(([key, pub]) => 
+                key === firebaseKey && pub.publicationId === newPublicationData.publicationId
+            );
+            
+            if (!isSelf) {
+                showAlert(`이미 사용 중인 논문 번호입니다: ${newPublicationData.publicationId}`, 'error');
+                return;
+            }
+        }
+        
         // 논문 업데이트
         if (oldType !== newType) {
             // 타입이 변경된 경우: 기존 위치에서 삭제하고 새 위치에 추가
@@ -844,7 +1138,7 @@ function setupEventListeners() {
         });
     }
 
-    // 논문 관리
+    // 논문 관리 - 개선된 버전 (논문 번호 자동 제안 포함)
     if (addPublicationBtn) {
         addPublicationBtn.addEventListener('click', async () => {
             if (editPublicationForm && editPublicationForm.style.display === 'block') {
@@ -855,9 +1149,11 @@ function setupEventListeners() {
                 const isVisible = addPublicationForm.style.display === 'block';
                 addPublicationForm.style.display = isVisible ? 'none' : 'block';
                 
-                // 폼이 열릴 때 위치 옵션 업데이트
+                // 폼이 열릴 때 번호 제안 및 위치 옵션 업데이트
                 if (!isVisible) {
+                    await updatePublicationIdSuggestion();
                     await updatePositionOptions();
+                    setupPublicationIdValidation();
                 }
             }
         });
@@ -868,6 +1164,12 @@ function setupEventListeners() {
             if (addPublicationForm) addPublicationForm.style.display = 'none';
             if (publicationForm) publicationForm.reset();
             resetPositionFields();
+            
+            // 검증 메시지들 제거
+            const validationElement = document.querySelector('.publication-id-validation');
+            if (validationElement) {
+                validationElement.remove();
+            }
         });
     }
     
@@ -907,6 +1209,20 @@ function setupEventListeners() {
             const formData = new FormData(publicationForm);
             const insertPosition = formData.get('insertPosition');
             const specificPosition = formData.get('specificPosition');
+            const publicationId = formData.get('publicationId');
+            
+            // 논문 번호 형식 검증
+            if (!/^P\d+$/i.test(publicationId)) {
+                showAlert('논문 번호는 P + 숫자 형식이어야 합니다 (예: P179)', 'error');
+                return;
+            }
+            
+            // 중복 체크
+            const duplicateCheck = await checkDuplicatePublicationId(publicationId);
+            if (duplicateCheck.isDuplicate) {
+                showAlert(`이미 사용 중인 논문 번호입니다: ${publicationId} (${duplicateCheck.type.toUpperCase()}: ${duplicateCheck.title})`, 'error');
+                return;
+            }
             
             // 특정 위치 선택 시 위치값 검증
             if (insertPosition === 'specific') {
@@ -927,7 +1243,7 @@ function setupEventListeners() {
             }
             
             const publicationData = {
-                publicationId: formData.get('publicationId'),
+                publicationId: publicationId,
                 title: formData.get('publicationTitle'),
                 authors: formData.get('publicationAuthors'),
                 journal: formData.get('publicationJournal'),
@@ -944,6 +1260,12 @@ function setupEventListeners() {
             if (addPublicationForm) addPublicationForm.style.display = 'none';
             if (publicationForm) publicationForm.reset();
             resetPositionFields();
+            
+            // 검증 메시지 제거
+            const validationElement = document.querySelector('.publication-id-validation');
+            if (validationElement) {
+                validationElement.remove();
+            }
         });
     }
     
@@ -1059,7 +1381,7 @@ async function migrateToDisplayOrder() {
 
 // ==================== 메인 초기화 ====================
 document.addEventListener("DOMContentLoaded", function() {
-    console.log('🚀 개선된 논문 관리 시스템 시작');
+    console.log('🚀 논문 번호 자동 제안 기능이 포함된 개선된 논문 관리 시스템 시작');
     
     // DOM 요소들 초기화
     loginBtn = document.getElementById('loginBtn');
@@ -1166,4 +1488,73 @@ window.testPositionInsert = async function(publicationType = 'sci', position = 1
     await addPublicationToRealtimeDB(testPublication);
 };
 
-console.log('🎯 개선된 publications.js 로드 완료');
+// 논문 번호 제안 시스템 테스트 함수
+window.testPublicationNumberSystem = async function() {
+    console.log('🧪 논문 번호 제안 시스템 테스트');
+    
+    const highestNumber = await getHighestPublicationNumber();
+    const suggestedNumber = await suggestNextPublicationNumber();
+    
+    console.log('📊 현재 가장 높은 번호:', highestNumber);
+    console.log('💡 제안 번호:', suggestedNumber);
+    
+    // 중복 체크 테스트
+    const duplicateTest = await checkDuplicatePublicationId('P1');
+    console.log('🔍 P1 중복 체크:', duplicateTest);
+    
+    showAlert(`테스트 완료: 현재 최고 번호 ${highestNumber}, 제안 번호 ${suggestedNumber}`, 'success');
+};
+
+// CSS 애니메이션 추가
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    .auto-fill-btn:hover {
+        transform: translateY(-1px);
+    }
+    
+    .auto-fill-btn:active {
+        transform: translateY(0);
+    }
+    
+    .publication-id-help {
+        animation: slideInDown 0.3s ease;
+    }
+    
+    .publication-id-validation {
+        animation: fadeIn 0.3s ease;
+    }
+`;
+document.head.appendChild(style);
+
+console.log('🎯 논문 번호 자동 제안 기능이 포함된 publications.js 로드 완료');
