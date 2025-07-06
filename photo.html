@@ -7,7 +7,7 @@
     <!-- 올바른 CSS 로딩 순서 적용 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css">
-    <link rel="stylesheet" href="photo.css">
+    <link rel="stylesheet" href="photo copy.css">
 </head>
 <body>
     <!-- 헤더 -->
@@ -29,7 +29,7 @@
     <div class="container">
         <!-- 활동 헤더 -->
         <div class="activities-header hidden">
-            <h1>Other Activities</h1>
+            <h1 style="font-size: 50px;">Other Activities</h1>
             <p>보안지능연구실의 특허, 수상 내역 및 연구실 활동을 소개합니다.</p>
         </div>
 
@@ -169,47 +169,171 @@
             </div>
         </div>
 
-        <!-- 사진 갤러리 섹션 -->
-        <div class="section hidden" id="photos">
-            <h2>
-                <i class="fas fa-camera"></i>Photo Gallery
-            </h2>
-            
-            <div class="photo-gallery">
-                <div class="photo-gallery-inner">
-                    <!-- 이미지 목록 -->
+    <!-- 포토 게시판 섹션 -->
+    <div class="section hidden" id="photos">
+        <h2>
+            <i class="fas fa-camera"></i>Photo Gallery
+        </h2>
+        
+        <!-- 게시판 그리드 -->
+        <div class="photo-board">
+            <div class="photo-item" data-date="2024.11.30" data-category="연구실모임">
+                <div class="photo-card">
                     <img src="./activity_img/11월30일Silab하반기모임.jpg" alt="Silab 하반기 모임">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>Silab 하반기 모임</h4>
+                            <p>2024.11.30</p>
+                            <span class="category">연구실모임</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2023.11.11" data-category="연구실모임">
+                <div class="photo-card">
                     <img src="./activity_img/23_11_11 Lab 모임.jpg" alt="2023년 11월 Lab 모임">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>2023년 11월 Lab 모임</h4>
+                            <p>2023.11.11</p>
+                            <span class="category">연구실모임</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2023.05.15" data-category="행사">
+                <div class="photo-card">
                     <img src="./activity_img/스승의날_1.jpg" alt="스승의날 행사">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>스승의날 행사</h4>
+                            <p>2023.05.15</p>
+                            <span class="category">행사</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2023.04.20" data-category="행사">
+                <div class="photo-card">
                     <img src="./activity_img/교수님 구글 행사.jpg" alt="구글 행사">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>구글 행사</h4>
+                            <p>2023.04.20</p>
+                            <span class="category">행사</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2021.08.27" data-category="연구실모임">
+                <div class="photo-card">
                     <img src="./activity_img/20210827_2.jpg" alt="2021년 8월 모임">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>한국정보보호학회 충청지부 학술대회</h4>
+                            <p>2021.08.27</p>
+                            <span class="category">수상</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2023.05.25" data-category="수상">
+                <div class="photo-card">
                     <img src="./activity_img/2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상1.jpg" alt="2023 정보처리학회 은상">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>2023 정보처리학회 은상</h4>
+                            <p>2023.05.25</p>
+                            <span class="category">수상</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2023.11.18" data-category="학회">
+                <div class="photo-card">
                     <img src="./activity_img/2023_부산_정보처리학회.jpg" alt="2023 부산 정보처리학회">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>2023 부산 정보처리학회</h4>
+                            <p>2023.11.18</p>
+                            <span class="category">학회</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2023.08.15" data-category="수상">
+                <div class="photo-card">
                     <img src="./activity_img/2023_소개딩_한국인터넷진흥원장상.JPG" alt="2023 한국인터넷진흥원장상">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>2023 한국인터넷진흥원장상</h4>
+                            <p>2023.08.15</p>
+                            <span class="category">수상</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2020.07.23" data-category="연구실모임">
+                <div class="photo-card">
                     <img src="./activity_img/20200723_1.jpg" alt="2020년 7월 모임">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>2020년 7월 모임</h4>
+                            <p>2020.07.23</p>
+                            <span class="category">연구실모임</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2024.03.14" data-category="워크숍">
+                <div class="photo-card">
                     <img src="./activity_img/240314_KISA워크숍.jpg" alt="2024 KISA워크숍">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>2024 KISA워크숍</h4>
+                            <p>2024.03.14</p>
+                            <span class="category">워크숍</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="photo-item" data-date="2023.09.20" data-category="워크숍">
+                <div class="photo-card">
                     <img src="./activity_img/2차년도 KISA 워크샵.jpg" alt="KISA 워크샵">
-                    <img src="activity_img/Netsec 수상(교수님).png" alt="Netsec 수상">
-
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>KISA 워크샵</h4>
+                            <p>2023.09.20</p>
+                            <span class="category">워크숍</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- 갤러리 컨트롤 -->
-                <div class="gallery-controls">
-                    <button class="gallery-btn prev-btn">
-                        <i class="fas fa-chevron-left"></i> 이전
-                    </button>
-                    <button class="gallery-btn next-btn">
-                        다음 <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-                
-                <!-- 현재 위치 표시기 -->
-                <div class="gallery-indicator">
-                    <span class="current-page">1</span> / <span class="total-pages">3</span> 페이지
+            </div>
+            
+            <div class="photo-item" data-date="2023.06.10" data-category="수상">
+                <div class="photo-card">
+                    <img src="./activity_img/Netsec 수상(교수님).png" alt="Netsec 수상">
+                    <div class="photo-overlay">
+                        <div class="photo-info">
+                            <h4>Netsec 수상</h4>
+                            <p>2023.06.10</p>
+                            <span class="category">수상</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
+        
         <!-- 푸터 -->
         <footer>
             <div class="contact-info">
@@ -226,9 +350,61 @@
         </footer>
     </div>
 
+
+
+    <!-- 사진 모달 -->
+    <div class="photo-modal" id="photoModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"></h3>
+                <button class="modal-close" id="modalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="modal-image-container">
+                    <img class="modal-image" src="" alt="">
+                </div>
+                
+                <div class="modal-info">
+                    <div class="modal-meta">
+                        <div class="modal-date">
+                            <i class="fas fa-calendar"></i>
+                            <span class="date-text"></span>
+                        </div>
+                        <div class="modal-category">
+                            <i class="fas fa-tag"></i>
+                            <span class="category-text"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-description">
+                        <p class="description-text"></p>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="modal-navigation">
+                <button class="nav-btn prev-photo" id="prevPhoto">
+                    <i class="fas fa-chevron-left"></i>
+                    이전
+                </button>
+                <button class="nav-btn next-photo" id="nextPhoto">
+                    다음
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script>
 document.addEventListener("DOMContentLoaded", function() {
+    console.log("페이지 로드됨");
+    
     // 스크롤 애니메이션
     const hiddenElements = document.querySelectorAll(".hidden");
     
@@ -246,8 +422,6 @@ document.addEventListener("DOMContentLoaded", function() {
     };
     
     window.addEventListener("scroll", handleScroll);
-    
-    // 초기 호출로 애니메이션 활성화
     handleScroll();
     
     // 더 보기 버튼 기능
@@ -292,159 +466,308 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
     
-    // 갤러리 슬라이더 기능 - 한 화면에 4개씩 표시
-    function initGallerySlider() {
-        const galleryInner = document.querySelector('.photo-gallery-inner');
-        const prevBtn = document.querySelector('.gallery-btn.prev-btn');
-        const nextBtn = document.querySelector('.gallery-btn.next-btn');
-        const currentPageEl = document.querySelector('.current-page');
-        const totalPagesEl = document.querySelector('.total-pages');
+    // 사진 모달 기능
+    function initPhotoModal() {
+        console.log("모달 초기화 시작");
         
-        if (!galleryInner || !prevBtn || !nextBtn) return;
+        const modal = document.getElementById('photoModal');
+        if (!modal) {
+            console.error("모달 요소를 찾을 수 없습니다!");
+            return { attachPhotoClickEvents: () => {} };
+        }
         
-        const allImages = galleryInner.querySelectorAll('img');
-        const imagesPerPage = 3; // 한 페이지에 표시할 이미지 수
-        const totalImages = allImages.length;
-        const totalPages = Math.ceil(totalImages / imagesPerPage);
-        let currentPage = 0;
+        const modalOverlay = modal.querySelector('.modal-overlay');
+        const modalClose = document.getElementById('modalClose');
+        const modalImage = modal.querySelector('.modal-image');
+        const modalTitle = modal.querySelector('.modal-title');
+        const dateText = modal.querySelector('.date-text');
+        const categoryText = modal.querySelector('.category-text');
+        const descriptionText = modal.querySelector('.description-text');
+        const prevBtn = document.getElementById('prevPhoto');
+        const nextBtn = document.getElementById('nextPhoto');
         
-        // 초기 설정
-        if (totalPagesEl) totalPagesEl.textContent = totalPages;
-        if (currentPageEl) currentPageEl.textContent = currentPage + 1;
+        let currentPhotoIndex = 0;
+        let allPhotos = [];
         
-        // 이미지 초기 설정 (처음에 첫 페이지만 표시)
-        setupImages();
+        // 모달 열기
+        function openModal(photoItem, photoIndex) {
+            console.log("모달 열기 - 사진 아이템:", photoItem, "인덱스:", photoIndex);
+            
+            currentPhotoIndex = photoIndex;
+            
+            // 사진 아이템에서 직접 정보 추출
+            const img = photoItem.querySelector('img');
+            const titleElement = photoItem.querySelector('.photo-info h4');
+            const dateElement = photoItem.querySelector('.photo-info p');
+            const categoryElement = photoItem.querySelector('.photo-info .category');
+            
+            if (img && modalImage) {
+                modalImage.src = img.src;
+                modalImage.alt = img.alt || "사진";
+                console.log("이미지 src 설정:", img.src);
+            }
+            
+            if (titleElement && modalTitle) {
+                modalTitle.textContent = titleElement.textContent;
+                console.log("제목 설정:", titleElement.textContent);
+            }
+            
+            if (dateElement && dateText) {
+                dateText.textContent = dateElement.textContent;
+                console.log("날짜 설정:", dateElement.textContent);
+            }
+            
+            if (categoryElement && categoryText) {
+                categoryText.textContent = categoryElement.textContent;
+                console.log("카테고리 설정:", categoryElement.textContent);
+            }
+            
+            // 설명은 제목과 카테고리를 기반으로 생성
+            const category = categoryElement ? categoryElement.textContent : '';
+            const title = titleElement ? titleElement.textContent : '';
+            
+            let description = getPhotoDescription(title, category);
+            if (descriptionText) {
+                descriptionText.textContent = description;
+                console.log("설명 설정:", description);
+            }
+            
+            // 네비게이션 버튼 상태 업데이트
+            updateNavigationButtons();
+            
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            console.log("모달이 열렸습니다");
+        }
         
-        function setupImages() {
-            // 모든 이미지 숨기기/표시하기
-            allImages.forEach((img, index) => {
-                // 4개씩 묶어서 페이지로 처리
-                const pageIndex = Math.floor(index / imagesPerPage);
+        // 사진 설명 가져오기 함수
+        function getPhotoDescription(title, category) {
+            const descriptions = {
+                'Silab 하반기 모임': '---',
+                '2023년 11월 Lab 모임': '2----.',
+                '스승의날 행사': '---.',
+                '구글 행사': '---',
+                '2021년 8월 모임': '---',
+                '2023 정보처리학회 은상': '---',
+                '2023 부산 정보처리학회': '---',
+                '2023 한국인터넷진흥원장상': '---',
+                '2020년 7월 모임': '---',
+                '2024 KISA워크숍': '---',
+                'KISA 워크샵': '---',
+                'Netsec 수상': '---'
+            };
+            
+            // 제목으로 정확한 매칭 시도
+            if (descriptions[title]) {
+                return descriptions[title];
+            }
+
+        }
+        
+        // 모달 닫기
+        function closeModal() {
+            console.log("모달 닫기");
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        // 네비게이션 버튼 상태 업데이트
+        function updateNavigationButtons() {
+            if (prevBtn) prevBtn.disabled = currentPhotoIndex === 0;
+            if (nextBtn) nextBtn.disabled = currentPhotoIndex === allPhotos.length - 1;
+        }
+        
+        // 이전/다음 사진
+        function showPreviousPhoto() {
+            if (currentPhotoIndex > 0) {
+                const prevPhoto = allPhotos[currentPhotoIndex - 1];
+                openModal(prevPhoto, currentPhotoIndex - 1);
+            }
+        }
+        
+        function showNextPhoto() {
+            if (currentPhotoIndex < allPhotos.length - 1) {
+                const nextPhoto = allPhotos[currentPhotoIndex + 1];
+                openModal(nextPhoto, currentPhotoIndex + 1);
+            }
+        }
+        
+        // 이벤트 리스너
+        if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
+        if (modalClose) modalClose.addEventListener('click', closeModal);
+        if (prevBtn) prevBtn.addEventListener('click', showPreviousPhoto);
+        if (nextBtn) nextBtn.addEventListener('click', showNextPhoto);
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                closeModal();
+            } else if (modal.classList.contains('show')) {
+                if (e.key === 'ArrowLeft') showPreviousPhoto();
+                if (e.key === 'ArrowRight') showNextPhoto();
+            }
+        });
+        
+        // 사진 클릭 이벤트 연결
+        function attachPhotoClickEvents() {
+            console.log("사진 클릭 이벤트 연결 시작");
+            
+            const photoItems = document.querySelectorAll('.photo-item');
+            console.log("찾은 사진 아이템:", photoItems.length);
+            
+            // 모든 사진을 배열에 저장
+            allPhotos = Array.from(photoItems);
+            
+            photoItems.forEach((item, index) => {
+                item.onclick = function() {
+                    console.log("사진 클릭됨:", index);
+                    // 사진 아이템 자체를 전달
+                    openModal(this, index);
+                };
                 
-                if (pageIndex === currentPage) {
-                    img.style.display = 'block'; // 현재 페이지 이미지만 표시
-                } else {
-                    img.style.display = 'none'; // 다른 페이지 이미지는 숨김
-                }
+                // 커서 포인터 추가
+                item.style.cursor = 'pointer';
             });
         }
         
-        // 페이지 이동 함수
-        function goToPage(page) {
-            if (page < 0) page = totalPages - 1;
-            if (page >= totalPages) page = 0;
-            
-            currentPage = page;
-            
-            // 페이지 변경에 따른 이미지 업데이트
-            setupImages();
-            
-            // 현재 페이지 표시 업데이트
-            if (currentPageEl) currentPageEl.textContent = currentPage + 1;
-        }
-        
-        // 다음 페이지로 이동
-        function nextPage() {
-            goToPage(currentPage + 1);
-        }
-        
-        // 이전 페이지로 이동
-        function prevPage() {
-            goToPage(currentPage - 1);
-        }
-        
-        // 이벤트 리스너 설정
-        if (prevBtn) prevBtn.addEventListener('click', prevPage);
-        if (nextBtn) nextBtn.addEventListener('click', nextPage);
-        
-        // 키보드 이벤트 설정
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft') {
-                prevPage();
-            } else if (e.key === 'ArrowRight') {
-                nextPage();
-            }
-        });
-        
-        // 초기 이미지 설정
-        goToPage(0);
+        return { attachPhotoClickEvents };
     }
     
-    // 섹션 네비게이션 버튼 기능
-    const navButtons = document.querySelectorAll('.section-nav-btn');
+    // 포토 게시판 기능 (간소화됨)
+    function initPhotoBoard() {
+        console.log("포토 게시판 초기화");
+        
+        const photoItems = document.querySelectorAll('.photo-item');
+        const totalPostsSpan = document.querySelector('.total-posts strong');
+        
+        const totalPosts = photoItems.length;
+        
+        // 모달 초기화
+        const photoModal = initPhotoModal();
+        
+        // 초기 설정
+        if (totalPostsSpan) totalPostsSpan.textContent = totalPosts;
+        
+        // 모든 사진 항상 보이기
+        photoItems.forEach((item) => {
+            item.style.display = 'block';
+        });
+        
+        // 사진 클릭 이벤트 연결
+        photoModal.attachPhotoClickEvents();
+        
+        console.log("포토 게시판 초기화 완료 - 총", totalPosts, "개 사진");
+    }
     
-    // 각 섹션 요소
-    const sections = {
-        'patents': document.getElementById('patents'),
-        'awards': document.getElementById('awards'),
-        'photos': document.getElementById('photos')
-    };
-    
-    // 현재 활성화된 버튼 추적
-    let activeButton = null;
-    
-    // 버튼 클릭 이벤트 처리
-    navButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const targetSection = sections[targetId];
-            
-            if (targetSection) {
-                // 스크롤 애니메이션
+    // 섹션 전환 기능
+    function initSectionToggle() {
+        const navButtons = document.querySelectorAll('.section-nav-btn');
+        const sections = {
+            'patents': document.getElementById('patents'),
+            'awards': document.getElementById('awards'),
+            'photos': document.getElementById('photos')
+        };
+        const sectionNav = document.querySelector('.section-nav');
+        
+        let isPhotoMode = false;
+        
+        // 초기 상태: patents와 awards는 보이고, photos는 숨김
+        if (sections.patents) sections.patents.style.display = 'block';
+        if (sections.awards) sections.awards.style.display = 'block';
+        if (sections.photos) sections.photos.style.display = 'none';
+        
+        // 버튼 클릭 이벤트 처리
+        navButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const targetSection = sections[targetId];
+                
+                if (targetId === 'photos') {
+                    console.log("Photo 버튼 클릭됨");
+                    
+                    // Photo 버튼 클릭 시 - 전체 화면 모드
+                    isPhotoMode = true;
+                    
+                    // 모든 섹션 숨기기
+                    Object.values(sections).forEach(section => {
+                        if (section) section.style.display = 'none';
+                    });
+                    
+                    // Photo 섹션만 보이기
+                    if (targetSection) {
+                        targetSection.style.display = 'block';
+                        targetSection.classList.add('visible');
+                    }
+                    
+                    // 버튼 활성화 상태 업데이트
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Photo 섹션으로 스크롤
+                    window.scrollTo({
+                        top: sectionNav.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                    
+                    // 게시판 초기화
+                    setTimeout(() => {
+                        initPhotoBoard();
+                    }, 100);
+                    
+                } else {
+                    // Patents 또는 Awards 버튼 클릭 시
+                    if (isPhotoMode) {
+                        // Photo 모드에서 나가기 - 원래 상태로 복원
+                        isPhotoMode = false;
+                        
+                        // 모든 기본 섹션 보이기
+                        if (sections.patents) sections.patents.style.display = 'block';
+                        if (sections.awards) sections.awards.style.display = 'block';
+                        if (sections.photos) sections.photos.style.display = 'none';
+                        
+                        // 모든 버튼 비활성화
+                        navButtons.forEach(btn => btn.classList.remove('active'));
+                    }
+                    
+                    // 해당 섹션으로 스크롤
+                    if (targetSection) {
+                        window.scrollTo({
+                            top: targetSection.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+        
+        // ESC 키로 Photo 모드에서 나가기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isPhotoMode && !document.getElementById('photoModal').classList.contains('show')) {
+                isPhotoMode = false;
+                
+                // 원래 상태로 복원
+                if (sections.patents) sections.patents.style.display = 'block';
+                if (sections.awards) sections.awards.style.display = 'block';
+                if (sections.photos) sections.photos.style.display = 'none';
+                
+                // 모든 버튼 비활성화
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // 상단으로 스크롤
                 window.scrollTo({
-                    top: targetSection.offsetTop - 100, // 상단에서 약간 여유 공간
+                    top: 0,
                     behavior: 'smooth'
                 });
-                
-                // 버튼 활성화 상태 업데이트
-                if (activeButton) {
-                    activeButton.classList.remove('active');
-                }
-                this.classList.add('active');
-                activeButton = this;
             }
         });
-    });
-    
-    // 스크롤 시 현재 섹션에 따라 버튼 활성화 상태 변경
-    function updateActiveButton() {
-        const scrollPosition = window.scrollY + 100; // 약간의 오프셋 추가
-        
-        let currentSection = null;
-        
-        // 어떤 섹션이 현재 보이는지 확인
-        for (const [id, section] of Object.entries(sections)) {
-            if (section && scrollPosition >= section.offsetTop && 
-                scrollPosition < (section.offsetTop + section.offsetHeight)) {
-                currentSection = id;
-                break;
-            }
-        }
-        
-        // 현재 보이는 섹션에 해당하는 버튼 활성화
-        if (currentSection) {
-            if (activeButton) {
-                activeButton.classList.remove('active');
-            }
-            
-            const newActiveButton = document.querySelector(`.section-nav-btn[data-target="${currentSection}"]`);
-            if (newActiveButton) {
-                newActiveButton.classList.add('active');
-                activeButton = newActiveButton;
-            }
-        }
     }
     
-    // 스크롤 이벤트 리스너
-    window.addEventListener('scroll', updateActiveButton);
+    // 초기화
+    initSectionToggle();
     
-    // 초기 상태 설정
-    updateActiveButton();
-    
-    // 갤러리 슬라이더 초기화
-    initGallerySlider();
+    console.log("모든 초기화 완료");
 });
-
     </script>
 </body>
 </html>
