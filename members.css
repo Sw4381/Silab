@@ -57,6 +57,8 @@
     border-radius: 8px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding-bottom: 65px;
+    padding-top:50px;
 }
 
 .professor-card:hover {
@@ -155,7 +157,7 @@
     border-left: 2px solid #4facfe;
 }
 
-/* 학생 섹션 스타일 - 간결하게 */
+/* 학생 섹션 스타일 - 간결하게
 .members-section h2 {
     font-size: 1.7em;
     margin-bottom: 20px;
@@ -219,8 +221,116 @@
 .member-block .email {
     margin-top: 8px;
     font-size: 0.85em;
-    color: #4facfe;
+    color: #4facfe; 
+}*/
+
+/* 기존 멤버 블록 스타일들을 주석 처리
+.member-blocks-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: flex-start;
 }
+
+.member-block {
+    width: calc(25% - 18px);
+    ... (기존 스타일들)
+}
+*/
+
+/* 새로운 학생 리스트 스타일 추가 */
+.student-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.student-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border-left: 3px solid #4facfe;
+}
+
+.student-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #4facfe;
+    flex-shrink: 0;
+}
+
+.student-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.student-name {
+    color: #005792;
+    font-size: 1.4em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.student-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 20px;
+    font-size: 15px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.detail-label {
+    color: #333;
+    font-weight: 600;
+    min-width: 40px;
+    flex-shrink: 0;
+}
+
+.detail-value {
+    color: #666;
+    flex: 1;
+}
+
+.detail-value.email {
+    padding-top: 2.5px;
+}
+.detail-value.Re {
+    padding-top: 3px;
+}
+
+.detail-value.degree {
+    color: #666;
+}
+
+
+/* 반응형 추가 */
+@media (max-width: 768px) {
+    .student-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .student-photo {
+        align-self: center;
+    }
+}
+
+
 .professor-card .email {
     margin-top: 8px;
     font-size: 0.85em;
