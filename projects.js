@@ -1,4 +1,4 @@
-// projects.js - 개선된 위치 삽입 기능
+// projects.js - 개선된 위치 삽입 기능 + 탭형 모달
 
 const firebaseConfig = {
     apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
@@ -26,7 +26,26 @@ const PROJECT_IMAGES = {
             name: 'Project 46',
             originalName: 'project46.png'
         }
-    ]
+    ],
+    // ✨ Project 44를 탭 구조로 수정
+    'project_44': {
+        architecture: [
+            {
+                url: './Project_photo/Project_44_1.png',
+                name: 'System Architecture Overview',
+                description: '전체 시스템 아키텍처 구조도',
+                originalName: 'project44_architecture_overview.jpg'
+            }
+        ],
+        values: [
+            {
+                url: './Project_photo/Project_44_2.png',
+                name: 'Performance values',
+                description: '결과물의 실질가치',
+                originalName: 'project44_performance.jpg'
+            }
+        ]
+    }
 };
 
 // ==================== 전역 변수 선언 ====================
@@ -34,6 +53,7 @@ let auth, database;
 let currentUser = null;
 let deleteMode = false;
 let editMode = false;
+let currentActiveTab = 'architecture';
 
 // ==================== 허용된 사용자 목록 ====================
 const ALLOWED_USERS = ['kinjecs0@gmail.com'];
@@ -102,6 +122,27 @@ function extractProjectNumber(projectName) {
     
     console.log('숫자를 찾을 수 없음');
     return null;
+}
+
+// 프로젝트에 이미지가 있는지 확인하는 함수
+function hasProjectImages(projectNumber) {
+    const projectKey = `project_${projectNumber}`;
+    const projectData = PROJECT_IMAGES[projectKey];
+    
+    if (!projectData) return false;
+    
+    // 배열 형태 (기존 방식)
+    if (Array.isArray(projectData) && projectData.length > 0) {
+        return true;
+    }
+    
+    // 객체 형태 (탭 구조)
+    if (typeof projectData === 'object' && !Array.isArray(projectData)) {
+        return (projectData.architecture && projectData.architecture.length > 0) ||
+               (projectData.values && projectData.values.length > 0);
+    }
+    
+    return false;
 }
 
 // ==================== 새로운 위치 삽입 시스템 ====================
@@ -328,7 +369,7 @@ function createProjectElement(project) {
     
     // 프로젝트 이름에서 번호 추출하여 이미지가 있는지 확인
     const projectNumber = extractProjectNumber(project.name);
-    const hasImages = projectNumber && PROJECT_IMAGES[`project_${projectNumber}`];
+    const hasImages = projectNumber && hasProjectImages(projectNumber);
     
     // 현재 진행 중 프로젝트이고 이미지가 있는 경우에만 세부사항 버튼 추가
     const detailsButton = (project.type === 'current' && hasImages) ? 
@@ -481,9 +522,20 @@ window.showProjectDetails = function(projectId, projectName, projectNumber) {
         }
         
         const projectKey = `project_${projectNumber}`;
-        const images = PROJECT_IMAGES[projectKey] || [];
+        const projectImages = PROJECT_IMAGES[projectKey];
         
-        displayImageGallery(images);
+        if (!projectImages) {
+            showAlert('프로젝트 이미지를 찾을 수 없습니다.', 'error');
+            return;
+        }
+        
+        // Project 44인 경우 탭 구조 사용
+        if (projectKey === 'project_44') {
+            setupTabbedModal(projectImages);
+        } else {
+            // 기존 방식 (단일 갤러리)
+            displayImageGallery(projectImages);
+        }
         
         imageModal.style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -494,9 +546,278 @@ window.showProjectDetails = function(projectId, projectName, projectNumber) {
     }
 };
 
+// ==================== 탭형 모달 관련 함수들 ====================
+function setupTabbedModal(projectImages) {
+    // 기존 갤러리 숨기기
+    if (imageGallery) imageGallery.style.display = 'none';
+    if (noImages) noImages.style.display = 'none';
+    
+    // 탭 네비게이션이 없으면 추가
+    let tabNavigation = document.querySelector('.tab-navigation');
+    if (!tabNavigation) {
+        createTabNavigation();
+        tabNavigation = document.querySelector('.tab-navigation');
+    }
+    
+    tabNavigation.style.display = 'flex';
+    
+    // 탭 컨텐츠가 없으면 추가
+    let architectureTab = document.getElementById('architecture-tab');
+    let valuesTab = document.getElementById('values-tab');
+    
+    if (!architectureTab || !valuesTab) {
+        createTabContents();
+        architectureTab = document.getElementById('architecture-tab');
+        valuesTab = document.getElementById('values-tab');
+    }
+    
+    // 갤러리 표시
+    displayTabGallery('architecture', projectImages.architecture || []);
+    displayTabGallery('values', projectImages.values || []);
+    
+    // 기본적으로 Architecture 탭 활성화
+    switchTab('architecture');
+    
+    // 탭 이벤트 리스너 설정
+    setupTabEventListeners();
+}
+
+function createTabNavigation() {
+    const modalBody = document.querySelector('.image-modal-body');
+    
+    const tabNav = document.createElement('div');
+    tabNav.className = 'tab-navigation';
+    tabNav.style.cssText = `
+        padding: 0 30px;
+        background: #2c3e50;
+        border-bottom: 2px solid #34495e;
+        display: flex;
+        gap: 0;
+    `;
+    
+    tabNav.innerHTML = `
+        <button class="tab-btn active" data-tab="architecture" style="
+            padding: 20px 40px; font-size: 18px; font-weight: 600;
+            background: transparent; color: #bdc3c7; border: none;
+            cursor: pointer; position: relative; transition: all 0.3s ease;
+            border-radius: 0; flex: 1; text-transform: uppercase;
+            letter-spacing: 1px;
+        ">
+            <i class="fas fa-building"></i> Architecture
+        </button>
+        <button class="tab-btn" data-tab="values" style="
+            padding: 20px 40px; font-size: 18px; font-weight: 600;
+            background: transparent; color: #bdc3c7; border: none;
+            cursor: pointer; position: relative; transition: all 0.3s ease;
+            border-radius: 0; flex: 1; text-transform: uppercase;
+            letter-spacing: 1px;
+        ">
+            <i class="fas fa-chart-line"></i> Values
+        </button>
+    `;
+    
+    modalBody.insertBefore(tabNav, modalBody.firstChild);
+}
+
+function createTabContents() {
+    const modalBody = document.querySelector('.image-modal-body');
+    
+    // Architecture 탭
+    const archTab = document.createElement('div');
+    archTab.className = 'tab-content active';
+    archTab.id = 'architecture-tab';
+    archTab.style.cssText = `
+        display: block; height: 100%; width: 100%;
+        padding: 30px; overflow-y: auto;
+    `;
+    archTab.innerHTML = `
+        <div class="image-gallery" id="architectureGallery" style="
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px; max-width: 1400px; margin: 0 auto;
+        "></div>
+        <div class="no-images" id="noArchitectureImages" style="
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; height: 60%; color: #7f8c8d; font-size: 18px;
+        ">
+            <i class="fas fa-building" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
+            <p>Architecture 이미지가 없습니다.</p>
+        </div>
+    `;
+    
+    // Values 탭
+    const valuesTab = document.createElement('div');
+    valuesTab.className = 'tab-content';
+    valuesTab.id = 'values-tab';
+    valuesTab.style.cssText = `
+        display: none; height: 100%; width: 100%;
+        padding: 30px; overflow-y: auto;
+    `;
+    valuesTab.innerHTML = `
+        <div class="image-gallery" id="valuesGallery" style="
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px; max-width: 1400px; margin: 0 auto;
+        "></div>
+        <div class="no-images" id="noValuesImages" style="
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; height: 60%; color: #7f8c8d; font-size: 18px;
+        ">
+            <i class="fas fa-chart-line" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
+            <p>Values 이미지가 없습니다.</p>
+        </div>
+    `;
+    
+    modalBody.appendChild(archTab);
+    modalBody.appendChild(valuesTab);
+}
+
+// 탭 전환
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.color = '#bdc3c7';
+        btn.style.background = 'transparent';
+    });
+    
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+    });
+    
+    // 선택된 탭 활성화
+    const selectedBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    const selectedContent = document.getElementById(`${tabName}-tab`);
+    
+    if (selectedBtn) {
+        selectedBtn.classList.add('active');
+        selectedBtn.style.color = '#fff';
+        selectedBtn.style.background = 'rgba(52, 152, 219, 0.2)';
+    }
+    
+    if (selectedContent) {
+        selectedContent.classList.add('active');
+        selectedContent.style.display = 'block';
+    }
+    
+    currentActiveTab = tabName;
+}
+
+// 탭별 갤러리 표시
+function displayTabGallery(tabName, images) {
+    const gallery = document.getElementById(`${tabName}Gallery`);
+    const noImagesElement = document.getElementById(`no${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Images`);
+    
+    if (!gallery || !noImagesElement) return;
+    
+    gallery.innerHTML = '';
+    
+    if (!images || images.length === 0) {
+        noImagesElement.style.display = 'flex';
+        return;
+    }
+    
+    noImagesElement.style.display = 'none';
+    
+    images.forEach((image, index) => {
+        const galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+        galleryItem.style.cssText = `
+            background: #2c3e50; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: all 0.3s ease;
+            border: 2px solid transparent;
+        `;
+        
+        galleryItem.innerHTML = `
+            <img src="${image.url}" 
+                 alt="${image.originalName || image.name}" 
+                 onclick="openImageFullscreen('${image.url}', '${(image.originalName || image.name).replace(/'/g, "\\'")}')"
+                 style="
+                    width: 100%; height: 300px; object-fit: cover;
+                    cursor: pointer; transition: transform 0.3s ease;
+                 ">
+            <div class="gallery-item-info" style="
+                padding: 20px; background: linear-gradient(135deg, #34495e, #2c3e50);
+            ">
+                <p class="gallery-item-name" style="
+                    font-size: 16px; font-weight: 600; color: #ecf0f1;
+                    margin: 0; text-align: center;
+                ">${image.name}</p>
+                ${image.description ? `
+                    <p class="gallery-item-desc" style="
+                        font-size: 14px; color: #bdc3c7; margin-top: 8px;
+                        text-align: center; line-height: 1.4;
+                    ">${image.description}</p>
+                ` : ''}
+            </div>
+        `;
+        
+        // 호버 효과 추가
+        galleryItem.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px)';
+            this.style.boxShadow = '0 15px 40px rgba(52, 152, 219, 0.3)';
+            this.style.borderColor = '#3498db';
+            this.querySelector('img').style.transform = 'scale(1.05)';
+        });
+        
+        galleryItem.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+            this.style.borderColor = 'transparent';
+            this.querySelector('img').style.transform = 'scale(1)';
+        });
+        
+        gallery.appendChild(galleryItem);
+    });
+}
+
+// 탭 이벤트 리스너 설정
+function setupTabEventListeners() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    
+    // 기존 이벤트 리스너 제거 후 새로 추가
+    tabButtons.forEach(button => {
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        
+        newButton.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            switchTab(tabName);
+        });
+        
+        // 호버 효과 추가
+        newButton.addEventListener('mouseenter', function() {
+            if (!this.classList.contains('active')) {
+                this.style.color = '#fff';
+                this.style.background = 'rgba(52, 152, 219, 0.1)';
+            }
+        });
+        
+        newButton.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('active')) {
+                this.style.color = '#bdc3c7';
+                this.style.background = 'transparent';
+            }
+        });
+    });
+}
+
+// 기존 displayImageGallery 함수 수정
 function displayImageGallery(images) {
     if (!imageGallery || !noImages) return;
     
+    // 탭 네비게이션 숨기기 (일반 프로젝트용)
+    const tabNavigation = document.querySelector('.tab-navigation');
+    if (tabNavigation) {
+        tabNavigation.style.display = 'none';
+    }
+    
+    // 탭 컨텐츠 숨기기
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    // 기본 갤러리 표시
+    imageGallery.style.display = 'grid';
     imageGallery.innerHTML = '';
     
     if (!images || images.length === 0) {
@@ -506,7 +827,6 @@ function displayImageGallery(images) {
     }
     
     noImages.style.display = 'none';
-    imageGallery.style.display = 'grid';
     
     images.forEach((image, index) => {
         const galleryItem = document.createElement('div');
@@ -528,7 +848,7 @@ window.openImageFullscreen = function(imageUrl, imageName) {
     const fullscreenModal = document.createElement('div');
     fullscreenModal.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.9); z-index: 1001; display: flex;
+        background: rgba(0,0,0,0.9); z-index: 1002; display: flex;
         justify-content: center; align-items: center; cursor: pointer;
     `;
     
@@ -828,6 +1148,14 @@ function setupImageEventListeners() {
             }
         });
     }
+    
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && imageModal.style.display === 'block') {
+            imageModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
     
     console.log('✅ 이미지 관련 이벤트 리스너 설정 완료');
 }
@@ -1195,4 +1523,4 @@ window.testPositionInsert = async function(projectType = 'current', position = 1
     await addProjectToRealtimeDB(testProject);
 };
 
-console.log('🎯 개선된 projects.js 로드 완료');
+console.log('🎯 완성된 projects.js 로드 완료 - 탭형 모달 포함');
