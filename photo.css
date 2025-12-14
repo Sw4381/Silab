@@ -1,4 +1,381 @@
-/* 전체 컨테이너 너비 제한 */
+/* ==================== 통일된 로그인 및 관리 기능 CSS ==================== */
+
+/* 헤더 수정 */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+/* 로그인 버튼 */
+.auth-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-right: 20px;
+}
+
+.login-btn, .logout-btn {
+    background: #4facfe;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.login-btn:hover, .logout-btn:hover {
+    background: #005792;
+    transform: translateY(-2px);
+}
+
+.user-info {
+    color: #005792;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 로그인 모달 */
+.login-modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    animation: fadeIn 0.3s ease;
+}
+
+.login-modal-content {
+    background: white;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    animation: slideIn 0.3s ease;
+}
+
+.login-form h2 {
+    color: #005792;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+.form-group input[type="file"] {
+    padding: 5px;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
+}
+
+.login-submit {
+    width: 100%;
+    background: #4facfe;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.login-submit:hover {
+    background: #005792;
+}
+
+.login-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.login-close:hover {
+    color: #005792;
+}
+
+.login-help {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* 관리자 패널 */
+.admin-panel {
+    display: none;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.admin-panel h3 {
+    color: #005792;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25em;
+    font-weight: 600;
+}
+
+.admin-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.admin-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    white-space: nowrap;
+}
+
+.admin-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.admin-btn.delete {
+    background: #dc3545;
+}
+
+.admin-btn.delete:hover {
+    background: #c82333;
+}
+
+.admin-btn.edit {
+    background: #ffc107;
+    color: #212529;
+}
+
+.admin-btn.edit:hover {
+    background: #e0a800;
+}
+
+.admin-btn.edit.active {
+    background: #d39e00;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
+}
+
+.admin-btn.delete.active {
+    background: #c82333;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.3);
+}
+
+.admin-btn i {
+    font-size: 0.9em;
+    width: 16px;
+    text-align: center;
+}
+
+/* 특허/수상내역 추가 폼 */
+.add-patent-form, .add-award-form {
+    display: none;
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border: 2px solid #4facfe;
+}
+
+.add-patent-form h4, .add-award-form h4 {
+    color: #005792;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-patent-form h4 i, .add-award-form h4 i {
+    color: #4facfe;
+    font-size: 1em;
+}
+
+/* 수정 폼 */
+.edit-item-form {
+    display: none;
+    background: #fff3cd;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border: 2px solid #ffc107;
+}
+
+.edit-item-form h4 {
+    color: #856404;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.edit-item-form h4 i {
+    color: #d39e00;
+    font-size: 1em;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: flex-end;
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+.submit-btn, .cancel-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1;
+}
+
+.submit-btn {
+    background: #28a745;
+    color: white;
+}
+
+.submit-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: #545b62;
+    transform: translateY(-1px);
+}
+
+.submit-btn i, .cancel-btn i {
+    font-size: 0.9em;
+}
+
+/* 알림 메시지 */
+.alert {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1002;
+    max-width: 400px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.3s ease;
+}
+
+.alert.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert.warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* ==================== 기존 photo.css 내용 ==================== */
 
 /* 활동 헤더 스타일 - 간결하게 */
 .activities-header {
@@ -257,8 +634,6 @@
     font-weight: 500;
 }
 
-
-
 /* 섹션 전환을 위한 스타일 */
 .section.visible {
     display: block;
@@ -281,25 +656,6 @@
 #photos.visible {
     min-height: 70vh;
     padding: 30px;
-}
-
-/* ESC 키 안내 텍스트 (선택사항) */
-.escape-hint {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 0.8em;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1000;
-}
-
-.escape-hint.show {
-    opacity: 1;
 }
 
 /* 더보기 버튼 스타일 - 간결하게 */
@@ -370,104 +726,25 @@
     }
 }
 
-/* 반응형 디자인 - 더 세밀하게 조정 */
-@media (max-width: 992px) {
-    .section h2 {
-        font-size: 1.4em;
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
     }
-    
-    .photo-board {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-    }
-    
-    .photo-card {
-        height: 180px;
+    to {
+        transform: translateY(0);
+        opacity: 1;
     }
 }
 
-@media (max-width: 768px) {
-    .section {
-        padding: 15px;
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
     }
-    
-    
-    .photo-board {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 12px;
-    }
-    
-    .photo-card {
-        height: 160px;
-    }
-    
-    .photo-overlay {
-        padding: 15px 12px 12px;
-    }
-    
-    .photo-info h4 {
-        font-size: 1em;
-    }
-    
-    .activities-header h1 {
-        font-size: 1.8em;
-    }
-    
-    .patent-list li, .award-list li {
-        font-size: 0.9em;
-        padding: 12px 14px;
-    }
-    
-    .section-nav {
-        position: sticky;
-        top: 0;
-        background: white;
-        z-index: 100;
-        padding: 10px 0;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    #photos.visible {
-        padding: 20px 15px;
-        min-height: 80vh;
-    }
-}
-
-@media (max-width: 576px) {
-    .patent-list li, .award-list li {
-        padding: 12px;
-    }
-    
-    .show-more-button button {
-        padding: 8px 16px;
-        font-size: 0.9em;
-    }
-    
-    .photo-board {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .photo-card {
-        height: 200px;
-    }
-    
-
-    
-    .page-btn, .page-num {
-        min-width: 35px;
-        height: 35px;
-        padding: 5px 8px;
-        font-size: 0.9em;
-    }
-    
-    .activities-header {
-        padding: 20px 12px 15px;
-    }
-    
-    .activities-header h1 {
-        font-size: 1.6em;
+    to {
+        transform: translateX(0);
+        opacity: 1;
     }
 }
 
@@ -633,43 +910,6 @@
     font-size: 0.95em;
 }
 
-
-.action-btn {
-    flex: 1;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.download-btn {
-    background: #4facfe;
-    color: white;
-}
-
-.download-btn:hover {
-    background: #3a8bfe;
-    transform: translateY(-2px);
-}
-
-.share-btn {
-    background: #f8f9fa;
-    color: #666;
-    border: 1px solid #e9ecef;
-}
-
-.share-btn:hover {
-    background: #e9ecef;
-    color: #333;
-}
-
 /* 모달 네비게이션 */
 .modal-navigation {
     display: flex;
@@ -706,11 +946,117 @@
     box-shadow: none;
 }
 
-/* 반응형 디자인 */
+/* ==================== 반응형 디자인 ==================== */
+
+@media (max-width: 992px) {
+    .section h2 {
+        font-size: 1.4em;
+    }
+    
+    .photo-board {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .photo-card {
+        height: 180px;
+    }
+    
+    .admin-panel h3 {
+        font-size: 1.2em;
+    }
+    
+    .admin-btn {
+        font-size: 0.85em;
+        padding: 9px 18px;
+    }
+}
+
 @media (max-width: 768px) {
-    .modal-content {
-        width: 95%;
-        height: 95%;
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .auth-section {
+        margin-right: 0;
+    }
+
+    .section {
+        padding: 18px 15px;
+    }
+    
+    .photo-board {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+    }
+    
+    .photo-card {
+        height: 160px;
+    }
+    
+    .photo-overlay {
+        padding: 15px 12px 12px;
+    }
+    
+    .photo-info h4 {
+        font-size: 1em;
+    }
+    
+    .activities-header h1 {
+        font-size: 1.8em;
+    }
+    
+    .patent-list li, .award-list li {
+        font-size: 0.9em;
+        padding: 12px 14px;
+    }
+    
+    .section-nav {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 100;
+        padding: 10px 0;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    #photos.visible {
+        padding: 20px 15px;
+        min-height: 80vh;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-row .form-group {
+        margin-bottom: 15px;
+    }
+
+    .admin-buttons {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .admin-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
+        font-size: 0.9em;
+    }
+    
+    .form-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .submit-btn, .cancel-btn {
+        width: 100%;
+        justify-content: center;
     }
     
     .modal-body {
@@ -726,26 +1072,35 @@
         min-width: auto;
         padding: 20px;
     }
-    
-    .modal-header {
-        padding: 15px 20px;
-    }
-    
-    .modal-title {
-        font-size: 1.2em;
-    }
-    
-    .modal-navigation {
-        padding: 12px 20px;
-    }
-    
-    .action-btn {
-        font-size: 0.85em;
-        padding: 8px 12px;
-    }
 }
 
 @media (max-width: 576px) {
+    .patent-list li, .award-list li {
+        padding: 12px;
+    }
+    
+    .show-more-button button {
+        padding: 8px 16px;
+        font-size: 0.9em;
+    }
+    
+    .photo-board {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .photo-card {
+        height: 200px;
+    }
+    
+    .activities-header {
+        padding: 20px 12px 15px;
+    }
+    
+    .activities-header h1 {
+        font-size: 1.6em;
+    }
+    
     .modal-content {
         width: 98%;
         height: 98%;
@@ -759,5 +1114,34 @@
     .nav-btn {
         font-size: 0.85em;
         padding: 6px 12px;
+    }
+    
+    .section-nav {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .section-nav-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .admin-panel {
+        padding: 15px 12px;
+    }
+    
+    .admin-panel h3 {
+        font-size: 1.1em;
+        margin-bottom: 15px;
+    }
+    
+    .admin-btn {
+        padding: 10px 16px;
+        font-size: 0.85em;
+        min-height: 36px;
+    }
+    
+    .add-patent-form, .add-award-form, .edit-item-form {
+        padding: 15px 12px;
     }
 }
