@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>보안 지능 연구실 - 기타 활동</title>
-    <!-- 올바른 CSS 로딩 순서 적용 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="photo.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
     <!-- 헤더 -->
@@ -15,8 +19,8 @@
         <div class="logo">
             <a href="index.html">
                 <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
-                </a>
-            </div>
+            </a>
+        </div>
         <nav class="menu">
             <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
             <a href="./members.html"><i class="fas fa-users"></i> Members</a>
@@ -24,15 +28,172 @@
             <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
             <a href="./photo.html" class="active"><i class="fas fa-image"></i> Other Activities</a>
         </nav>
+        
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i>
+                로그아웃
+            </button>
+        </div>
     </header>
 
+    <!-- Firebase 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fab fa-firebase"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">
+                    연구실 멤버만 접근 가능합니다. 
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="container">
+        
+        <!-- 관리자 패널 -->
+        <div class="admin-panel" id="adminPanel">
+            <h3><i class="fas fa-tools"></i> 특허 & 수상내역 관리</h3>
+            <div class="admin-buttons">
+                <button class="admin-btn" id="addPatentBtn">
+                    <i class="fas fa-plus"></i>
+                    특허 추가
+                </button>
+                <button class="admin-btn" id="addAwardBtn">
+                    <i class="fas fa-plus"></i>
+                    수상내역 추가
+                </button>
+                <button class="admin-btn edit" id="toggleEditMode">
+                    <i class="fas fa-edit"></i>
+                    수정 모드 토글
+                </button>
+                <button class="admin-btn delete" id="toggleDeleteMode">
+                    <i class="fas fa-trash"></i>
+                    삭제 모드 토글
+                </button>
+            </div>
+        </div>
+
+        <!-- 특허 추가 폼 -->
+        <div class="add-patent-form" id="addPatentForm">
+            <h4><i class="fas fa-plus-circle"></i> 새 특허 추가</h4>
+            <form id="patentForm">
+                <div class="form-group">
+                    <label for="patentNumber">특허 번호 *</label>
+                    <input type="text" id="patentNumber" name="patentNumber" 
+                           placeholder="예: PT42" required>
+                </div>
+                <div class="form-group">
+                    <label for="patentContent">특허 내용 *</label>
+                    <textarea id="patentContent" name="patentContent" 
+                              placeholder="예: 설명 가능한 산업제어시스템 악성행위 탐지 기술 방법, (10-2846030, 2025.8)" 
+                              required></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="cancel-btn" id="cancelAddPatent">취소</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i> 저장
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 수상내역 추가 폼 -->
+        <div class="add-award-form" id="addAwardForm">
+            <h4><i class="fas fa-plus-circle"></i> 새 수상내역 추가</h4>
+            <form id="awardForm">
+                <div class="form-group">
+                    <label for="awardContent">수상 내용 *</label>
+                    <textarea id="awardContent" name="awardContent" 
+                              placeholder="예: 김현서, 한태현, 이태진 - 한국정보보호학회 동계학술대회 한국정보보호학회장상 최우수논문상 (2025.11)" 
+                              required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="awardHighlight">하이라이트 (선택사항)</label>
+                        <input type="text" id="awardHighlight" name="awardHighlight" 
+                               placeholder="예: 최우수논문상 (빨간색으로 강조될 텍스트)">
+                    </div>
+                    <div class="form-group">
+                        <label for="awardDate">날짜 *</label>
+                        <input type="date" id="awardDate" name="awardDate" required>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="cancel-btn" id="cancelAddAward">취소</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i> 저장
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 항목 수정 폼 (특허/수상내역 공통) -->
+        <div class="edit-item-form" id="editItemForm">
+            <h4><i class="fas fa-edit"></i> 항목 수정</h4>
+            <form id="itemEditForm">
+                <input type="hidden" id="editItemKey" name="editItemKey">
+                <input type="hidden" id="editItemType" name="editItemType">
+                
+                <div class="form-group" id="editPatentNumberGroup">
+                    <label for="editPatentNumber">특허 번호 *</label>
+                    <input type="text" id="editPatentNumber" name="editPatentNumber">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editItemContent">내용 *</label>
+                    <textarea id="editItemContent" name="editItemContent" required></textarea>
+                </div>
+                
+                <div class="form-group" id="editHighlightGroup" style="display: none;">
+                    <label for="editItemHighlight">하이라이트 (선택사항)</label>
+                    <input type="text" id="editItemHighlight" name="editItemHighlight">
+                </div>
+                
+                <div class="form-group" id="editDateGroup" style="display: none;">
+                    <label for="editAwardDate">날짜</label>
+                    <input type="date" id="editAwardDate" name="editAwardDate">
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" class="cancel-btn" id="cancelEditItem">취소</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i> 수정 완료
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <!-- 활동 헤더 -->
         <div class="activities-header hidden">
-            <h1 style="font-size: 50px;">Other Activities</h1>
+            <h1>Other Activities</h1>
             <p>보안지능연구실의 특허, 수상 내역 및 연구실 활동을 소개합니다.</p>
         </div>
 
+
+
+        
         <div class="section-nav hidden">
             <button class="section-nav-btn" data-target="patents">
                 <i class="fas fa-certificate"></i> Patents
@@ -47,298 +208,186 @@
 
         <!-- 특허 섹션 -->
         <div class="section hidden" id="patents">
-            <h2><i class="fas fa-certificate"></i>Patents</h2>
+            <h2><i class="fas fa-certificate"></i> Patents</h2>
             <ul class="patent-list">
-                <!-- 기본으로 보여줄 10개 항목 -->
-                <li><strong>[PT41]</strong> 설명 가능한 산업제어시스템 악성행위 탐지 기술 방법, (10-2846030, 2025.8)</li>
-                <li><strong>[PT40]</strong> 악성코드 변종분석을 위한 AI모델의 견고성 측정 시스템 및 어플리케이션, (10-2753131, 2025.1)</li>
-                <li><strong>[PT39]</strong> 효율적인 악성위협 탐지를 위한 valuable alert 선별방법 (10-2548321, 2023.6)</li>
-                <li><strong>[PT38]</strong> DGA 생성 도메인 탐지 및 분류하는 방법 (10-2486124, 2023.1)</li>
-                <li><strong>[PT37]</strong> Packer Classification Apparatus and Method using PE Section Information (US 11,429,819, 2022.8)</li>
-                <li><strong>[PT36]</strong> 저작권 보호를 위한 변형된 게시글 정규화 방법 및 장치 (10-2337543, 2021.12)</li>
-                <li><strong>[PT35]</strong> 이상치 스코어 기반의 EDR에서의 이상징후 탐지장치 및 방법, (10-2251467, 2021.5)</li>
-                <li><strong>[PT34]</strong> TF-IDF 기반 벡터변환 및 데이터 분석장치 및 방법, (10-2246405, 2021.4)</li>
-                <li><strong>[PT33]</strong> PE섹션정보를 이용한 패커유형 분류 장치 및 방법, (10-2202911, 2021.1)</li>
-                <li><strong>[PT32]</strong> 디해시 기반 악성코드 분석장치 및 방법, (10-2185831, 2020.11)</li>
-                <li><strong>[PT31]</strong> 시계열 통계 기반 공격의심 이상징후를 탐지하기 위한 방법, (10-1621019, 2016.5)</li>
-                <li><strong>[PT30]</strong> 네트워크 트래픽 수집 및 분석 시스템, (10-1623068, 2016.5)</li>
+                <!-- Firebase에서 로드된 특허들이 여기에 동적으로 추가됩니다 -->
             </ul>
-
-            <!-- 더 많은 특허 항목 (초기에는 숨김) -->
-            <div class="show-more">
-                <ul class="patent-list">
-                    <li><strong>[PT29]</strong> 공격의심 이상징후 탐지 시스템, (10-1623071, 2016.5)</li>
-                    <li><strong>[PT28]</strong> API 기반 악성 코드 탐지 시스템 및 방법, (10-1623073, 2016.5)</li>
-                    <li><strong>[PT27]</strong> 대량의 악성 코드 분석 시스템 및 방법, (10-1589649, 2016.1)</li>
-                    <li><strong>[PT26]</strong> API 기반 악성 코드 변종 탐지 조회 시스템 및 방법, (10-1589656, , 2016.1)</li>
-                    <li><strong>[PT25]</strong> 모바일 침해사고 분석시스템 및 방법, (10-1574652, 2015.11)</li>
-                    <li><strong>[PT24]</strong> 상용 이메일 기반 악성코드 감염단말 탐지 방법, (10-1535503, 2015.7)</li>
-                    <li><strong>[PT23]</strong> 시분할 방식의 배양기반 악성코드 분석시스템, (10-1512454, 2015.4)</li>
-                    <li><strong>[PT22]</strong> 배양기반 악성코드 분석시스템의 네트워크를 통한 OS재로딩 방법, (10-1512456, 2015.4)</li>
-                    <li><strong>[PT21]</strong> 배양기반 악성코드 분석시스템의 악성코드 업데이트 여부분석 방법, (10-1512462, 2015.4)</li>
-                    <li><strong>[PT20]</strong> 싱크홀 서버에 기반한 악용 경유지 추적 시스템 및 방법, (10-1468114, 2014.11)</li>
-                    <li><strong>[PT19]</strong> 트래픽 분석을 통한 악성 트래픽 탐지 방법 및 그 시스템, (10-1428721, 2014.8)</li>
-                    <li><strong>[PT18]</strong> 하위 웹주소 점검을 통한 악성코드 은닉 사이트 탐지 시스템 및 방법, (10-1428725, 2014.8)</li>
-                    <li><strong>[PT17]</strong> 악성코드 최종 유포지 및 경유지 탐지 시스템 및 방법, (10-1428727, 2014.8)</li>
-                    <li><strong>[PT16]</strong> 이메일 기반 문서형 악성코드 고속탐지 시스템 및 방법, (10-1434179, 2014.8)</li>
-                    <li><strong>[PT15]</strong> Detection system and method of suspicious malicious website using analysis of javascript obfuscation strength, (US8756685B2, 2014.6)</li>
-                    <li><strong>[PT14]</strong> 대규모 웹사이트 방문점검 방법, (10-1401948, 2014.5)</li>
-                    <li><strong>[PT13]</strong> 악성코드 유포지 및 경유지 주기 점검 시스템 및 방법, (10-1401949, 2014.5)</li>
-                    <li><strong>[PT12]</strong> 대규모 웹사이트 고속 점검방법, (10-1388962, 2014.4)</li>
-                    <li><strong>[PT11]</strong> 악성코드 통합정보 생성 시스템 및 이를 포함하는 악성코드 통합관리 시스템, (10-1328641, 2013.11)</li>
-                    <li><strong>[PT10]</strong> 에스엔에스 검색 서비스를 이용한 유알엘 수집 시스템 및 방법, (10-1329034, 2013.11)</li>
-                    <li><strong>[PT9]</strong> 변종 악성 코드를 탐지하기 위한 시스템 및 방법, (10-1329037, 2013.11)</li>
-                    <li><strong>[PT8]</strong> 에스엔에스 트랩 수집 시스템 및 그에 의한 유알엘 수집 방법, (10-1329040, 2013.11)</li>
-                    <li><strong>[PT7]</strong> 악성코드 경유-유포지의 위험도 평가 시스템 및 그 방법, (10-1329108, 2013.11)</li>
-                    <li><strong>[PT6]</strong> 피디에프 문서형 악성코드 탐지 시스템 및 방법, (10-1296716, 2013.8)</li>
-                    <li><strong>[PT5]</strong> Apparatus for detecting and filtering application layer DDoS attack of web service, (US 8438639 B2, 2013.5)</li>
-                    <li><strong>[PT4]</strong> 웹 서비스 대상 응용계층 디도스 공격 탐지 및 대응 장치, (10-1077135, 2011.10)</li>
-                    <li><strong>[PT3]</strong> 히스토리 기반 DDoS 대응 방법, (10-1077136, 2011.10)</li>
-                    <li><strong>[PT2]</strong> URI 타입 기반 디도스 공격 탐지 및 대응 장치, (10-1061375, 2011.8)</li>
-                    <li><strong>[PT1]</strong> 분포 기반 디도스 공격 탐지 및 대응 장치, (10-1061377, 2011.8)</li>
-                </ul>
-            </div>
-
-            <!-- 더 보기 버튼 -->
-            <div class="show-more-button">
-                <button id="show-more-patents">
-                    <span>더 많은 특허 보기</span>
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-            </div>
         </div>
 
         <!-- 수상 내역 섹션 -->
         <div class="section hidden" id="awards">
-            <h2><i class="fas fa-trophy"></i>Awards</h2>
+            <h2><i class="fas fa-trophy"></i> Awards</h2>
             <ul class="award-list">
-                <!-- 기본으로 보여줄 10개 항목 -->
-            <ul class="award-list">
-                <!-- 기본으로 보여줄 10개 항목 -->
-                <li>김현서, 한태현, 이태진 - 한국정보보호학회 동계학술대회 <span class="award-highlight">한국정보보호학회장상 최우수논문상</span> (2025.11) </li>
-                <li>김현서 - 2025년 캡스톤 디자인 및 AI해커톤 경진대회 <span class="award-highlight">우수상</span> (2025.10) -  <a href="https://www.ccnnews.co.kr/news/articleView.html?idxno=389565">News</a></li>
-                <li>한태현, 김현서 - kisa 정보보호 개발자 해커톤 <span class="award-highlight">장려상</span> (2025.6) - <a href="https://m.boannews.com/html/detail.html?idx=138863">News</a> </li>
-                <li>이선우, 정혜란, 이태진 - 한국정보보호학회 하계학술대회 <span class="award-highlight">한국정보보호학회장상 최우수논문상</span> (2025.6) - <a href="https://m.boannews.com/html/detail.html?idx=137838">News</a></li>
-                <li>윤주한, 정진욱, 이선우, 이태진 - 한국정보보호학회 하계학술대회 <span class="award-highlight">2024 우수논문상</span> (2024.6)</li>
-                <li>황상연, 한태현, 이선우, 이태진 - 한국융합보안학회 하계학술대회 <span class="award-highlight">2024 우수논문상</span> (2024.6)</li>
-                <li>정혜란, 정연수, 이태진 - 한국융합보안학회 하계학술대회 <span class="award-highlight">2024 장려상</span> (2024.6)</li>
-                <li>이주영, 한태현, 정혜란, 이태진 - 한국정보처리학회 ACK <span class="award-highlight">2023 우수논문상</span> (2023.9)</li>
-                <li>이태진 - 호서대학교 <span class="award-highlight">우수교원 표창(연구분야)</span>, 호서대 <span class="award-highlight">총장상</span> (2023.9)</li>
-                <li>이선우, 이현우, 정시온, 이태진 - 한국정보보호학회 학술대회 호서대 <span class="award-highlight">총장상</span> (2023.9)</li>
-                <li>이현우, 임승범, 이예은, 정시온 - SW 개발보안 경진대회(소개딩) 2023 <span class="award-highlight">한국인터넷진흥원상(장려상)</span> 수상 (2023.8)</li>
-                <li>한태현, 박영지, 이규한, 이현우 - 2023 AIㆍSW 프로젝트 성과 전시회 <span class="award-highlight">최우수논문상</span> 수상 (2023.7)</li>
-                <li>서주현, 신민일, 박진주, 이태진 - 한국융합보안학회 하계학술대회 <span class="award-highlight">우수논문상</span> 수상 (2023.6)</li>
-                <li>한태현, 박영지, 이규한, 이현우, 이태진 - 한국정보보호학회 하계학술대회 <span class="award-highlight">과기부장관상</span> 수상 (2023.6)</li>
+                <!-- Firebase에서 로드된 수상내역들이 여기에 동적으로 추가됩니다 -->
             </ul>
-
-            <!-- 더 많은 수상 내역 (초기에는 숨김) -->
-            <div class="show-more">
-                <ul class="award-list">
-                    
-                    <li>이태진 - 행정안전부 <span class="award-highlight">장관상(우수성과상)</span> 수상 (2023.4)</li>
-                    <li>이은규 - 호서대학교 일반대학원 <span class="award-highlight">최우수 졸업논문상</span> 수상 (2023.2)</li>
-                    <li>김진강, 임승범, 이예은, 한태현 - 사이버보안 AI+Security <span class="award-highlight">우수논문 공모전 우수상</span> 수상 (2022.12)</li>
-                    <li>김진강, 임승범, 이예은, 한태현 - 사이버보안 AI·빅데이터 챌린지 <span class="award-highlight">최우수상</span> 수상 (2022.12)</li>
-                    <li>한태현, 이은규, 이태진 - 한국시뮬레이션학회 <span class="award-highlight">우수논문상</span> 수상 (2022.11)</li>
-                    <li>황찬웅 - 호서대학교 일반대학원 <span class="award-highlight">최우수 졸업논문상</span> 수상 (2022.2)</li>
-                    <li>황찬웅, 배성호, 이태진 - 산업제어시스템 보안위협탐지 AI 경진대회(HAICon 2021) <span class="award-highlight">최우수상</span> 수상 (2021.11)</li>
-                    <li>이은규, 이용수, 김형래 - Hoseo AIWeek <span class="award-highlight">우수 프로젝트</span> 수상 (2021.10)</li>
-                    <li>유호제, 이지웅, 정종배, 김도연 - 한국중부발전 사이버보안 경진대회(취약점 분석) <span class="award-highlight">장려상</span> 수상 (2021.10)</li>
-                    <li>황찬웅, 이태진 - 한국정보보호학회 사이버안보 논문공모전 <span class="award-highlight">장려상</span> 수상 (2021.10)</li>
-                    <li>이태진 - 호서대학교 <span class="award-highlight">우수교원 표창(산학분야)</span>, 호서대 <span class="award-highlight">총장상</span> (2021.9)</li>
-                    <li>이현나, 배성호, 황찬웅, 이태진 - 정보보호학회 충청학술대회 <span class="award-highlight">ETRI 원장상</span> 수상 (2021.8)</li>
-                    <li>안준연 - BoB 9기 인증식, <span class="award-highlight">그랑프리팀(최우수프로젝트팀)</span> 수상 (2021.3)</li>
-                    <li>김도연, 황찬웅, 이용수, 김홍비, 이태진 - K-Cyber Security Challenge 2020, AI-dataset <span class="award-highlight">한국인터넷진흥원장상</span> 수상 (2020.12)</li>
-                    <li>최아린, 조선영, 조해린, 최승희, 이태진, 김형종 - 한국IT서비스학회 <span class="award-highlight">최우수논문상</span> (2020.11)</li>
-                    <li>황찬웅, 김도연, 김효식, 김선진, 이태진 - 산업제어시스템 보안위협탐지 AI 경진대회(HAICon 2020) <span class="award-highlight">최우수상</span> 수상 (2020.10)</li>
-                    <li>김진강, 황찬웅, 이태진 - 한국인터넷정보학회 추계학술대회 <span class="award-highlight">우수논문상</span> 수상 (2020.10)</li>
-                    <li>이태진 - 호서대학교 <span class="award-highlight">우수교원 표창</span>, 호서대 <span class="award-highlight">총장상</span> (2020.7)</li>
-                    <li>황준호 - 호서대학교 일반대학원 <span class="award-highlight">최우수 졸업논문상</span> 수상 (2020.2)</li>
-                    <li>안준연, 고광필 - Bigdata Idea Challenge 2019 <span class="award-highlight">장려상</span> (2019.11.5)</li>
-                    <li>황준호, 김수정, 하지희, 김인호, 신현석 - DataChallenge 2018(AI기반 악성코드 탐지부문) <span class="award-highlight">우수상</span> (KISA 원장상, 2018.12)</li>
-                    <li>김호경, 황선빈, 이태진 - 한국정보과학회 <span class="award-highlight">최우수논문상</span> (2017.12)</li>
-                    <li>산학협력 <span class="award-highlight">우수 공로패</span> (지니언스, 2017.12)</li>
-                    <li>K-ICT 표준화전략 맵 <span class="award-highlight">공로상</span> (TTA 원장상, 2016.11)</li>
-                    <li>정보통신/방송R&D <span class="award-highlight">우수성과상</span> (미래부 장관상, 2014.11)</li>
-                    <li>국가연구개발 <span class="award-highlight">우수성과상</span> (미래부 장관상, 2014.7)</li>
-                    <li>최우수 <span class="award-highlight">직원상</span> (KISA 원장상, 2013.12)</li>
-                </ul>
-            </div>
-
-            <!-- 더 보기 버튼 -->
-            <div class="show-more-button">
-                <button id="show-more-awards">
-                    <span>더 많은 수상내역 보기</span>
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-            </div>
         </div>
 
-    <!-- 포토 게시판 섹션 -->
-    <div class="section hidden" id="photos">
-        <h2>
-            <i class="fas fa-camera"></i>Photo Gallery
-        </h2>
-        
-        <!-- 게시판 그리드 -->
-        <div class="photo-board">
-            <div class="photo-item" data-date="2024.11.30" data-category="연구실모임">
-                <div class="photo-card">
-                    <img src="./activity_img/11월30일Silab하반기모임.jpg" alt="Silab 하반기 모임">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>Silab 하반기 모임</h4>
-                            <p>2024.11.30</p>
-                            <span class="category">연구실모임</span>
+        <!-- 포토 게시판 섹션 -->
+        <div class="section hidden" id="photos">
+            <h2>
+                <i class="fas fa-camera"></i> Photo Gallery
+            </h2>
+            
+            <!-- 게시판 그리드 -->
+            <div class="photo-board">
+                <div class="photo-item" data-date="2024.11.30" data-category="연구실모임">
+                    <div class="photo-card">
+                        <img src="./activity_img/11월30일Silab하반기모임.jpg" alt="Silab 하반기 모임">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>Silab 하반기 모임</h4>
+                                <p>2024.11.30</p>
+                                <span class="category">연구실모임</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2023.11.11" data-category="연구실모임">
-                <div class="photo-card">
-                    <img src="./activity_img/23_11_11 Lab 모임.jpg" alt="2023년 11월 Lab 모임">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>2023년 11월 Lab 모임</h4>
-                            <p>2023.11.11</p>
-                            <span class="category">연구실모임</span>
+                
+                <div class="photo-item" data-date="2023.11.11" data-category="연구실모임">
+                    <div class="photo-card">
+                        <img src="./activity_img/23_11_11 Lab 모임.jpg" alt="2023년 11월 Lab 모임">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>2023년 11월 Lab 모임</h4>
+                                <p>2023.11.11</p>
+                                <span class="category">연구실모임</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2023.05.15" data-category="행사">
-                <div class="photo-card">
-                    <img src="./activity_img/스승의날_1.jpg" alt="스승의날 행사">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>스승의날 행사</h4>
-                            <p>2023.05.15</p>
-                            <span class="category">행사</span>
+                
+                <div class="photo-item" data-date="2023.05.15" data-category="행사">
+                    <div class="photo-card">
+                        <img src="./activity_img/스승의날_1.jpg" alt="스승의날 행사">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>스승의날 행사</h4>
+                                <p>2023.05.15</p>
+                                <span class="category">행사</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2023.04.20" data-category="행사">
-                <div class="photo-card">
-                    <img src="./activity_img/교수님 구글 행사.jpg" alt="구글 행사">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>구글 행사</h4>
-                            <p>2023.04.20</p>
-                            <span class="category">행사</span>
+                
+                <div class="photo-item" data-date="2023.04.20" data-category="행사">
+                    <div class="photo-card">
+                        <img src="./activity_img/교수님 구글 행사.jpg" alt="구글 행사">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>구글 행사</h4>
+                                <p>2023.04.20</p>
+                                <span class="category">행사</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2021.08.27" data-category="연구실모임">
-                <div class="photo-card">
-                    <img src="./activity_img/20210827_2.jpg" alt="2021년 8월 모임">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>한국정보보호학회 충청지부 학술대회</h4>
-                            <p>2021.08.27</p>
-                            <span class="category">수상</span>
+                
+                <div class="photo-item" data-date="2021.08.27" data-category="연구실모임">
+                    <div class="photo-card">
+                        <img src="./activity_img/20210827_2.jpg" alt="2021년 8월 모임">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>한국정보보호학회 충청지부 학술대회</h4>
+                                <p>2021.08.27</p>
+                                <span class="category">수상</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2023.05.25" data-category="수상">
-                <div class="photo-card">
-                    <img src="./activity_img/2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상1.jpg" alt="2023 정보처리학회 은상">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>2023 정보처리학회 은상</h4>
-                            <p>2023.05.25</p>
-                            <span class="category">수상</span>
+                
+                <div class="photo-item" data-date="2023.05.25" data-category="수상">
+                    <div class="photo-card">
+                        <img src="./activity_img/2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상1.jpg" alt="2023 정보처리학회 은상">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>2023 정보처리학회 은상</h4>
+                                <p>2023.05.25</p>
+                                <span class="category">수상</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2023.11.18" data-category="학회">
-                <div class="photo-card">
-                    <img src="./activity_img/2023_부산_정보처리학회.jpg" alt="2023 부산 정보처리학회">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>2023 부산 정보처리학회</h4>
-                            <p>2023.11.18</p>
-                            <span class="category">학회</span>
+                
+                <div class="photo-item" data-date="2023.11.18" data-category="학회">
+                    <div class="photo-card">
+                        <img src="./activity_img/2023_부산_정보처리학회.jpg" alt="2023 부산 정보처리학회">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>2023 부산 정보처리학회</h4>
+                                <p>2023.11.18</p>
+                                <span class="category">학회</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2023.08.15" data-category="수상">
-                <div class="photo-card">
-                    <img src="./activity_img/2023_소개딩_한국인터넷진흥원장상.JPG" alt="2023 한국인터넷진흥원장상">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>2023 한국인터넷진흥원장상</h4>
-                            <p>2023.08.15</p>
-                            <span class="category">수상</span>
+                
+                <div class="photo-item" data-date="2023.08.15" data-category="수상">
+                    <div class="photo-card">
+                        <img src="./activity_img/2023_소개딩_한국인터넷진흥원장상.JPG" alt="2023 한국인터넷진흥원장상">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>2023 한국인터넷진흥원장상</h4>
+                                <p>2023.08.15</p>
+                                <span class="category">수상</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2020.07.23" data-category="연구실모임">
-                <div class="photo-card">
-                    <img src="./activity_img/20200723_1.jpg" alt="2020년 7월 모임">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>2020년 7월 모임</h4>
-                            <p>2020.07.23</p>
-                            <span class="category">연구실모임</span>
+                
+                <div class="photo-item" data-date="2020.07.23" data-category="연구실모임">
+                    <div class="photo-card">
+                        <img src="./activity_img/20200723_1.jpg" alt="2020년 7월 모임">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>2020년 7월 모임</h4>
+                                <p>2020.07.23</p>
+                                <span class="category">연구실모임</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2024.03.14" data-category="워크숍">
-                <div class="photo-card">
-                    <img src="./activity_img/240314_KISA워크숍.jpg" alt="2024 KISA워크숍">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>2024 KISA워크숍</h4>
-                            <p>2024.03.14</p>
-                            <span class="category">워크숍</span>
+                
+                <div class="photo-item" data-date="2024.03.14" data-category="워크숍">
+                    <div class="photo-card">
+                        <img src="./activity_img/240314_KISA워크숍.jpg" alt="2024 KISA워크숍">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>2024 KISA워크숍</h4>
+                                <p>2024.03.14</p>
+                                <span class="category">워크숍</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2023.09.20" data-category="워크숍">
-                <div class="photo-card">
-                    <img src="./activity_img/2차년도 KISA 워크샵.jpg" alt="KISA 워크샵">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>KISA 워크샵</h4>
-                            <p>2023.09.20</p>
-                            <span class="category">워크숍</span>
+                
+                <div class="photo-item" data-date="2023.09.20" data-category="워크숍">
+                    <div class="photo-card">
+                        <img src="./activity_img/2차년도 KISA 워크샵.jpg" alt="KISA 워크샵">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>KISA 워크샵</h4>
+                                <p>2023.09.20</p>
+                                <span class="category">워크숍</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="photo-item" data-date="2023.06.10" data-category="수상">
-                <div class="photo-card">
-                    <img src="./activity_img/Netsec 수상(교수님).png" alt="Netsec 수상">
-                    <div class="photo-overlay">
-                        <div class="photo-info">
-                            <h4>Netsec 수상</h4>
-                            <p>2023.06.10</p>
-                            <span class="category">수상</span>
+                
+                <div class="photo-item" data-date="2023.06.10" data-category="수상">
+                    <div class="photo-card">
+                        <img src="./activity_img/Netsec 수상(교수님).png" alt="Netsec 수상">
+                        <div class="photo-overlay">
+                            <div class="photo-info">
+                                <h4>Netsec 수상</h4>
+                                <p>2023.06.10</p>
+                                <span class="category">수상</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- 푸터 -->
         <footer>
             <div class="contact-info">
@@ -354,8 +403,6 @@
             </div>
         </footer>
     </div>
-
-
 
     <!-- 사진 모달 -->
     <div class="photo-modal" id="photoModal">
@@ -388,7 +435,6 @@
                     <div class="modal-description">
                         <p class="description-text"></p>
                     </div>
-                    
                 </div>
             </div>
             
@@ -406,373 +452,6 @@
     </div>
 
     <!-- JavaScript -->
-    <script>
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("페이지 로드됨");
-    
-    // 스크롤 애니메이션
-    const hiddenElements = document.querySelectorAll(".hidden");
-    
-    const handleScroll = () => {
-        hiddenElements.forEach(element => {
-            const elementTop = element.getBoundingClientRect().top;
-            const windowHeight = window.innerHeight;
-            
-            if (elementTop < windowHeight - 50) {
-                element.classList.add("visible");
-            } else {
-                element.classList.remove("visible");
-            }
-        });
-    };
-    
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-    
-    // 더 보기 버튼 기능
-    const showMorePatents = document.getElementById("show-more-patents");
-    const showMoreAwards = document.getElementById("show-more-awards");
-    
-    if (showMorePatents) {
-        showMorePatents.addEventListener("click", function() {
-            const hiddenSection = this.parentElement.previousElementSibling;
-            hiddenSection.classList.toggle("visible");
-            
-            if (hiddenSection.classList.contains("visible")) {
-                this.querySelector("span").textContent = "특허 목록 접기";
-                this.querySelector("i").classList.remove("fa-chevron-down");
-                this.querySelector("i").classList.add("fa-chevron-up");
-                this.parentElement.classList.add("active");
-            } else {
-                this.querySelector("span").textContent = "더 많은 특허 보기";
-                this.querySelector("i").classList.remove("fa-chevron-up");
-                this.querySelector("i").classList.add("fa-chevron-down");
-                this.parentElement.classList.remove("active");
-            }
-        });
-    }
-    
-    if (showMoreAwards) {
-        showMoreAwards.addEventListener("click", function() {
-            const hiddenSection = this.parentElement.previousElementSibling;
-            hiddenSection.classList.toggle("visible");
-            
-            if (hiddenSection.classList.contains("visible")) {
-                this.querySelector("span").textContent = "수상내역 접기";
-                this.querySelector("i").classList.remove("fa-chevron-down");
-                this.querySelector("i").classList.add("fa-chevron-up");
-                this.parentElement.classList.add("active");
-            } else {
-                this.querySelector("span").textContent = "더 많은 수상내역 보기";
-                this.querySelector("i").classList.remove("fa-chevron-up");
-                this.querySelector("i").classList.add("fa-chevron-down");
-                this.parentElement.classList.remove("active");
-            }
-        });
-    }
-    
-    // 사진 모달 기능
-    function initPhotoModal() {
-        console.log("모달 초기화 시작");
-        
-        const modal = document.getElementById('photoModal');
-        if (!modal) {
-            console.error("모달 요소를 찾을 수 없습니다!");
-            return { attachPhotoClickEvents: () => {} };
-        }
-        
-        const modalOverlay = modal.querySelector('.modal-overlay');
-        const modalClose = document.getElementById('modalClose');
-        const modalImage = modal.querySelector('.modal-image');
-        const modalTitle = modal.querySelector('.modal-title');
-        const dateText = modal.querySelector('.date-text');
-        const categoryText = modal.querySelector('.category-text');
-        const descriptionText = modal.querySelector('.description-text');
-        const prevBtn = document.getElementById('prevPhoto');
-        const nextBtn = document.getElementById('nextPhoto');
-        
-        let currentPhotoIndex = 0;
-        let allPhotos = [];
-        
-        // 모달 열기
-        function openModal(photoItem, photoIndex) {
-            console.log("모달 열기 - 사진 아이템:", photoItem, "인덱스:", photoIndex);
-            
-            currentPhotoIndex = photoIndex;
-            
-            // 사진 아이템에서 직접 정보 추출
-            const img = photoItem.querySelector('img');
-            const titleElement = photoItem.querySelector('.photo-info h4');
-            const dateElement = photoItem.querySelector('.photo-info p');
-            const categoryElement = photoItem.querySelector('.photo-info .category');
-            
-            if (img && modalImage) {
-                modalImage.src = img.src;
-                modalImage.alt = img.alt || "사진";
-                console.log("이미지 src 설정:", img.src);
-            }
-            
-            if (titleElement && modalTitle) {
-                modalTitle.textContent = titleElement.textContent;
-                console.log("제목 설정:", titleElement.textContent);
-            }
-            
-            if (dateElement && dateText) {
-                dateText.textContent = dateElement.textContent;
-                console.log("날짜 설정:", dateElement.textContent);
-            }
-            
-            if (categoryElement && categoryText) {
-                categoryText.textContent = categoryElement.textContent;
-                console.log("카테고리 설정:", categoryElement.textContent);
-            }
-            
-            // 설명은 제목과 카테고리를 기반으로 생성
-            const category = categoryElement ? categoryElement.textContent : '';
-            const title = titleElement ? titleElement.textContent : '';
-            
-            let description = getPhotoDescription(title, category);
-            if (descriptionText) {
-                descriptionText.textContent = description;
-                console.log("설명 설정:", description);
-            }
-            
-            // 네비게이션 버튼 상태 업데이트
-            updateNavigationButtons();
-            
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-            
-            console.log("모달이 열렸습니다");
-        }
-        
-        // 사진 설명 가져오기 함수
-        function getPhotoDescription(title, category) {
-            const descriptions = {
-                'Silab 하반기 모임': '---',
-                '2023년 11월 Lab 모임': '2----.',
-                '스승의날 행사': '---.',
-                '구글 행사': '---',
-                '2021년 8월 모임': '---',
-                '2023 정보처리학회 은상': '---',
-                '2023 부산 정보처리학회': '---',
-                '2023 한국인터넷진흥원장상': '---',
-                '2020년 7월 모임': '---',
-                '2024 KISA워크숍': '---',
-                'KISA 워크샵': '---',
-                'Netsec 수상': '---'
-            };
-            
-            // 제목으로 정확한 매칭 시도
-            if (descriptions[title]) {
-                return descriptions[title];
-            }
-
-        }
-        
-        // 모달 닫기
-        function closeModal() {
-            console.log("모달 닫기");
-            modal.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-        
-        // 네비게이션 버튼 상태 업데이트
-        function updateNavigationButtons() {
-            if (prevBtn) prevBtn.disabled = currentPhotoIndex === 0;
-            if (nextBtn) nextBtn.disabled = currentPhotoIndex === allPhotos.length - 1;
-        }
-        
-        // 이전/다음 사진
-        function showPreviousPhoto() {
-            if (currentPhotoIndex > 0) {
-                const prevPhoto = allPhotos[currentPhotoIndex - 1];
-                openModal(prevPhoto, currentPhotoIndex - 1);
-            }
-        }
-        
-        function showNextPhoto() {
-            if (currentPhotoIndex < allPhotos.length - 1) {
-                const nextPhoto = allPhotos[currentPhotoIndex + 1];
-                openModal(nextPhoto, currentPhotoIndex + 1);
-            }
-        }
-        
-        // 이벤트 리스너
-        if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
-        if (modalClose) modalClose.addEventListener('click', closeModal);
-        if (prevBtn) prevBtn.addEventListener('click', showPreviousPhoto);
-        if (nextBtn) nextBtn.addEventListener('click', showNextPhoto);
-        
-        // ESC 키로 모달 닫기
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('show')) {
-                closeModal();
-            } else if (modal.classList.contains('show')) {
-                if (e.key === 'ArrowLeft') showPreviousPhoto();
-                if (e.key === 'ArrowRight') showNextPhoto();
-            }
-        });
-        
-        // 사진 클릭 이벤트 연결
-        function attachPhotoClickEvents() {
-            console.log("사진 클릭 이벤트 연결 시작");
-            
-            const photoItems = document.querySelectorAll('.photo-item');
-            console.log("찾은 사진 아이템:", photoItems.length);
-            
-            // 모든 사진을 배열에 저장
-            allPhotos = Array.from(photoItems);
-            
-            photoItems.forEach((item, index) => {
-                item.onclick = function() {
-                    console.log("사진 클릭됨:", index);
-                    // 사진 아이템 자체를 전달
-                    openModal(this, index);
-                };
-                
-                // 커서 포인터 추가
-                item.style.cursor = 'pointer';
-            });
-        }
-        
-        return { attachPhotoClickEvents };
-    }
-    
-    // 포토 게시판 기능 (간소화됨)
-    function initPhotoBoard() {
-        console.log("포토 게시판 초기화");
-        
-        const photoItems = document.querySelectorAll('.photo-item');
-        const totalPostsSpan = document.querySelector('.total-posts strong');
-        
-        const totalPosts = photoItems.length;
-        
-        // 모달 초기화
-        const photoModal = initPhotoModal();
-        
-        // 초기 설정
-        if (totalPostsSpan) totalPostsSpan.textContent = totalPosts;
-        
-        // 모든 사진 항상 보이기
-        photoItems.forEach((item) => {
-            item.style.display = 'block';
-        });
-        
-        // 사진 클릭 이벤트 연결
-        photoModal.attachPhotoClickEvents();
-        
-        console.log("포토 게시판 초기화 완료 - 총", totalPosts, "개 사진");
-    }
-    
-    // 섹션 전환 기능
-    function initSectionToggle() {
-        const navButtons = document.querySelectorAll('.section-nav-btn');
-        const sections = {
-            'patents': document.getElementById('patents'),
-            'awards': document.getElementById('awards'),
-            'photos': document.getElementById('photos')
-        };
-        const sectionNav = document.querySelector('.section-nav');
-        
-        let isPhotoMode = false;
-        
-        // 초기 상태: patents와 awards는 보이고, photos는 숨김
-        if (sections.patents) sections.patents.style.display = 'block';
-        if (sections.awards) sections.awards.style.display = 'block';
-        if (sections.photos) sections.photos.style.display = 'none';
-        
-        // 버튼 클릭 이벤트 처리
-        navButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const targetId = this.getAttribute('data-target');
-                const targetSection = sections[targetId];
-                
-                if (targetId === 'photos') {
-                    console.log("Photo 버튼 클릭됨");
-                    
-                    // Photo 버튼 클릭 시 - 전체 화면 모드
-                    isPhotoMode = true;
-                    
-                    // 모든 섹션 숨기기
-                    Object.values(sections).forEach(section => {
-                        if (section) section.style.display = 'none';
-                    });
-                    
-                    // Photo 섹션만 보이기
-                    if (targetSection) {
-                        targetSection.style.display = 'block';
-                        targetSection.classList.add('visible');
-                    }
-                    
-                    // 버튼 활성화 상태 업데이트
-                    navButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Photo 섹션으로 스크롤
-                    window.scrollTo({
-                        top: sectionNav.offsetTop - 20,
-                        behavior: 'smooth'
-                    });
-                    
-                    // 게시판 초기화
-                    setTimeout(() => {
-                        initPhotoBoard();
-                    }, 100);
-                    
-                } else {
-                    // Patents 또는 Awards 버튼 클릭 시
-                    if (isPhotoMode) {
-                        // Photo 모드에서 나가기 - 원래 상태로 복원
-                        isPhotoMode = false;
-                        
-                        // 모든 기본 섹션 보이기
-                        if (sections.patents) sections.patents.style.display = 'block';
-                        if (sections.awards) sections.awards.style.display = 'block';
-                        if (sections.photos) sections.photos.style.display = 'none';
-                        
-                        // 모든 버튼 비활성화
-                        navButtons.forEach(btn => btn.classList.remove('active'));
-                    }
-                    
-                    // 해당 섹션으로 스크롤
-                    if (targetSection) {
-                        window.scrollTo({
-                            top: targetSection.offsetTop - 100,
-                            behavior: 'smooth'
-                        });
-                    }
-                }
-            });
-        });
-        
-        // ESC 키로 Photo 모드에서 나가기
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isPhotoMode && !document.getElementById('photoModal').classList.contains('show')) {
-                isPhotoMode = false;
-                
-                // 원래 상태로 복원
-                if (sections.patents) sections.patents.style.display = 'block';
-                if (sections.awards) sections.awards.style.display = 'block';
-                if (sections.photos) sections.photos.style.display = 'none';
-                
-                // 모든 버튼 비활성화
-                navButtons.forEach(btn => btn.classList.remove('active'));
-                
-                // 상단으로 스크롤
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    }
-    
-    // 초기화
-    initSectionToggle();
-    
-    console.log("모든 초기화 완료");
-});
-    </script>
+    <script src="photo.js"></script>
 </body>
 </html>
