@@ -1,4 +1,4 @@
-// projects.js - 개선된 위치 삽입 기능 + 탭형 모달
+// projects.js - 프로젝트 관리 시스템
 
 const firebaseConfig = {
     apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
@@ -11,49 +11,11 @@ const firebaseConfig = {
     measurementId: "G-JH2LH2CS3K"
 };
 
-// ==================== 프로젝트별 이미지 데이터 ====================
-const PROJECT_IMAGES = {
-    'project_47': [
-        {
-            url: './Project_photo/Project_47.jpg',
-            name: 'Project 47',
-            originalName: 'project47.jpg'
-        }
-    ],
-    'project_46': [
-        {
-            url: './Project_photo/Project_46.png',
-            name: 'Project 46',
-            originalName: 'project46.png'
-        }
-    ],
-    // ✨ Project 44를 탭 구조로 수정
-    'project_44': {
-        architecture: [
-            {
-                url: './Project_photo/Project_44_1.png',
-                name: 'System Architecture Overview',
-                description: '전체 시스템 아키텍처 구조도',
-                originalName: 'project44_architecture_overview.jpg'
-            }
-        ],
-        values: [
-            {
-                url: './Project_photo/Project_44_2.png',
-                name: 'Performance values',
-                description: '결과물의 실질가치',
-                originalName: 'project44_performance.jpg'
-            }
-        ]
-    }
-};
-
 // ==================== 전역 변수 선언 ====================
 let auth, database;
 let currentUser = null;
 let deleteMode = false;
 let editMode = false;
-let currentActiveTab = 'architecture';
 
 // ==================== 허용된 사용자 목록 ====================
 const ALLOWED_USERS = ['kinjecs0@gmail.com'];
@@ -63,8 +25,28 @@ let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
 let userInfo, userName, adminPanel, addProjectBtn, addProjectForm;
 let projectForm, cancelAddProject, toggleDeleteMode, toggleEditMode;
 let editProjectForm, projectEditForm, cancelEditProject;
-let imageModal, imageModalClose, imageGallery, noImages;
 let currentEditingProject = null;
+
+// 프로젝트 이름에서 번호 추출하는 함수
+function extractProjectNumber(projectName) {
+    const patterns = [
+        /\[PJ(\d+)\]/i,
+        /PJ(\d+)/i,
+        /(?:project|프로젝트)\s*(\d+)/i,
+        /project(\d+)/i,
+        /프로젝트(\d+)/,
+        /(\d+)/
+    ];
+    
+    for (let pattern of patterns) {
+        const match = projectName.match(pattern);
+        if (match) {
+            return parseInt(match[1], 10);
+        }
+    }
+    
+    return Infinity; // 번호를 찾을 수 없는 경우 맨 마지막에 배치
+}
 
 // ==================== 기본 함수들 ====================
 function showAlert(message, type) {
@@ -95,55 +77,6 @@ function showAlert(message, type) {
     setTimeout(() => alert.remove(), 3000);
 }
 
-// 프로젝트 이름에서 번호 추출하는 함수
-function extractProjectNumber(projectName) {
-    console.log('프로젝트 이름 분석:', projectName);
-    
-    const cleanName = projectName.replace(/세부사항/g, '').trim();
-    console.log('정리된 이름:', cleanName);
-    
-    const patterns = [
-        /\[PJ(\d+)\]/i,
-        /PJ(\d+)/i,
-        /(?:project|프로젝트)\s*(\d+)/i,
-        /project(\d+)/i,
-        /프로젝트(\d+)/,
-        /(\d+)/
-    ];
-    
-    for (let i = 0; i < patterns.length; i++) {
-        const pattern = patterns[i];
-        const match = cleanName.match(pattern);
-        if (match) {
-            console.log(`패턴 ${i + 1} 매치됨:`, match[1]);
-            return match[1];
-        }
-    }
-    
-    console.log('숫자를 찾을 수 없음');
-    return null;
-}
-
-// 프로젝트에 이미지가 있는지 확인하는 함수
-function hasProjectImages(projectNumber) {
-    const projectKey = `project_${projectNumber}`;
-    const projectData = PROJECT_IMAGES[projectKey];
-    
-    if (!projectData) return false;
-    
-    // 배열 형태 (기존 방식)
-    if (Array.isArray(projectData) && projectData.length > 0) {
-        return true;
-    }
-    
-    // 객체 형태 (탭 구조)
-    if (typeof projectData === 'object' && !Array.isArray(projectData)) {
-        return (projectData.architecture && projectData.architecture.length > 0) ||
-               (projectData.values && projectData.values.length > 0);
-    }
-    
-    return false;
-}
 
 // ==================== 새로운 위치 삽입 시스템 ====================
 
@@ -155,7 +88,6 @@ async function getAllProjectsSorted(projectType) {
         const snapshot = await ref.orderByChild('displayOrder').once('value');
         const data = snapshot.val() || {};
         
-        // displayOrder가 없는 기존 항목들은 createdAt으로 정렬
         const projects = Object.entries(data)
             .filter(([key, value]) => value && value.name)
             .map(([key, value]) => ({
@@ -166,9 +98,6 @@ async function getAllProjectsSorted(projectType) {
             .sort((a, b) => a.displayOrder - b.displayOrder);
         
         console.log(`📊 ${projectType} 프로젝트 정렬 결과:`, projects.length, '개');
-        projects.forEach((project, index) => {
-            console.log(`  ${index + 1}. ${project.name} (order: ${project.displayOrder})`);
-        });
         
         return projects;
     } catch (error) {
@@ -188,11 +117,9 @@ async function insertProjectAtPosition(projectData, targetPosition) {
         const refPath = projectType === 'current' ? 'current projects' : 'past projects';
         const ref = database.ref(refPath);
         
-        // 현재 모든 프로젝트 가져오기
         const existingProjects = await getAllProjectsSorted(projectType);
         console.log('📊 기존 프로젝트 수:', existingProjects.length);
         
-        // 위치 검증
         const maxPosition = existingProjects.length + 1;
         const actualPosition = Math.max(1, Math.min(parseInt(targetPosition), maxPosition));
         
@@ -200,21 +127,17 @@ async function insertProjectAtPosition(projectData, targetPosition) {
             console.log(`⚠️ 위치 조정: ${targetPosition} → ${actualPosition}`);
         }
         
-        // 새 프로젝트의 displayOrder 계산
         let newDisplayOrder;
         
         if (actualPosition === 1) {
-            // 맨 앞에 삽입
             const firstOrder = existingProjects.length > 0 ? existingProjects[0].displayOrder : 1000;
             newDisplayOrder = firstOrder - 100;
             console.log('📍 맨 앞 삽입, 새 순서:', newDisplayOrder);
         } else if (actualPosition > existingProjects.length) {
-            // 맨 뒤에 삽입
             const lastOrder = existingProjects.length > 0 ? existingProjects[existingProjects.length - 1].displayOrder : 0;
             newDisplayOrder = lastOrder + 100;
             console.log('📍 맨 뒤 삽입, 새 순서:', newDisplayOrder);
         } else {
-            // 중간에 삽입
             const prevIndex = actualPosition - 2;
             const nextIndex = actualPosition - 1;
             
@@ -224,10 +147,8 @@ async function insertProjectAtPosition(projectData, targetPosition) {
             console.log(`📍 ${prevIndex + 1}번과 ${nextIndex + 1}번 사이 삽입`);
             console.log(`📊 이전: ${prevOrder}, 다음: ${nextOrder}`);
             
-            // 중간값 계산
             newDisplayOrder = (prevOrder + nextOrder) / 2;
             
-            // 값이 너무 가까우면 재정렬 후 다시 시도
             if (Math.abs(nextOrder - prevOrder) < 1) {
                 console.log('⚠️ 순서값이 너무 가까움, 재정렬 필요');
                 await reorderProjectsByType(projectType);
@@ -237,7 +158,6 @@ async function insertProjectAtPosition(projectData, targetPosition) {
             console.log('📍 중간 삽입, 새 순서:', newDisplayOrder);
         }
         
-        // 새 프로젝트 데이터 생성
         const newProject = {
             name: projectData.name,
             period: projectData.period,
@@ -250,7 +170,6 @@ async function insertProjectAtPosition(projectData, targetPosition) {
         
         console.log('💾 저장할 프로젝트:', newProject);
         
-        // Firebase에 저장
         await ref.push(newProject);
         
         console.log('✅ 위치 삽입 완료');
@@ -272,7 +191,6 @@ async function reorderProjectsByType(projectType) {
         
         const existingProjects = await getAllProjectsSorted(projectType);
         
-        // 100 단위로 재정렬
         for (let i = 0; i < existingProjects.length; i++) {
             const project = existingProjects[i];
             const newOrder = (i + 1) * 100;
@@ -308,8 +226,15 @@ async function loadProjectsFromRealtimeDB() {
         // current projects 로드
         const currentProjects = await getAllProjectsSorted('current');
         
-        // past projects 로드  
+        // past projects 로드 및 프로젝트 번호로 정렬
         const pastProjects = await getAllProjectsSorted('past');
+        
+        // 과거 프로젝트를 프로젝트 번호로 정렬
+        pastProjects.sort((a, b) => {
+            const numA = extractProjectNumber(a.name);
+            const numB = extractProjectNumber(b.name);
+            return numB - numA; // 큰 번호부터 정렬 (내림차순)
+        });
         
         console.log('📊 현재 프로젝트:', currentProjects.length, '개');
         console.log('📊 과거 프로젝트:', pastProjects.length, '개');
@@ -333,10 +258,26 @@ async function loadProjectsFromRealtimeDB() {
         console.log('✅ 프로젝트 로드 완료');
         updateButtonsVisibility();
         
+        // 페이지 요소 표시 애니메이션
+        animatePageElements();
+        
     } catch (error) {
         console.error('❌ 프로젝트 로드 실패:', error);
         showAlert('프로젝트 로드에 실패했습니다.', 'error');
     }
+}
+// 페이지 애니메이션 함수 추가
+function animatePageElements() {
+    const hiddenElements = document.querySelectorAll('.hidden');
+    
+    hiddenElements.forEach((element, index) => {
+        setTimeout(() => {
+            element.classList.remove('hidden');
+            element.classList.add('visible');
+        }, index * 150); // 각 요소마다 150ms 간격으로 순차 표시
+    });
+    
+    console.log('✨ 페이지 애니메이션 적용 완료');
 }
 
 function addProjectToDOM(project) {
@@ -367,23 +308,12 @@ function createProjectElement(project) {
     
     const deleteId = project.firebaseKey || project.id;
     
-    // 프로젝트 이름에서 번호 추출하여 이미지가 있는지 확인
-    const projectNumber = extractProjectNumber(project.name);
-    const hasImages = projectNumber && hasProjectImages(projectNumber);
-    
-    // 현재 진행 중 프로젝트이고 이미지가 있는 경우에만 세부사항 버튼 추가
-    const detailsButton = (project.type === 'current' && hasImages) ? 
-        `<button class="details-btn" onclick="showProjectDetails('${project.id}', '${project.name.replace(/'/g, "\\'")}', ${projectNumber})">
-            <i class="fas fa-info-circle"></i> 세부사항
-        </button>` : '';
-    
     projectDiv.innerHTML = `
         <div class="project-content">
             <div class="project-header">
                 <div class="project-info">
                     <h3 class="project-name">
                         ${project.name}
-                        ${detailsButton}
                     </h3>
                     <p class="project-period">
                         <i class="far fa-calendar-alt"></i> 연구기간: ${project.period}
@@ -411,6 +341,7 @@ function createProjectElement(project) {
     
     return projectDiv;
 }
+
 
 // ==================== 프로젝트 추가 함수 (개선됨) ====================
 async function addProjectToRealtimeDB(projectData) {
@@ -506,368 +437,6 @@ window.deleteFirebaseProject = async function(projectId, projectType) {
     }
 };
 
-// ==================== 이미지 세부사항 관련 함수들 ====================
-window.showProjectDetails = function(projectId, projectName, projectNumber) {
-    try {
-        console.log('🔍 프로젝트 세부사항 로드:', projectName);
-        
-        if (!imageModal) {
-            showAlert('이미지 모달을 찾을 수 없습니다.', 'error');
-            return;
-        }
-        
-        const modalTitle = document.getElementById('imageModalTitle');
-        if (modalTitle) {
-            modalTitle.textContent = `${projectName} - 세부사항`;
-        }
-        
-        const projectKey = `project_${projectNumber}`;
-        const projectImages = PROJECT_IMAGES[projectKey];
-        
-        if (!projectImages) {
-            showAlert('프로젝트 이미지를 찾을 수 없습니다.', 'error');
-            return;
-        }
-        
-        // Project 44인 경우 탭 구조 사용
-        if (projectKey === 'project_44') {
-            setupTabbedModal(projectImages);
-        } else {
-            // 기존 방식 (단일 갤러리)
-            displayImageGallery(projectImages);
-        }
-        
-        imageModal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        
-    } catch (error) {
-        console.error('❌ 세부사항 로드 실패:', error);
-        showAlert('세부사항을 불러오는데 실패했습니다.', 'error');
-    }
-};
-
-// ==================== 탭형 모달 관련 함수들 ====================
-function setupTabbedModal(projectImages) {
-    // 기존 갤러리 숨기기
-    if (imageGallery) imageGallery.style.display = 'none';
-    if (noImages) noImages.style.display = 'none';
-    
-    // 탭 네비게이션이 없으면 추가
-    let tabNavigation = document.querySelector('.tab-navigation');
-    if (!tabNavigation) {
-        createTabNavigation();
-        tabNavigation = document.querySelector('.tab-navigation');
-    }
-    
-    tabNavigation.style.display = 'flex';
-    
-    // 탭 컨텐츠가 없으면 추가
-    let architectureTab = document.getElementById('architecture-tab');
-    let valuesTab = document.getElementById('values-tab');
-    
-    if (!architectureTab || !valuesTab) {
-        createTabContents();
-        architectureTab = document.getElementById('architecture-tab');
-        valuesTab = document.getElementById('values-tab');
-    }
-    
-    // 갤러리 표시
-    displayTabGallery('architecture', projectImages.architecture || []);
-    displayTabGallery('values', projectImages.values || []);
-    
-    // 기본적으로 Architecture 탭 활성화
-    switchTab('architecture');
-    
-    // 탭 이벤트 리스너 설정
-    setupTabEventListeners();
-}
-
-function createTabNavigation() {
-    const modalBody = document.querySelector('.image-modal-body');
-    
-    const tabNav = document.createElement('div');
-    tabNav.className = 'tab-navigation';
-    tabNav.style.cssText = `
-        padding: 0 30px;
-        background: #2c3e50;
-        border-bottom: 2px solid #34495e;
-        display: flex;
-        gap: 0;
-    `;
-    
-    tabNav.innerHTML = `
-        <button class="tab-btn active" data-tab="architecture" style="
-            padding: 20px 40px; font-size: 18px; font-weight: 600;
-            background: transparent; color: #bdc3c7; border: none;
-            cursor: pointer; position: relative; transition: all 0.3s ease;
-            border-radius: 0; flex: 1; text-transform: uppercase;
-            letter-spacing: 1px;
-        ">
-            <i class="fas fa-building"></i> Architecture
-        </button>
-        <button class="tab-btn" data-tab="values" style="
-            padding: 20px 40px; font-size: 18px; font-weight: 600;
-            background: transparent; color: #bdc3c7; border: none;
-            cursor: pointer; position: relative; transition: all 0.3s ease;
-            border-radius: 0; flex: 1; text-transform: uppercase;
-            letter-spacing: 1px;
-        ">
-            <i class="fas fa-chart-line"></i> Values
-        </button>
-    `;
-    
-    modalBody.insertBefore(tabNav, modalBody.firstChild);
-}
-
-function createTabContents() {
-    const modalBody = document.querySelector('.image-modal-body');
-    
-    // Architecture 탭
-    const archTab = document.createElement('div');
-    archTab.className = 'tab-content active';
-    archTab.id = 'architecture-tab';
-    archTab.style.cssText = `
-        display: block; height: 100%; width: 100%;
-        padding: 30px; overflow-y: auto;
-    `;
-    archTab.innerHTML = `
-        <div class="image-gallery" id="architectureGallery" style="
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 30px; max-width: 1400px; margin: 0 auto;
-        "></div>
-        <div class="no-images" id="noArchitectureImages" style="
-            display: none; flex-direction: column; align-items: center;
-            justify-content: center; height: 60%; color: #7f8c8d; font-size: 18px;
-        ">
-            <i class="fas fa-building" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-            <p>Architecture 이미지가 없습니다.</p>
-        </div>
-    `;
-    
-    // Values 탭
-    const valuesTab = document.createElement('div');
-    valuesTab.className = 'tab-content';
-    valuesTab.id = 'values-tab';
-    valuesTab.style.cssText = `
-        display: none; height: 100%; width: 100%;
-        padding: 30px; overflow-y: auto;
-    `;
-    valuesTab.innerHTML = `
-        <div class="image-gallery" id="valuesGallery" style="
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 30px; max-width: 1400px; margin: 0 auto;
-        "></div>
-        <div class="no-images" id="noValuesImages" style="
-            display: none; flex-direction: column; align-items: center;
-            justify-content: center; height: 60%; color: #7f8c8d; font-size: 18px;
-        ">
-            <i class="fas fa-chart-line" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-            <p>Values 이미지가 없습니다.</p>
-        </div>
-    `;
-    
-    modalBody.appendChild(archTab);
-    modalBody.appendChild(valuesTab);
-}
-
-// 탭 전환
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.color = '#bdc3c7';
-        btn.style.background = 'transparent';
-    });
-    
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-        content.style.display = 'none';
-    });
-    
-    // 선택된 탭 활성화
-    const selectedBtn = document.querySelector(`[data-tab="${tabName}"]`);
-    const selectedContent = document.getElementById(`${tabName}-tab`);
-    
-    if (selectedBtn) {
-        selectedBtn.classList.add('active');
-        selectedBtn.style.color = '#fff';
-        selectedBtn.style.background = 'rgba(52, 152, 219, 0.2)';
-    }
-    
-    if (selectedContent) {
-        selectedContent.classList.add('active');
-        selectedContent.style.display = 'block';
-    }
-    
-    currentActiveTab = tabName;
-}
-
-// 탭별 갤러리 표시
-function displayTabGallery(tabName, images) {
-    const gallery = document.getElementById(`${tabName}Gallery`);
-    const noImagesElement = document.getElementById(`no${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Images`);
-    
-    if (!gallery || !noImagesElement) return;
-    
-    gallery.innerHTML = '';
-    
-    if (!images || images.length === 0) {
-        noImagesElement.style.display = 'flex';
-        return;
-    }
-    
-    noImagesElement.style.display = 'none';
-    
-    images.forEach((image, index) => {
-        const galleryItem = document.createElement('div');
-        galleryItem.className = 'gallery-item';
-        galleryItem.style.cssText = `
-            background: #2c3e50; border-radius: 15px; overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: all 0.3s ease;
-            border: 2px solid transparent;
-        `;
-        
-        galleryItem.innerHTML = `
-            <img src="${image.url}" 
-                 alt="${image.originalName || image.name}" 
-                 onclick="openImageFullscreen('${image.url}', '${(image.originalName || image.name).replace(/'/g, "\\'")}')"
-                 style="
-                    width: 100%; height: 300px; object-fit: cover;
-                    cursor: pointer; transition: transform 0.3s ease;
-                 ">
-            <div class="gallery-item-info" style="
-                padding: 20px; background: linear-gradient(135deg, #34495e, #2c3e50);
-            ">
-                <p class="gallery-item-name" style="
-                    font-size: 16px; font-weight: 600; color: #ecf0f1;
-                    margin: 0; text-align: center;
-                ">${image.name}</p>
-                ${image.description ? `
-                    <p class="gallery-item-desc" style="
-                        font-size: 14px; color: #bdc3c7; margin-top: 8px;
-                        text-align: center; line-height: 1.4;
-                    ">${image.description}</p>
-                ` : ''}
-            </div>
-        `;
-        
-        // 호버 효과 추가
-        galleryItem.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-10px)';
-            this.style.boxShadow = '0 15px 40px rgba(52, 152, 219, 0.3)';
-            this.style.borderColor = '#3498db';
-            this.querySelector('img').style.transform = 'scale(1.05)';
-        });
-        
-        galleryItem.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
-            this.style.borderColor = 'transparent';
-            this.querySelector('img').style.transform = 'scale(1)';
-        });
-        
-        gallery.appendChild(galleryItem);
-    });
-}
-
-// 탭 이벤트 리스너 설정
-function setupTabEventListeners() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    
-    // 기존 이벤트 리스너 제거 후 새로 추가
-    tabButtons.forEach(button => {
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-        
-        newButton.addEventListener('click', function() {
-            const tabName = this.getAttribute('data-tab');
-            switchTab(tabName);
-        });
-        
-        // 호버 효과 추가
-        newButton.addEventListener('mouseenter', function() {
-            if (!this.classList.contains('active')) {
-                this.style.color = '#fff';
-                this.style.background = 'rgba(52, 152, 219, 0.1)';
-            }
-        });
-        
-        newButton.addEventListener('mouseleave', function() {
-            if (!this.classList.contains('active')) {
-                this.style.color = '#bdc3c7';
-                this.style.background = 'transparent';
-            }
-        });
-    });
-}
-
-// 기존 displayImageGallery 함수 수정
-function displayImageGallery(images) {
-    if (!imageGallery || !noImages) return;
-    
-    // 탭 네비게이션 숨기기 (일반 프로젝트용)
-    const tabNavigation = document.querySelector('.tab-navigation');
-    if (tabNavigation) {
-        tabNavigation.style.display = 'none';
-    }
-    
-    // 탭 컨텐츠 숨기기
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabContents.forEach(content => {
-        content.style.display = 'none';
-    });
-    
-    // 기본 갤러리 표시
-    imageGallery.style.display = 'grid';
-    imageGallery.innerHTML = '';
-    
-    if (!images || images.length === 0) {
-        noImages.style.display = 'block';
-        imageGallery.style.display = 'none';
-        return;
-    }
-    
-    noImages.style.display = 'none';
-    
-    images.forEach((image, index) => {
-        const galleryItem = document.createElement('div');
-        galleryItem.className = 'gallery-item';
-        
-        galleryItem.innerHTML = `
-            <img src="${image.url}" alt="${image.originalName || image.name}" 
-                 onclick="openImageFullscreen('${image.url}', '${(image.originalName || image.name).replace(/'/g, "\\'")}')">
-            <div class="gallery-item-info">
-                <p class="gallery-item-name">${image.originalName || image.name}</p>
-            </div>
-        `;
-        
-        imageGallery.appendChild(galleryItem);
-    });
-}
-
-window.openImageFullscreen = function(imageUrl, imageName) {
-    const fullscreenModal = document.createElement('div');
-    fullscreenModal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.9); z-index: 1002; display: flex;
-        justify-content: center; align-items: center; cursor: pointer;
-    `;
-    
-    const img = document.createElement('img');
-    img.src = imageUrl;
-    img.alt = imageName;
-    img.style.cssText = `
-        max-width: 90%; max-height: 90%; object-fit: contain;
-        border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    `;
-    
-    fullscreenModal.appendChild(img);
-    document.body.appendChild(fullscreenModal);
-    
-    fullscreenModal.addEventListener('click', () => {
-        document.body.removeChild(fullscreenModal);
-    });
-};
-
 // ==================== 프로젝트 수정 관련 함수들 ====================
 window.editProject = function(projectId, projectType) {
     if (!currentUser) {
@@ -930,8 +499,6 @@ async function updateProject() {
     }
     
     try {
-        console.log('💾 프로젝트 수정 시작');
-        
         const formData = new FormData(projectEditForm);
         const newProjectData = {
             name: formData.get('editProjectName'),
@@ -946,21 +513,29 @@ async function updateProject() {
         const firebaseKey = formData.get('editProjectFirebaseKey');
         
         if (oldType !== newType) {
+            // 기존 프로젝트의 정보 가져오기
             const oldRefPath = `${oldType === 'current' ? 'current projects' : 'past projects'}/${firebaseKey}`;
-            
             const oldSnapshot = await database.ref(oldRefPath).once('value');
             const oldData = oldSnapshot.val();
-            const oldDisplayOrder = oldData ? oldData.displayOrder : Date.now();
             
+            // 과거 프로젝트로 변경 시 최상단에 위치하도록 displayOrder 설정
+            const displayOrder = newType === 'past' ? -100 : Date.now();
+            
+            // 기존 프로젝트 삭제
             await database.ref(oldRefPath).remove();
             
             const newRefPath = `${newType === 'current' ? 'current projects' : 'past projects'}`;
-            await database.ref(newRefPath).push({
+            const newProjectRef = await database.ref(newRefPath).push({
                 ...newProjectData,
-                displayOrder: oldDisplayOrder,
+                displayOrder: displayOrder,
                 createdAt: oldData ? oldData.createdAt : Date.now()
             });
+            
+            // 다른 프로젝트들의 displayOrder 재조정
+            await reorderProjectsByType(newType);
+            
         } else {
+            // 타입 변경 없는 경우 기존 로직 유지
             const refPath = `${newType === 'current' ? 'current projects' : 'past projects'}/${firebaseKey}`;
             await database.ref(refPath).update(newProjectData);
         }
@@ -1059,6 +634,7 @@ function updateButtonsVisibility() {
     }
 }
 
+
 // ==================== 위치 입력 도우미 함수들 ====================
 function resetPositionFields() {
     const insertPositionSelect = document.getElementById('insertPosition');
@@ -1106,319 +682,7 @@ async function updatePositionOptions() {
     }
 }
 
-// ==================== 이벤트 리스너 설정 ====================
-function setupEditEventListeners() {
-    editProjectForm = document.getElementById('editProjectForm');
-    projectEditForm = document.getElementById('projectEditForm');
-    cancelEditProject = document.getElementById('cancelEditProject');
-    
-    if (!editProjectForm || !projectEditForm || !cancelEditProject) {
-        console.warn('⚠️ 수정 관련 DOM 요소를 찾을 수 없습니다.');
-        return;
-    }
-    
-    cancelEditProject.addEventListener('click', () => {
-        editProjectForm.style.display = 'none';
-        projectEditForm.reset();
-        currentEditingProject = null;
-        showAlert('프로젝트 수정이 취소되었습니다.', 'warning');
-    });
-    
-    projectEditForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await updateProject();
-    });
-    
-    console.log('✅ 수정 관련 이벤트 리스너 설정 완료');
-}
-
-function setupImageEventListeners() {
-    if (imageModalClose) {
-        imageModalClose.addEventListener('click', () => {
-            imageModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        });
-    }
-    
-    if (imageModal) {
-        imageModal.addEventListener('click', (e) => {
-            if (e.target === imageModal) {
-                imageModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        });
-    }
-    
-    // ESC 키로 모달 닫기
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && imageModal.style.display === 'block') {
-            imageModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    });
-    
-    console.log('✅ 이미지 관련 이벤트 리스너 설정 완료');
-}
-
-function setupEventListeners() {
-    console.log('🔧 이벤트 리스너 설정 시작');
-    
-    // 로그인 관련
-    if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            if (loginModal) loginModal.style.display = 'block';
-        });
-    }
-    
-    if (loginClose) {
-        loginClose.addEventListener('click', () => {
-            if (loginModal) loginModal.style.display = 'none';
-        });
-    }
-    
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logoutUser);
-    }
-    
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-            
-            if (!emailInput || !passwordInput) {
-                showAlert('로그인 폼 요소를 찾을 수 없습니다.', 'error');
-                return;
-            }
-            
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            
-            try {
-                const result = await loginUser(email, password);
-                currentUser = result.user;
-                updateAuthUI();
-                showAlert('로그인 성공!', 'success');
-                if (loginModal) loginModal.style.display = 'none';
-                loginForm.reset();
-            } catch (error) {
-                console.error('❌ 로그인 실패:', error);
-                showAlert('로그인 실패: ' + error.message, 'error');
-            }
-        });
-    }
-
-    // 프로젝트 관리
-    if (addProjectBtn) {
-        addProjectBtn.addEventListener('click', async () => {
-            if (editProjectForm && editProjectForm.style.display === 'block') {
-                editProjectForm.style.display = 'none';
-                currentEditingProject = null;
-            }
-            if (addProjectForm) {
-                const isVisible = addProjectForm.style.display === 'block';
-                addProjectForm.style.display = isVisible ? 'none' : 'block';
-                
-                // 폼이 열릴 때 위치 옵션 업데이트
-                if (!isVisible) {
-                    await updatePositionOptions();
-                }
-            }
-        });
-    }
-    
-    if (cancelAddProject) {
-        cancelAddProject.addEventListener('click', () => {
-            if (addProjectForm) addProjectForm.style.display = 'none';
-            if (projectForm) projectForm.reset();
-            resetPositionFields();
-        });
-    }
-    
-    // 위치 선택 변경 이벤트
-    const insertPositionSelect = document.getElementById('insertPosition');
-    const specificPositionGroup = document.getElementById('specificPositionGroup');
-    const projectTypeSelect = document.getElementById('projectType');
-    
-    if (insertPositionSelect && specificPositionGroup) {
-        insertPositionSelect.addEventListener('change', function() {
-            if (this.value === 'specific') {
-                specificPositionGroup.style.display = 'block';
-                specificPositionGroup.classList.remove('hidden');
-                updatePositionOptions(); // 특정 위치 선택 시 옵션 업데이트
-            } else {
-                specificPositionGroup.style.display = 'none';
-                specificPositionGroup.classList.add('hidden');
-            }
-        });
-    }
-    
-    // 프로젝트 타입 변경 시 위치 옵션 업데이트
-    if (projectTypeSelect) {
-        projectTypeSelect.addEventListener('change', () => {
-            const insertPosition = document.getElementById('insertPosition');
-            if (insertPosition && insertPosition.value === 'specific') {
-                updatePositionOptions();
-            }
-        });
-    }
-    
-    if (projectForm) {
-        projectForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // 폼 검증
-            const formData = new FormData(projectForm);
-            const insertPosition = formData.get('insertPosition');
-            const specificPosition = formData.get('specificPosition');
-            
-            // 특정 위치 선택 시 위치값 검증
-            if (insertPosition === 'specific') {
-                if (!specificPosition || specificPosition < 1) {
-                    showAlert('올바른 위치를 입력해주세요.', 'error');
-                    return;
-                }
-                
-                // 최대 위치 검증
-                const projectType = formData.get('projectType');
-                const existingProjects = await getAllProjectsSorted(projectType);
-                const maxPosition = existingProjects.length + 1;
-                
-                if (parseInt(specificPosition) > maxPosition) {
-                    showAlert(`위치는 1~${maxPosition} 사이여야 합니다.`, 'error');
-                    return;
-                }
-            }
-            
-            const projectData = {
-                name: formData.get('projectName'),
-                period: formData.get('projectPeriod'),
-                funding: formData.get('projectFunding'),
-                description: formData.get('projectDesc'),
-                type: formData.get('projectType'),
-                insertPosition: insertPosition,
-                specificPosition: specificPosition
-            };
-            
-            console.log('📝 프로젝트 추가 요청:', projectData);
-            
-            await addProjectToRealtimeDB(projectData);
-            if (addProjectForm) addProjectForm.style.display = 'none';
-            if (projectForm) projectForm.reset();
-            resetPositionFields();
-        });
-    }
-    
-    // 수정/삭제 모드 토글
-    if (toggleEditMode) {
-        toggleEditMode.addEventListener('click', () => {
-            editMode = !editMode;
-            updateButtonsVisibility();
-            showAlert(editMode ? '수정 모드 활성화' : '수정 모드 비활성화', 'success');
-        });
-    }
-    
-    if (toggleDeleteMode) {
-        toggleDeleteMode.addEventListener('click', () => {
-            deleteMode = !deleteMode;
-            updateButtonsVisibility();
-            showAlert(deleteMode ? '삭제 모드 활성화' : '삭제 모드 비활성화', 'success');
-        });
-    }
-    
-    // 모달 외부 클릭 시 닫기
-    window.addEventListener('click', (e) => {
-        if (loginModal && e.target === loginModal) {
-            loginModal.style.display = 'none';
-        }
-    });
-
-    setupEditEventListeners();
-    setupImageEventListeners();
-    
-    console.log('✅ 이벤트 리스너 설정 완료');
-}
-
-function setupScrollAnimation() {
-    const hiddenElements = document.querySelectorAll(".hidden");
-    
-    const handleScroll = () => {
-        hiddenElements.forEach(element => {
-            const elementTop = element.getBoundingClientRect().top;
-            const windowHeight = window.innerHeight;
-            
-            if (elementTop < windowHeight - 50) {
-                element.classList.add("visible");
-            } else {
-                element.classList.remove("visible");
-            }
-        });
-    };
-    
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-}
-
-function setupMoreButton() {
-    const loadMoreBtn = document.getElementById("load-more");
-    const moreProjects = document.querySelector(".more-projects");
-    
-    if (loadMoreBtn && moreProjects) {
-        loadMoreBtn.addEventListener("click", function() {
-            moreProjects.classList.toggle("visible");
-            this.classList.toggle("active");
-        });
-    }
-}
-
-// ==================== 데이터 마이그레이션 함수 ====================
-async function migrateToDisplayOrder() {
-    try {
-        console.log('🔄 displayOrder 필드로 데이터 마이그레이션 시작...');
-        
-        const types = ['current projects', 'past projects'];
-        
-        for (const type of types) {
-            console.log(`📊 ${type} 마이그레이션 중...`);
-            
-            const ref = database.ref(type);
-            const snapshot = await ref.once('value');
-            const data = snapshot.val() || {};
-            
-            const projects = Object.entries(data).filter(([key, project]) => project && project.name);
-            
-            for (let i = 0; i < projects.length; i++) {
-                const [key, project] = projects[i];
-                
-                // displayOrder가 없는 경우에만 추가
-                if (project.displayOrder === undefined) {
-                    const displayOrder = (i + 1) * 100; // 100, 200, 300...
-                    
-                    await ref.child(key).update({
-                        displayOrder: displayOrder,
-                        createdAt: project.createdAt || Date.now()
-                    });
-                    
-                    console.log(`✅ ${project.name}: displayOrder ${displayOrder} 추가`);
-                }
-            }
-        }
-        
-        console.log('✅ 마이그레이션 완료');
-        showAlert('데이터 마이그레이션이 완료되었습니다.', 'success');
-        
-        // 데이터 다시 로드
-        setTimeout(() => {
-            loadProjectsFromRealtimeDB();
-        }, 1000);
-        
-    } catch (error) {
-        console.error('❌ 마이그레이션 실패:', error);
-        showAlert('마이그레이션 실패: ' + error.message, 'error');
-    }
-}
-
-// ==================== 메인 초기화 ====================
+// 메인 초기화
 document.addEventListener("DOMContentLoaded", function() {
     console.log('🚀 개선된 프로젝트 관리 시스템 시작');
     
@@ -1438,12 +702,9 @@ document.addEventListener("DOMContentLoaded", function() {
     toggleDeleteMode = document.getElementById('toggleDeleteMode');
     toggleEditMode = document.getElementById('toggleEditMode');
     
-    imageModal = document.getElementById('imageModal');
-    imageModalClose = document.getElementById('imageModalClose');
-    imageGallery = document.getElementById('imageGallery');
-    noImages = document.getElementById('noImages');
-    
-    console.log('📱 DOM 요소 초기화 완료');
+    editProjectForm = document.getElementById('editProjectForm');
+    projectEditForm = document.getElementById('projectEditForm');
+    cancelEditProject = document.getElementById('cancelEditProject');
     
     // Firebase 초기화
     try {
@@ -1475,52 +736,180 @@ document.addEventListener("DOMContentLoaded", function() {
         showAlert('Firebase 초기화 실패: ' + error.message, 'error');
     }
     
-    setupEventListeners();
-    setupScrollAnimation();
-    setupMoreButton();
+    // 이벤트 리스너 설정
+    function setupEventListeners() {
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                if (loginModal) loginModal.style.display = 'block';
+            });
+        }
+        
+        if (loginClose) {
+            loginClose.addEventListener('click', () => {
+                if (loginModal) loginModal.style.display = 'none';
+            });
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', logoutUser);
+        }
+        
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const emailInput = document.getElementById('email');
+                const passwordInput = document.getElementById('password');
+                
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                
+                try {
+                    const result = await loginUser(email, password);
+                    currentUser = result.user;
+                    updateAuthUI();
+                    showAlert('로그인 성공!', 'success');
+                    if (loginModal) loginModal.style.display = 'none';
+                    loginForm.reset();
+                } catch (error) {
+                    console.error('❌ 로그인 실패:', error);
+                    showAlert('로그인 실패: ' + error.message, 'error');
+                }
+            });
+        }
+        
+        // 프로젝트 추가 버튼
+        if (addProjectBtn) {
+            addProjectBtn.addEventListener('click', () => {
+                if (!currentUser) {
+                    showAlert('로그인이 필요합니다.', 'warning');
+                    return;
+                }
+                if (addProjectForm) {
+                    addProjectForm.style.display = 'block';
+                    addProjectForm.scrollIntoView({ behavior: 'smooth' });
+                }
+                if (editProjectForm) {
+                    editProjectForm.style.display = 'none';
+                }
+            });
+        }
+        
+        // 프로젝트 추가 폼 제출
+        if (projectForm) {
+            projectForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(projectForm);
+                
+                const projectData = {
+                    name: formData.get('projectName'),
+                    period: formData.get('projectPeriod'),
+                    funding: formData.get('projectFunding'),
+                    description: formData.get('projectDesc'),
+                    type: formData.get('projectType'),
+                    insertPosition: formData.get('insertPosition'),
+                    specificPosition: formData.get('specificPosition')
+                };
+                
+                await addProjectToRealtimeDB(projectData);
+                projectForm.reset();
+                if (addProjectForm) addProjectForm.style.display = 'none';
+                resetPositionFields();
+            });
+        }
+        
+        // 프로젝트 추가 취소
+        if (cancelAddProject) {
+            cancelAddProject.addEventListener('click', () => {
+                if (projectForm) projectForm.reset();
+                if (addProjectForm) addProjectForm.style.display = 'none';
+                resetPositionFields();
+            });
+        }
+        
+        // 프로젝트 수정 폼 제출
+        if (projectEditForm) {
+            projectEditForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await updateProject();
+            });
+        }
+        
+        // 프로젝트 수정 취소
+        if (cancelEditProject) {
+            cancelEditProject.addEventListener('click', () => {
+                if (projectEditForm) projectEditForm.reset();
+                if (editProjectForm) editProjectForm.style.display = 'none';
+                currentEditingProject = null;
+            });
+        }
+        
+        // 수정 모드 토글
+        if (toggleEditMode) {
+            toggleEditMode.addEventListener('click', () => {
+                if (!currentUser) {
+                    showAlert('로그인이 필요합니다.', 'warning');
+                    return;
+                }
+                editMode = !editMode;
+                if (editMode) {
+                    deleteMode = false;
+                    showAlert('수정 모드가 활성화되었습니다.', 'success');
+                } else {
+                    showAlert('수정 모드가 비활성화되었습니다.', 'success');
+                }
+                updateButtonsVisibility();
+            });
+        }
+        
+        // 삭제 모드 토글
+        if (toggleDeleteMode) {
+            toggleDeleteMode.addEventListener('click', () => {
+                if (!currentUser) {
+                    showAlert('로그인이 필요합니다.', 'warning');
+                    return;
+                }
+                deleteMode = !deleteMode;
+                if (deleteMode) {
+                    editMode = false;
+                    showAlert('삭제 모드가 활성화되었습니다. 주의하세요!', 'warning');
+                } else {
+                    showAlert('삭제 모드가 비활성화되었습니다.', 'success');
+                }
+                updateButtonsVisibility();
+            });
+        }
+        
+        // 위치 선택 변경 이벤트
+        const insertPositionSelect = document.getElementById('insertPosition');
+        const specificPositionGroup = document.getElementById('specificPositionGroup');
+        
+        if (insertPositionSelect && specificPositionGroup) {
+            insertPositionSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'specific') {
+                    specificPositionGroup.style.display = 'block';
+                    specificPositionGroup.classList.remove('hidden');
+                    updatePositionOptions();
+                } else {
+                    specificPositionGroup.style.display = 'none';
+                    specificPositionGroup.classList.add('hidden');
+                }
+            });
+        }
+        
+        // 프로젝트 타입 변경 시 위치 옵션 업데이트
+        const projectTypeSelect = document.getElementById('projectType');
+        if (projectTypeSelect) {
+            projectTypeSelect.addEventListener('change', () => {
+                const insertPosition = document.getElementById('insertPosition');
+                if (insertPosition && insertPosition.value === 'specific') {
+                    updatePositionOptions();
+                }
+            });
+        }
+    }
     
+    setupEventListeners();
     console.log('🎯 개선된 프로젝트 관리 시스템 로드 완료');
 });
 
-// ==================== 디버깅 및 관리 함수들 ====================
-window.debugSystem = function() {
-    console.log('=== 시스템 상태 ===');
-    console.log('- currentUser:', currentUser);
-    console.log('- deleteMode:', deleteMode);
-    console.log('- editMode:', editMode);
-    console.log('- database:', database ? '연결됨' : '연결 안됨');
-    console.log('- PROJECT_IMAGES:', Object.keys(PROJECT_IMAGES));
-    
-    loadProjectsFromRealtimeDB();
-};
-
-window.runDisplayOrderMigration = function() {
-    if (confirm('displayOrder 필드로 마이그레이션을 실행하시겠습니까?')) {
-        migrateToDisplayOrder();
-    }
-};
-
-window.manualReorder = function(projectType = 'current') {
-    if (confirm(`${projectType} 프로젝트 순서를 수동으로 재정렬하시겠습니까?`)) {
-        reorderProjectsByType(projectType);
-    }
-};
-
-// 위치 테스트 함수
-window.testPositionInsert = async function(projectType = 'current', position = 1) {
-    console.log(`🧪 위치 ${position}에 테스트 프로젝트 삽입`);
-    
-    const testProject = {
-        name: `테스트 프로젝트 ${Date.now()}`,
-        period: '2024.01 ~ 2024.12',
-        funding: '테스트 펀딩',
-        description: '위치 삽입 테스트용 프로젝트',
-        type: projectType,
-        insertPosition: 'specific',
-        specificPosition: position
-    };
-    
-    await addProjectToRealtimeDB(testProject);
-};
-
-console.log('🎯 완성된 projects.js 로드 완료 - 탭형 모달 포함');
+console.log('✅ projects.js 로드 완료');
