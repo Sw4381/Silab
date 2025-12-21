@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="photo.css">
-    
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -28,7 +28,7 @@
             <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
             <a href="./photo.html" class="active"><i class="fas fa-image"></i> Other Activities</a>
         </nav>
-        
+
         <div class="auth-section">
             <div class="user-info" id="userInfo" style="display: none;">
                 <i class="fas fa-user"></i>
@@ -53,8 +53,7 @@
                 <h2><i class="fab fa-firebase"></i> 연구실 로그인</h2>
                 <div class="form-group">
                     <label for="email">이메일</label>
-                    <input type="email" id="email" name="email" required 
-                           placeholder="example@gachon.ac.kr">
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
                 </div>
                 <div class="form-group">
                     <label for="password">비밀번호</label>
@@ -64,14 +63,14 @@
                     <i class="fas fa-sign-in-alt"></i> 로그인
                 </button>
                 <div class="login-help">
-                    연구실 멤버만 접근 가능합니다. 
+                    연구실 멤버만 접근 가능합니다.
                 </div>
             </form>
         </div>
     </div>
 
     <div class="container">
-        
+
         <!-- 관리자 패널 -->
         <div class="admin-panel" id="adminPanel">
             <h3><i class="fas fa-tools"></i> 특허 & 수상내역 관리</h3>
@@ -101,14 +100,12 @@
             <form id="patentForm">
                 <div class="form-group">
                     <label for="patentNumber">특허 번호 *</label>
-                    <input type="text" id="patentNumber" name="patentNumber" 
-                           placeholder="예: PT42" required>
+                    <input type="text" id="patentNumber" name="patentNumber" placeholder="예: PT42" required>
                 </div>
                 <div class="form-group">
                     <label for="patentContent">특허 내용 *</label>
-                    <textarea id="patentContent" name="patentContent" 
-                              placeholder="예: 설명 가능한 산업제어시스템 악성행위 탐지 기술 방법, (10-2846030, 2025.8)" 
-                              required></textarea>
+                    <textarea id="patentContent" name="patentContent"
+                        placeholder="예: 설명 가능한 산업제어시스템 악성행위 탐지 기술 방법, (10-2846030, 2025.8)" required></textarea>
                 </div>
                 <div class="form-buttons">
                     <button type="button" class="cancel-btn" id="cancelAddPatent">취소</button>
@@ -125,15 +122,14 @@
             <form id="awardForm">
                 <div class="form-group">
                     <label for="awardContent">수상 내용 *</label>
-                    <textarea id="awardContent" name="awardContent" 
-                              placeholder="예: 김현서, 한태현, 이태진 - 한국정보보호학회 동계학술대회 한국정보보호학회장상 최우수논문상 (2025.11)" 
-                              required></textarea>
+                    <textarea id="awardContent" name="awardContent"
+                        placeholder="예: 김현서, 한태현, 이태진 - 한국정보보호학회 동계학술대회 한국정보보호학회장상 최우수논문상 (2025.11)" required></textarea>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="awardHighlight">하이라이트 (선택사항)</label>
-                        <input type="text" id="awardHighlight" name="awardHighlight" 
-                               placeholder="예: 최우수논문상 (빨간색으로 강조될 텍스트)">
+                        <input type="text" id="awardHighlight" name="awardHighlight"
+                            placeholder="예: 최우수논문상 (빨간색으로 강조될 텍스트)">
                     </div>
                     <div class="form-group">
                         <label for="awardDate">날짜 *</label>
@@ -155,27 +151,27 @@
             <form id="itemEditForm">
                 <input type="hidden" id="editItemKey" name="editItemKey">
                 <input type="hidden" id="editItemType" name="editItemType">
-                
+
                 <div class="form-group" id="editPatentNumberGroup">
                     <label for="editPatentNumber">특허 번호 *</label>
                     <input type="text" id="editPatentNumber" name="editPatentNumber">
                 </div>
-                
+
                 <div class="form-group">
                     <label for="editItemContent">내용 *</label>
                     <textarea id="editItemContent" name="editItemContent" required></textarea>
                 </div>
-                
+
                 <div class="form-group" id="editHighlightGroup" style="display: none;">
                     <label for="editItemHighlight">하이라이트 (선택사항)</label>
                     <input type="text" id="editItemHighlight" name="editItemHighlight">
                 </div>
-                
+
                 <div class="form-group" id="editDateGroup" style="display: none;">
                     <label for="editAwardDate">날짜</label>
                     <input type="date" id="editAwardDate" name="editAwardDate">
                 </div>
-                
+
                 <div class="form-buttons">
                     <button type="button" class="cancel-btn" id="cancelEditItem">취소</button>
                     <button type="submit" class="submit-btn">
@@ -191,9 +187,6 @@
             <p>보안지능연구실의 특허, 수상 내역 및 연구실 활동을 소개합니다.</p>
         </div>
 
-
-
-        
         <div class="section-nav hidden">
             <button class="section-nav-btn" data-target="patents">
                 <i class="fas fa-certificate"></i> Patents
@@ -222,168 +215,57 @@
             </ul>
         </div>
 
-        <!-- 포토 게시판 섹션 -->
+        <!-- ==========================
+             Photo Gallery (개편)
+             - 처음: 카테고리(대표사진 2~3)
+             - 클릭: 해당 카테고리 사진 전체
+             ========================== -->
         <div class="section hidden" id="photos">
-            <h2>
-                <i class="fas fa-camera"></i> Photo Gallery
+            <h2 class="photo-header">
+                <span><i class="fas fa-camera"></i> Photo Gallery</span>
+                <div class="photo-header-actions">
+                    <button class="photo-header-btn" id="photoViewAllBtn" type="button">
+                        <i class="fas fa-th"></i> 전체 보기
+                    </button>
+                </div>
             </h2>
-            
-            <!-- 게시판 그리드 -->
-            <div class="photo-board">
-                <div class="photo-item" data-date="2024.11.30" data-category="연구실모임">
-                    <div class="photo-card">
-                        <img src="./activity_img/11월30일Silab하반기모임.jpg" alt="Silab 하반기 모임">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>Silab 하반기 모임</h4>
-                                <p>2024.11.30</p>
-                                <span class="category">연구실모임</span>
-                            </div>
+
+            <!-- 카테고리(대표사진) 뷰 -->
+            <div class="photo-category-view" id="photoCategoryView">
+                <div class="photo-category-top">
+                    <div class="photo-hint">
+                        <i class="fas fa-mouse-pointer"></i>
+                        카테고리를 클릭하면 관련 사진이 전체 표시됩니다.
+                    </div>
+                </div>
+
+                <div class="photo-categories" id="photoCategories">
+                    <!-- JS로 카테고리 카드 생성 -->
+                </div>
+            </div>
+
+            <!-- 카테고리 상세(해당 카테고리 전체 사진) 뷰 -->
+            <div class="photo-gallery-view" id="photoGalleryView" style="display:none;">
+                <div class="photo-gallery-toolbar">
+                    <button class="photo-back-btn" id="photoBackBtn" type="button">
+                        <i class="fas fa-arrow-left"></i> 카테고리로
+                    </button>
+
+                    <div class="photo-gallery-title">
+                        <span class="pill" id="photoActiveCategoryPill">전체</span>
+                        <span class="count" id="photoActiveCount">0</span>
+                    </div>
+
+                    <div class="photo-gallery-right">
+                        <div class="photo-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="photoSearchInput" placeholder="제목 검색 (예: 워크숍, 송별회)">
                         </div>
                     </div>
                 </div>
-                
-                <div class="photo-item" data-date="2023.11.11" data-category="연구실모임">
-                    <div class="photo-card">
-                        <img src="./activity_img/23_11_11 Lab 모임.jpg" alt="2023년 11월 Lab 모임">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>2023년 11월 Lab 모임</h4>
-                                <p>2023.11.11</p>
-                                <span class="category">연구실모임</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2023.05.15" data-category="행사">
-                    <div class="photo-card">
-                        <img src="./activity_img/스승의날_1.jpg" alt="스승의날 행사">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>스승의날 행사</h4>
-                                <p>2023.05.15</p>
-                                <span class="category">행사</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2023.04.20" data-category="행사">
-                    <div class="photo-card">
-                        <img src="./activity_img/교수님 구글 행사.jpg" alt="구글 행사">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>구글 행사</h4>
-                                <p>2023.04.20</p>
-                                <span class="category">행사</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2021.08.27" data-category="연구실모임">
-                    <div class="photo-card">
-                        <img src="./activity_img/20210827_2.jpg" alt="2021년 8월 모임">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>한국정보보호학회 충청지부 학술대회</h4>
-                                <p>2021.08.27</p>
-                                <span class="category">수상</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2023.05.25" data-category="수상">
-                    <div class="photo-card">
-                        <img src="./activity_img/2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상1.jpg" alt="2023 정보처리학회 은상">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>2023 정보처리학회 은상</h4>
-                                <p>2023.05.25</p>
-                                <span class="category">수상</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2023.11.18" data-category="학회">
-                    <div class="photo-card">
-                        <img src="./activity_img/2023_부산_정보처리학회.jpg" alt="2023 부산 정보처리학회">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>2023 부산 정보처리학회</h4>
-                                <p>2023.11.18</p>
-                                <span class="category">학회</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2023.08.15" data-category="수상">
-                    <div class="photo-card">
-                        <img src="./activity_img/2023_소개딩_한국인터넷진흥원장상.JPG" alt="2023 한국인터넷진흥원장상">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>2023 한국인터넷진흥원장상</h4>
-                                <p>2023.08.15</p>
-                                <span class="category">수상</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2020.07.23" data-category="연구실모임">
-                    <div class="photo-card">
-                        <img src="./activity_img/20200723_1.jpg" alt="2020년 7월 모임">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>2020년 7월 모임</h4>
-                                <p>2020.07.23</p>
-                                <span class="category">연구실모임</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2024.03.14" data-category="워크숍">
-                    <div class="photo-card">
-                        <img src="./activity_img/240314_KISA워크숍.jpg" alt="2024 KISA워크숍">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>2024 KISA워크숍</h4>
-                                <p>2024.03.14</p>
-                                <span class="category">워크숍</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2023.09.20" data-category="워크숍">
-                    <div class="photo-card">
-                        <img src="./activity_img/2차년도 KISA 워크샵.jpg" alt="KISA 워크샵">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>KISA 워크샵</h4>
-                                <p>2023.09.20</p>
-                                <span class="category">워크숍</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="photo-item" data-date="2023.06.10" data-category="수상">
-                    <div class="photo-card">
-                        <img src="./activity_img/Netsec 수상(교수님).png" alt="Netsec 수상">
-                        <div class="photo-overlay">
-                            <div class="photo-info">
-                                <h4>Netsec 수상</h4>
-                                <p>2023.06.10</p>
-                                <span class="category">수상</span>
-                            </div>
-                        </div>
-                    </div>
+
+                <div class="photo-board" id="photoBoard">
+                    <!-- JS로 photo-item 생성 -->
                 </div>
             </div>
         </div>
@@ -410,16 +292,16 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title"></h3>
-                <button class="modal-close" id="modalClose">
+                <button class="modal-close" id="modalClose" type="button">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <div class="modal-body">
                 <div class="modal-image-container">
                     <img class="modal-image" src="" alt="">
                 </div>
-                
+
                 <div class="modal-info">
                     <div class="modal-meta">
                         <div class="modal-date">
@@ -431,19 +313,19 @@
                             <span class="category-text"></span>
                         </div>
                     </div>
-                    
+
                     <div class="modal-description">
                         <p class="description-text"></p>
                     </div>
                 </div>
             </div>
-            
+
             <div class="modal-navigation">
-                <button class="nav-btn prev-photo" id="prevPhoto">
+                <button class="nav-btn prev-photo" id="prevPhoto" type="button">
                     <i class="fas fa-chevron-left"></i>
                     이전
                 </button>
-                <button class="nav-btn next-photo" id="nextPhoto">
+                <button class="nav-btn next-photo" id="nextPhoto" type="button">
                     다음
                     <i class="fas fa-chevron-right"></i>
                 </button>
