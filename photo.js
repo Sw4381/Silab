@@ -763,7 +763,7 @@ function buildPhotoListFromFilenames(year, dir, filenames) {
 // ---- 2023/2024/2025 전부 반영 ----
 const PHOTO_DATA = [
     ...buildPhotoListFromFilenames("2025", "./activity_img/2025년", [
-        "2025 정보호호 동계학술대회.jpg",
+        "2025 정보호호 동계학술대회 학회장상.jpg",
         "20250403 KISTI kick-off 4.jpg",
         "20250403 KISTI kick-off 5.jpg",
         "20250624 정보보호학회 하계학술대회 학회장상.jpg",
@@ -812,8 +812,12 @@ const PHOTO_DATA = [
         "240314_KISA워크숍3.jpg",
         "240411_KISTI_Kick-off.jpg",
         "240411_KISTI_Kick-off2.jpg",
-        "KISA 워크숍_4.jpg",
-        "스승의날_1.jpg"
+        "스승의날_1.jpg",
+        "SVCC2024_발표_한태현.jpg",
+        "SVCC2024_포스터_이선우.jpg",
+        "융합보안학회 하계학술대회_정혜란_장려상.png",
+        "융합보안학회 하계학술대회_황상연_우수논문상.png",
+        "정보보호학회 하계학술대회 학회장상.jpg",
     ]),
 
     ...buildPhotoListFromFilenames("2023", "./activity_img/2023년", [
