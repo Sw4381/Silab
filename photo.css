@@ -377,7 +377,7 @@
 
 /* ==================== 기존 photo.css 내용 ==================== */
 
-/* 활동 헤더 스타일 - 간결하게 */
+/* 활동 헤더 스타일 */
 .activities-header {
     text-align: center;
     padding: 25px 15px 20px;
@@ -413,7 +413,7 @@
     margin: 15px auto 0;
 }
 
-/* 섹션 공통 스타일 - 여백 축소 */
+/* 섹션 공통 */
 .section {
     margin-bottom: 35px;
     padding: 20px;
@@ -453,6 +453,7 @@
     color: #4facfe;
 }
 
+/* 섹션 네비 */
 .section-nav {
     display: flex;
     justify-content: center;
@@ -482,31 +483,17 @@
     box-shadow: 0 6px 12px rgba(79, 172, 254, 0.35);
 }
 
-.section-nav-btn:active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(79, 172, 254, 0.3);
-}
-
 .section-nav-btn.active {
     background: linear-gradient(90deg, #4facfe, #00f2fe);
     box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
     transform: translateY(-2px);
 }
 
-.section-nav-btn i {
-    font-size: 1.1em;
-}
+/* 특허/수상 */
+#patents { border-left: 3px solid #4facfe; display: block; }
+#awards  { border-left: 3px solid #28a745; display: block; }
 
-/* 특허 섹션 스타일 - 테두리 축소 */
-#patents {
-    border-left: 3px solid #4facfe;
-    display: block; /* 초기에 보임 */
-}
-
-.patent-list, .award-list {
-    list-style: none;
-    padding: 0;
-}
+.patent-list, .award-list { list-style: none; padding: 0; }
 
 .patent-list li, .award-list li {
     margin-bottom: 10px;
@@ -525,49 +512,215 @@
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
 }
 
-.patent-list li strong, .award-list li strong {
+.award-list li { background: #f8fff8; }
+.award-list li:hover { background: #f0fff0; }
+.award-highlight { color: #dc3545; font-weight: bold; }
+
+/* ==================== Photo 개편 UI ==================== */
+#photos { border-left: 3px solid #ffc107; display: none; }
+
+.photo-header {
+    gap: 10px;
+}
+
+.photo-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.photo-header-btn {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    color: #333;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+}
+
+.photo-header-btn:hover {
+    background: #eef6ff;
+    border-color: #cfe7ff;
+    transform: translateY(-1px);
+}
+
+.photo-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fbff;
+    border: 1px solid #e6f2ff;
+    color: #2a5d9f;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 0.92em;
+}
+
+.photo-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.photo-category-card {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.photo-category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.photo-category-topbar {
+    padding: 14px 14px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.photo-category-name {
+    font-weight: 700;
     color: #005792;
-    margin-right: 6px;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* 수상 섹션 스타일 - 테두리 축소 */
-#awards {
-    border-left: 3px solid #28a745;
-    display: block; /* 초기에 보임 */
+.photo-category-badge {
+    background: #4facfe;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.82em;
+    font-weight: 600;
 }
 
-.award-list li {
-    background: #f8fff8;
+.photo-category-thumbs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    height: 150px;
+    background: #f2f2f2;
 }
 
-.award-list li:hover {
-    background: #f0fff0;
+.photo-category-thumbs img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
 }
 
-.award-highlight {
-    color: #dc3545;
-    font-weight: bold;
+.photo-category-footer {
+    padding: 12px 14px 14px;
+    color: #666;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* 포토 게시판 섹션 */
-#photos {
-    border-left: 3px solid #ffc107;
-    display: none; /* 초기에 숨김 */
+.photo-category-footer .cta {
+    color: #2a5d9f;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
+/* 갤러리 뷰 */
+.photo-gallery-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 12px 0 14px;
+}
+
+.photo-back-btn {
+    border: 1px solid #e9ecef;
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.photo-back-btn:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+}
+
+.photo-gallery-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pill {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9em;
+}
+
+.count {
+    color: #666;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+.photo-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 8px 10px;
+    background: #fff;
+    min-width: 260px;
+}
+
+.photo-search i {
+    color: #999;
+}
+
+.photo-search input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.92em;
+}
 
 /* 게시판 그리드 */
 .photo-board {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
 }
 
+/* 카드 */
 .photo-item {
     background: white;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
@@ -576,7 +729,7 @@
 
 .photo-item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14);
 }
 
 .photo-card {
@@ -593,7 +746,7 @@
 }
 
 .photo-item:hover .photo-card img {
-    transform: scale(1.1);
+    transform: scale(1.06);
 }
 
 .photo-overlay {
@@ -604,17 +757,11 @@
     background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
     color: white;
     padding: 20px 15px 15px;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-}
-
-.photo-item:hover .photo-overlay {
-    transform: translateY(0);
 }
 
 .photo-info h4 {
     margin: 0 0 5px 0;
-    font-size: 1.1em;
+    font-size: 1.05em;
     font-weight: bold;
 }
 
@@ -634,76 +781,14 @@
     font-weight: 500;
 }
 
-/* 섹션 전환을 위한 스타일 */
-.section.visible {
-    display: block;
-    animation: fadeInUp 0.5s ease-out;
-}
+/* 섹션 전환 + 애니메이션 */
+.section.visible { display: block; animation: fadeInUp 0.5s ease-out; }
 
-/* 페이드인 애니메이션 */
 @keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-/* 전체화면 포토 게시판을 위한 스타일 */
-#photos.visible {
-    min-height: 70vh;
-    padding: 30px;
-}
-
-/* 더보기 버튼 스타일 - 간결하게 */
-.show-more {
-    display: none;
-}
-
-.show-more.visible {
-    display: block;
-    animation: fadeIn 0.4s ease-in-out;
-}
-
-.show-more-button {
-    text-align: center;
-    margin-top: 20px;
-}
-
-.show-more-button button {
-    background: linear-gradient(90deg, #8bb6ff, #88b4ff);
-    color: white;
-    border: none;
-    padding: 8px 18px;
-    border-radius: 20px;
-    font-size: 0.95em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(79, 172, 254, 0.2);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0 auto;
-}
-
-.show-more-button button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3);
-}
-
-.show-more-button button i {
-    transition: transform 0.3s ease;
-}
-
-.show-more-button.active button i {
-    transform: rotate(180deg);
-}
-
-/* 애니메이션 효과 - 부드럽게 */
 .hidden {
     opacity: 0;
     transform: translateY(20px);
@@ -716,39 +801,21 @@
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(15px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(15px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideIn {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    from { transform: translateY(-50px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
 }
 
-/* 사진 모달 스타일 */
+/* ==================== 모달 (기존 유지) ==================== */
 .photo-modal {
     position: fixed;
     top: 0;
@@ -796,7 +863,6 @@
     transform: scale(1);
 }
 
-/* 모달 헤더 */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -808,8 +874,8 @@
 
 .modal-title {
     color: #333;
-    font-size: 1.4em;
-    font-weight: 600;
+    font-size: 1.35em;
+    font-weight: 700;
     margin: 0;
 }
 
@@ -834,7 +900,6 @@
     color: #333;
 }
 
-/* 모달 바디 */
 .modal-body {
     flex: 1;
     display: flex;
@@ -867,7 +932,6 @@
     min-width: 300px;
 }
 
-/* 메타 정보 */
 .modal-meta {
     margin-bottom: 20px;
 }
@@ -885,10 +949,6 @@
     width: 16px;
 }
 
-.modal-date .date-text {
-    color: #666;
-}
-
 .modal-category .category-text {
     background: #4facfe;
     color: white;
@@ -898,19 +958,9 @@
     font-weight: 500;
 }
 
-/* 설명 */
-.modal-description {
-    flex: 1;
-    margin-bottom: 20px;
-}
+.modal-description { flex: 1; margin-bottom: 20px; }
+.description-text { color: #555; line-height: 1.6; font-size: 0.95em; }
 
-.description-text {
-    color: #555;
-    line-height: 1.6;
-    font-size: 0.95em;
-}
-
-/* 모달 네비게이션 */
 .modal-navigation {
     display: flex;
     justify-content: space-between;
@@ -946,73 +996,21 @@
     box-shadow: none;
 }
 
-/* ==================== 반응형 디자인 ==================== */
-
+/* ==================== 반응형 ==================== */
 @media (max-width: 992px) {
-    .section h2 {
-        font-size: 1.4em;
-    }
-    
-    .photo-board {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-    }
-    
-    .photo-card {
-        height: 180px;
-    }
-    
-    .admin-panel h3 {
-        font-size: 1.2em;
-    }
-    
-    .admin-btn {
-        font-size: 0.85em;
-        padding: 9px 18px;
-    }
+    .photo-board { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+    .photo-card { height: 180px; }
+    .photo-search { min-width: 220px; }
 }
 
 @media (max-width: 768px) {
-    .navbar {
-        flex-direction: column;
-        gap: 15px;
-        padding: 20px;
-    }
+    .navbar { flex-direction: column; gap: 15px; padding: 20px; }
+    .auth-section { margin-right: 0; }
 
-    .auth-section {
-        margin-right: 0;
-    }
+    .section { padding: 18px 15px; }
+    .photo-board { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .photo-card { height: 160px; }
 
-    .section {
-        padding: 18px 15px;
-    }
-    
-    .photo-board {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 12px;
-    }
-    
-    .photo-card {
-        height: 160px;
-    }
-    
-    .photo-overlay {
-        padding: 15px 12px 12px;
-    }
-    
-    .photo-info h4 {
-        font-size: 1em;
-    }
-    
-    .activities-header h1 {
-        font-size: 1.8em;
-    }
-    
-    .patent-list li, .award-list li {
-        font-size: 0.9em;
-        padding: 12px 14px;
-    }
-    
     .section-nav {
         position: sticky;
         top: 0;
@@ -1022,126 +1020,23 @@
         margin-bottom: 20px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
-    #photos.visible {
-        padding: 20px 15px;
-        min-height: 80vh;
-    }
-    
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
-    
-    .form-row .form-group {
-        margin-bottom: 15px;
-    }
 
-    .admin-buttons {
+    .photo-gallery-toolbar {
         flex-direction: column;
-        gap: 12px;
-    }
-    
-    .admin-btn {
-        width: 100%;
-        justify-content: center;
-        padding: 12px 20px;
-        font-size: 0.9em;
-    }
-    
-    .form-buttons {
-        flex-direction: column;
+        align-items: stretch;
         gap: 10px;
     }
-    
-    .submit-btn, .cancel-btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .modal-body {
-        flex-direction: column;
-    }
-    
-    .modal-image-container {
-        flex: 2;
-    }
-    
-    .modal-info {
-        flex: 1;
-        min-width: auto;
-        padding: 20px;
-    }
+
+    .photo-search { min-width: 100%; }
+
+    .modal-body { flex-direction: column; }
+    .modal-info { min-width: auto; padding: 20px; }
 }
 
 @media (max-width: 576px) {
-    .patent-list li, .award-list li {
-        padding: 12px;
-    }
-    
-    .show-more-button button {
-        padding: 8px 16px;
-        font-size: 0.9em;
-    }
-    
-    .photo-board {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .photo-card {
-        height: 200px;
-    }
-    
-    .activities-header {
-        padding: 20px 12px 15px;
-    }
-    
-    .activities-header h1 {
-        font-size: 1.6em;
-    }
-    
-    .modal-content {
-        width: 98%;
-        height: 98%;
-        border-radius: 8px;
-    }
-    
-    .modal-info {
-        padding: 15px;
-    }
-    
-    .nav-btn {
-        font-size: 0.85em;
-        padding: 6px 12px;
-    }
-    
-    .section-nav {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .section-nav-btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .admin-panel {
-        padding: 15px 12px;
-    }
-    
-    .admin-panel h3 {
-        font-size: 1.1em;
-        margin-bottom: 15px;
-    }
-    
-    .admin-btn {
-        padding: 10px 16px;
-        font-size: 0.85em;
-        min-height: 36px;
-    }
-    
-    .add-patent-form, .add-award-form, .edit-item-form {
-        padding: 15px 12px;
-    }
+    .photo-board { grid-template-columns: 1fr; gap: 15px; }
+    .photo-card { height: 200px; }
+    .photo-categories { grid-template-columns: 1fr; }
+    .photo-category-thumbs { height: 180px; }
+    .photo-category-thumbs img { height: 180px; }
 }
