@@ -652,6 +652,7 @@ function initSectionToggle() {
 /* =========================================================
    Photo Gallery (카테고리 대표 → 상세)
    - 2025년 추가 반영
+   - ✅ description(설명) 지원 추가
    ========================================================= */
 
 const CATEGORY_THUMB_COUNT = 3;
@@ -744,6 +745,32 @@ function prettyTitleFromFilename(filename) {
     return t || filename;
 }
 
+/* ==================== ✅ 사진 설명(Description) 사전 ====================
+   - 파일명 그대로 키로 넣으면 됨
+   - 없는 건 자동으로 빈 문자열 -> 모달에서 ---로 표시
+*/
+const PHOTO_DESC = {
+    // ===== 2025 (샘플) =====
+    "연구실 남자들끼리의 뜨거운 한 잔 모임.jpg": "연구실 구성원들이 모여 친목을 다진 자리입니다. 이 뜨거운 술자리에 함께 하고 싶으신 분은 언제든지 환영입니다.",
+    "20251121 신입생 환영회.jpg": "신입 연구원 환영을 위해 진행한 모임입니다.",
+    "20250716 AI 보안 워크샵.jpg": "AI 보안 워크샵 참가 현장 사진입니다.",
+    "20250716 AI 보안 워크샵 교수님과 탁구.jpg": "워크샵 중 쉬는 시간 스냅샷입니다.",
+    "20250820 정보보호 개발자 해커톤.jpg": "정보보호 개발자 해커톤 참가 현장입니다.",
+    "20250821 정보보호 개발자 해커톤 장려상.jpg": "해커톤 장려상 수상 기념 사진입니다.",
+    "20250821 WISA 학술대회 포스터 발표.jpg": "WISA 포스터 발표 현장입니다.",
+    "20250822 WISA 학술대회 발표.jpg": "WISA 구두 발표 현장입니다.",
+    "20251026 캡스톤 디자인 우수상.jpg": "캡스톤 디자인 우수상 수상 기념 사진입니다.",
+
+    // ===== 2024 (샘플) =====
+    "11월30일Silab하반기모임.jpg": "하반기 연구실 모임에서 함께 교류한 자리입니다.",
+    "20240422_교수님생신.jpg": "교수님 생신을 기념해 축하한 날입니다.",
+    "240206_송별회1.jpg": "연구실 송별회 단체 사진입니다.",
+    "240306_신입생환영회.jpg": "신입생 환영회에서의 모습입니다.",
+    "SVCC2024_포스터_이선우.jpg": "SVCC 2024 포스터 발표 기록입니다.",
+    "SVCC2024_발표_한태현.jpg": "SVCC 2024 발표 현장 기록입니다.",
+    "정보보호학회 하계학술대회 학회장상.jpg": "정보보호학회 하계학술대회 학회장상 수상 기념 사진입니다."
+};
+
 function buildPhotoListFromFilenames(year, dir, filenames) {
     const list = [];
     filenames.forEach(fn => {
@@ -755,7 +782,17 @@ function buildPhotoListFromFilenames(year, dir, filenames) {
         const category = autoCategoryByName(fn);
 
         const src = encodeURI(`${dir}/${fn}`);
-        list.push({ src, title, date, category, year });
+
+        // ✅ filename / description 추가
+        list.push({
+            src,
+            title,
+            date,
+            category,
+            year,
+            filename: fn,
+            description: (PHOTO_DESC[fn] || "")
+        });
     });
     return list;
 }
@@ -891,7 +928,6 @@ const PHOTO_DATA = [
         "학교 벚꽃2_모임.jpg",
         "학사 졸업식.jpg"
     ])
-
 ];
 
 // Photo UI 상태
@@ -1060,7 +1096,12 @@ function initPhotoModal() {
         if (modalTitle) modalTitle.textContent = photo.title || "";
         if (dateText) dateText.textContent = photo.date || "";
         if (categoryText) categoryText.textContent = photo.category || "";
-        if (descriptionText) descriptionText.textContent = "---";
+
+        // ✅ 여기서 description 출력
+        if (descriptionText) {
+            const d = (photo.description || "").trim();
+            descriptionText.textContent = d ? d : "---";
+        }
 
         updateNavButtons();
         modal.classList.add('show');
