@@ -838,7 +838,7 @@ const PHOTO_DATA = [
         "Security 분야에서의 XAI 연구 동향 및 시사점_장려상.jpg",
         "선우,시온 학술대회 수상.jpg",
         "위험관리 RMF 워크숍.jpg",
-        "정보보호학회_충청지부_학술대회.png",
+        "정보보호학회_충청지부_학술대회_수상.png",
         "정보보호학회_충청지부_학술대회_포스터 (2).jpg",
         "정보보호학회_충청지부_학술대회_포스터 (3).jpg",
         "정보보호학회_충청지부_학술대회_포스터.jpg",
@@ -846,7 +846,48 @@ const PHOTO_DATA = [
         "정보보호학회_충청지부_학술대회_포스터발표_2.jpg",
         "정보보호학회_충청지부_학술대회_포스터발표_3.jpg",
         "한국정보보호학회 충청지부 - 호서대 총장상(이선우).jpg"
+    ]),
+
+    ...buildPhotoListFromFilenames("2022", "./activity_img/2022년", [
+        "2022 AI Week 졸업작품경진대회 우수상1.jp2.jpg",
+        "2022 AI Week 졸업작품경진대회 우수상1.jpg",
+        "2022 AI Week 학술논문발표.jpg",
+        "2022 캡스톤 디자인 및 AI 해커톤1.jpg",
+        "2022 캡스톤 디자인 및 AI 해커톤2.jpg",
+        "2022 캡스톤 디자인 및 AI 해커톤3.jpg",
+        "2022 한국정보보호학회 하계학술대회.jpeg",
+        "2022년 AI+Security 우수논문 아이디어 공모전(수상증빙_2).jpg",
+        "9_24 SILAB OB_YB 단체 서울 회식.jpg",
+        "AI+Security 우수논문 아이디어 공모전 우수상.jpg",
+        "AI+Security 우수논문 아이디어 공모전 우수상_2.jpg",
+        "KISA kick-off 제주도.jpg",
+        "KISA kick-off 제주도2.jpg",
+        "KISA kick-off 제주도_10.jpg",
+        "KISA kick-off 제주도_11.jpg",
+        "KISA kick-off 제주도_12.jpg",
+        "KISA kick-off 제주도_13.jpg",
+        "KISA kick-off 제주도_14.jpg",
+        "KISA kick-off 제주도_3.jpg",
+        "KISA kick-off 제주도_4.jpg",
+        "KISA kick-off 제주도_5.jpg",
+        "KISA kick-off 제주도_6.jpg",
+        "KISA kick-off 제주도_7.jpg",
+        "KISA kick-off 제주도_8.jpg",
+        "KISA kick-off 제주도_9.jpg",
+        "사이버 보안 AI 빅데이터 챌린지 C트랙 발표.jpg",
+        "사이버 보안 AI빅데이터 챌린지 C트랙 최우수상1.jpg",
+        "사이버 보안 AI빅데이터 챌린지 C트랙 최우수상2.jpg",
+        "사이버 보안 AI빅데이터 챌린지 C트랙 최우수상3.jpg",
+        "사이버 보안 AI빅데이터 챌린지 C트랙 최우수상4.jpg",
+        "사이버보안 AI_빅데이터 챌린지 2022_수상.png",
+        "삼성 Z플립 행사참여.jpg",
+        "스승의날_1.jpg",
+        "스승의날_2.jpg",
+        "학교 벚꽃1_모임.jpg",
+        "학교 벚꽃2_모임.jpg",
+        "학사 졸업식.jpg"
     ])
+
 ];
 
 // Photo UI 상태
