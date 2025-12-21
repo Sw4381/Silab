@@ -790,7 +790,8 @@ const PHOTO_DATA = [
         "250404-KISTI kick-off 3.jpg",
         "교수님 구글 행사.jpg",
         "정보보호학회 동계학술대회.jpg",
-        "정보보호학회 하계학술대회 학회장상.jpg"
+        "정보보호학회 하계학술대회 학회장상.jpg",
+        "연구실 남자들끼리의 뜨거운 한잔 모임.jpg"
     ]),
 
     ...buildPhotoListFromFilenames("2024", "./activity_img/2024년", [
