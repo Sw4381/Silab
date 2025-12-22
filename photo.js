@@ -701,8 +701,8 @@ function autoCategoryByName(name) {
     const n = name.toLowerCase();
 
     const isWorkshop =
-        n.includes("워크숍") || n.includes("workshop") ||
-        n.includes("ai 보안 워크샵") || n.includes("kisa") ||
+        n.includes("워크숍") || n.includes("workshop") || n.includes("워크샵") ||
+        n.includes("ai 보안 워크샵") || n.includes("kisa") ||  n.includes("KISA") ||
         n.includes("kisti") || n.includes("kick-off") || n.includes("kickoff");
 
     const isAward =
@@ -712,11 +712,11 @@ function autoCategoryByName(name) {
         n.includes("한국인터넷진흥원장상") || n.includes("netsec");
 
     const isConference =
-        n.includes("학회") || n.includes("wisa") || n.includes("학술대회") ||
+        n.includes("학회") || n.includes("wisa") || n.includes("학술대회") || n.includes("NetSec") || 
         n.includes("포스터") || n.includes("발표");
 
     const isLabMeet =
-        n.includes("lab") || n.includes("모임") || n.includes("송별회") ||
+        n.includes("lab") || n.includes("모임") || n.includes("송별회") || n.includes("회식") ||
         n.includes("환영회") || n.includes("신입생 환영회");
 
     const isHackathon =
@@ -733,7 +733,7 @@ function autoCategoryByName(name) {
     if (isConference) return "학회";
     if (isEvent) return "행사";
     if (isLabMeet) return "연구실모임";
-    return "기타";
+    return "연구실모임";
 }
 
 function prettyTitleFromFilename(filename) {
@@ -927,6 +927,140 @@ const PHOTO_DATA = [
         "학교 벚꽃1_모임.jpg",
         "학교 벚꽃2_모임.jpg",
         "학사 졸업식.jpg"
+    ]),
+    ...buildPhotoListFromFilenames("2021", "./activity_img/2021년", [
+        // WISA 제주도
+        "2021 WISA 제주도1.jpg",
+        "2021 WISA 제주도2.jpg",
+        "2021 WISA 제주도3.jpg",
+        "2021 WISA 제주도4.jpg",
+        "2021 WISA 제주도5.jpg",
+        "2021 WISA 제주도6.jpg",
+        "2021 WISA 제주도7.jpg",
+        "2021 WISA 제주도8.jpg",
+        "2021 WISA 제주도9.jpg",
+        // 학회 / 수상
+        "20210827-정보보호학회_충청지부학술대회_우수상.jpg",
+        "20211118_ICS보안위협탐지_AI경진대회_최우수상.jpg",
+        // 행사 / 컨퍼런스
+        "HAIcon사진.jpg",
+        "NetSec-KR1.jpg",
+        "NetSec-KR2.jpg",
+        "NetSec-KR3.jpg",
+
+        // 정보보호학회 충청지부
+        "정보보호학회 충청지부 학술대회1.jpg",
+        "정보보호학회 충청지부 학술되회2.jpg",
+        "정보보호학회 충청지부 학술되회3.jpg"
+    ]),
+
+
+    ...buildPhotoListFromFilenames("2020", "./activity_img/2020년", [
+        "20200106-회식_1.jpg",
+        "20200106-회식_2.jpg",
+        "20200106-회식_3.jpg",
+        "20200106-회식_4.jpg",
+        "20200106-회식_5.jpg",
+        "20200106-회식_6.jpg",
+        "20200106-회식_7.jpg",
+        "20200106-회식_8.jpg",
+        "20200106-회식_9.jpg",
+
+        "20200224-최우수졸업논문상-황준호.jpg",
+
+        "20200706-APIC-IST 2020 논문발표_1.jpg",
+        "20200706-APIC-IST 2020 논문발표_2.jpg",
+        "20200706-APIC-IST 2020 논문발표_3.jpg",
+        "20200706-APIC-IST 2020 논문발표_4.jpg",
+        "20200706-APIC-IST 2020 논문발표_5.jpg",
+        "20200706-APIC-IST 2020 논문발표_6.jpg",
+
+        "20200804-미래융합보안기술워크숍_1.jpg",
+        "20200804-미래융합보안기술워크숍_2.jpg",
+        "20200804-미래융합보안기술워크숍_3.jpg",
+        "20200804-미래융합보안기술워크숍_4.jpg",
+        "20200804-미래융합보안기술워크숍_5.jpg",
+        "20200804-미래융합보안기술워크숍_6.jpg",
+        "20200804-미래융합보안기술워크숍_7.jpg",
+        "20200804-미래융합보안기술워크숍_8.jpg",
+
+        "20201021-ICS 단체사진.jpg",
+        "20201027_ICS보안위협탐지_AI경진대회_최우수상_1.jpg",
+        "20201030-한국인터넷정보학회_추계학술대회_1.jpg",
+        "20201030-한국인터넷정보학회_추계학술대회_시상식_1.jpg",
+
+        "20201119_SILAB_연구실_신입생환영회_1.jpg",
+
+        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_1.jpg",
+        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_2.jpg",
+        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_3.jpg",
+        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_4.jpg",
+        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_5.jpg",
+        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_6.jpg",
+        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_상장.jpg",
+        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_상장_1.jpg",
+        "20201203-K-사이버_시큐리티챌린지_악성코드탐지분야_1.jpg"
+    ]),
+
+    ...buildPhotoListFromFilenames("2018", "./activity_img/2018년", [
+        "181208-AI기반 악성코드탐지(KISA원장상)-우수상.GIF",
+        "181208-AI기반 악성코드탐지(침해사고대응협의회장상).GIF",
+        "2018-1210_데이터챌린지_R&D부상.jpg",
+        "20180129_호경생일날_1.jpg",
+        "20180220_졸업식_1.jpg",
+        "20180220_졸업식_2.jpg",
+        "20180220_졸업식_3.jpg",
+        "20180227_펜타포트점 아웃백.jpg",
+        "20180323_513-2호 이전.jpg",
+        "20180328_회의중_1.png",
+        "20180409_deepweb 발표(엠진)_1.jpg",
+        "20180409_deepweb 발표(엠진)_2.jpg",
+        "20180409_deepweb 발표(엠진)_3.jpg",
+        "20180417_교수님,수정생일,인호,현석환영식_2.jpg",
+        "20180515_스승의날교수님얼음.jpg",
+        "20180717_Alcohol_time.jpg",
+        "20180717_BBQ Time.jpg",
+        "20180717_poker_teaching.jpg",
+        "20180717_the_Goddess_of_fortune.jpg",
+        "20180717_강화도1.jpg",
+        "20180717_강화도2.jpg",
+        "20180717_강화도3.jpg",
+        "20180717_강화도4.jpg",
+        "20180717_단체샷.jpg",
+        "20180717_해질녘.jpg",
+        "20180717_흡연자.jpg",
+        "20180718_CoffeeBreak.jpg",
+        "20181208_R&D시상식1.jpg",
+        "20181208_R&D시상식2.jpg",
+        "20181208_R&D시상식3.jpg",
+        "20181208_R&D시상식4.jpg",
+        "20181208_R&D시상식5.jpg",
+        "20181210_R&D기념사진_수상_1.1.jpg",
+        "20181210_R&D기념사진_수상_1.jpg",
+        "2018데이터챌린지-우수상.jpg",
+        "2018데이터챌린지_예선_경기 충정  2위 상장.jpg"
+    ]),
+
+    ...buildPhotoListFromFilenames("2017", "./activity_img/2017년", [
+        "20170726_용현계곡_워크샵_1.jpg",
+        "20170726_용현계곡_워크샵_2.jpg",
+        "20170726_용현계곡_워크샵_3(호경,선빈,준호 뒷풀이).jpg",
+        "20171028_해커톤.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_1.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_2.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_3.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_4.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_5.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_6.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_7.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_8.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_9.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_10.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_11.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_12.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_13.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_14.jpg",
+        "20171220_부산벡스코(한국정보과학회논문발표)_15.jpg"
     ])
 ];
 
