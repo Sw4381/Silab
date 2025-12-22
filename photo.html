@@ -202,24 +202,16 @@
         <!-- 특허 섹션 -->
         <div class="section hidden" id="patents">
             <h2><i class="fas fa-certificate"></i> Patents</h2>
-            <ul class="patent-list">
-                <!-- Firebase에서 로드된 특허들이 여기에 동적으로 추가됩니다 -->
-            </ul>
+            <ul class="patent-list"></ul>
         </div>
 
         <!-- 수상 내역 섹션 -->
         <div class="section hidden" id="awards">
             <h2><i class="fas fa-trophy"></i> Awards</h2>
-            <ul class="award-list">
-                <!-- Firebase에서 로드된 수상내역들이 여기에 동적으로 추가됩니다 -->
-            </ul>
+            <ul class="award-list"></ul>
         </div>
 
-        <!-- ==========================
-             Photo Gallery (개편)
-             - 처음: 카테고리(대표사진 2~3)
-             - 클릭: 해당 카테고리 사진 전체
-             ========================== -->
+        <!-- Photo Gallery -->
         <div class="section hidden" id="photos">
             <h2 class="photo-header">
                 <span><i class="fas fa-camera"></i> Photo Gallery</span>
@@ -230,21 +222,37 @@
                 </div>
             </h2>
 
-            <!-- 카테고리(대표사진) 뷰 -->
+            <!-- ✅ 카테고리(대표사진) 뷰 -->
             <div class="photo-category-view" id="photoCategoryView">
                 <div class="photo-category-top">
                     <div class="photo-hint">
                         <i class="fas fa-mouse-pointer"></i>
-                        카테고리를 클릭하면 관련 사진이 전체 표시됩니다.
+                        카테고리 또는 연도를 클릭하면 관련 사진이 전체 표시됩니다.
                     </div>
                 </div>
 
-                <div class="photo-categories" id="photoCategories">
-                    <!-- JS로 카테고리 카드 생성 -->
+                <!-- ✅ YEAR CARDS -->
+                <div class="photo-subsection">
+                    <div class="photo-subsection-title">
+                        <i class="fas fa-calendar-alt"></i> 년도별 보기
+                    </div>
+                    <div class="photo-years" id="photoYears">
+                        <!-- JS로 년도 카드 생성 -->
+                    </div>
+                </div>
+
+                <!-- ✅ CATEGORY CARDS -->
+                <div class="photo-subsection">
+                    <div class="photo-subsection-title">
+                        <i class="fas fa-folder-open"></i> 카테고리별 보기
+                    </div>
+                    <div class="photo-categories" id="photoCategories">
+                        <!-- JS로 카테고리 카드 생성 -->
+                    </div>
                 </div>
             </div>
 
-            <!-- 카테고리 상세(해당 카테고리 전체 사진) 뷰 -->
+            <!-- ✅ 갤러리 뷰 -->
             <div class="photo-gallery-view" id="photoGalleryView" style="display:none;">
                 <div class="photo-gallery-toolbar">
                     <button class="photo-back-btn" id="photoBackBtn" type="button">
@@ -252,11 +260,15 @@
                     </button>
 
                     <div class="photo-gallery-title">
-                        <span class="pill" id="photoActiveCategoryPill">전체</span>
+                        <span class="pill" id="photoActiveCategoryPill">전체 · 전체년도</span>
                         <span class="count" id="photoActiveCount">0</span>
                     </div>
 
                     <div class="photo-gallery-right">
+                        <button class="photo-clear-btn" id="photoClearFiltersBtn" type="button">
+                            <i class="fas fa-rotate-left"></i> 필터 초기화
+                        </button>
+
                         <div class="photo-search">
                             <i class="fas fa-search"></i>
                             <input type="text" id="photoSearchInput" placeholder="제목 검색 (예: 워크숍, 송별회)">
@@ -264,9 +276,11 @@
                     </div>
                 </div>
 
-                <div class="photo-board" id="photoBoard">
-                    <!-- JS로 photo-item 생성 -->
-                </div>
+                <!-- ✅ Year chips (갤러리 내부에서 연도 선택) -->
+                <div class="photo-year-chips" id="photoYearChips"></div>
+
+                <!-- ✅ Board -->
+                <div class="photo-board" id="photoBoard"></div>
             </div>
         </div>
 
@@ -333,7 +347,6 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script src="photo.js"></script>
 </body>
 </html>

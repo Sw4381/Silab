@@ -1040,3 +1040,133 @@
     .photo-category-thumbs { height: 180px; }
     .photo-category-thumbs img { height: 180px; }
 }
+
+
+/* ==================== (추가) Photo: Year Cards / Year Chips / Grouped View ==================== */
+
+/* 년도 카드 그리드 */
+.photo-years {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+}
+
+/* 카테고리/년도 섹션 타이틀 */
+.photo-subsection {
+    margin-top: 18px;
+}
+.photo-subsection-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    color: #005792;
+    margin: 8px 0 6px;
+    font-size: 0.98em;
+    opacity: 0.95;
+}
+
+/* 갤러리 우측 버튼 */
+.photo-gallery-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.photo-clear-btn {
+    border: 1px solid #e9ecef;
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+.photo-clear-btn:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+}
+
+/* Year chips */
+.photo-year-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 6px 0 14px;
+    padding: 8px 0 2px;
+}
+.year-chip {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 800;
+    opacity: .85;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+.year-chip:hover {
+    transform: translateY(-1px);
+    background: #f8fbff;
+    border-color: #cfe7ff;
+}
+.year-chip.active {
+    opacity: 1;
+    border-color: rgba(0,0,0,0.35);
+    background: #fff3cd;
+}
+
+/* 그룹핑 모드: photoBoard 자체는 블록 컨테이너로 */
+.photo-board.year-grouped {
+    display: block;
+    gap: 0;
+}
+
+/* 연도 섹션 */
+.photo-year-section {
+    margin: 18px 0 22px;
+}
+.photo-year-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    background: #f8fbff;
+    border: 1px solid #e6f2ff;
+    border-radius: 12px;
+}
+.photo-year-title {
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: #005792;
+}
+.photo-year-count {
+    font-weight: 800;
+    opacity: .75;
+}
+
+/* 섹션 내부 그리드 */
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* 반응형 보정 */
+@media (max-width: 992px) {
+    .photo-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+}
+@media (max-width: 768px) {
+    .photo-gallery-right { flex-direction: column; align-items: stretch; }
+    .photo-clear-btn { width: 100%; justify-content: center; }
+    .photo-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+}
+@media (max-width: 576px) {
+    .photo-grid { grid-template-columns: 1fr; gap: 15px; }
+    .photo-years { grid-template-columns: 1fr; }
+}

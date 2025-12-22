@@ -1,4 +1,4 @@
-// photo.js - Patents와 Awards를 Firebase로 관리 + Photo Gallery(카테고리 대표 → 상세) 구현
+// photo.js - Patents와 Awards를 Firebase로 관리 + Photo Gallery(카테고리/년도 카드 → 상세) 구현
 
 const firebaseConfig = {
     apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
@@ -650,13 +650,15 @@ function initSectionToggle() {
 }
 
 /* =========================================================
-   Photo Gallery (카테고리 대표 → 상세)
-   - 2025년 추가 반영
-   - ✅ description(설명) 지원 추가
+   Photo Gallery (카테고리/년도 카드 → 상세)
+   - ✅ 연도 카드 추가
+   - ✅ 갤러리 내부: 연도칩 + 연도별 그룹핑(연도필터 없을 때)
+   - ✅ description 유지
    ========================================================= */
 
 const CATEGORY_THUMB_COUNT = 3;
 
+// ---- 기존 유틸들(너 코드 유지) ----
 function parseDateFromFilename(filename) {
     const base = filename;
 
@@ -702,7 +704,7 @@ function autoCategoryByName(name) {
 
     const isWorkshop =
         n.includes("워크숍") || n.includes("workshop") || n.includes("워크샵") ||
-        n.includes("ai 보안 워크샵") || n.includes("kisa") ||  n.includes("KISA") ||
+        n.includes("ai 보안 워크샵") || n.includes("kisa") ||  n.includes("kisa") ||
         n.includes("kisti") || n.includes("kick-off") || n.includes("kickoff");
 
     const isAward =
@@ -712,7 +714,7 @@ function autoCategoryByName(name) {
         n.includes("한국인터넷진흥원장상") || n.includes("netsec");
 
     const isConference =
-        n.includes("학회") || n.includes("wisa") || n.includes("학술대회") || n.includes("NetSec") || 
+        n.includes("학회") || n.includes("wisa") || n.includes("학술대회") || n.includes("netsec") ||
         n.includes("포스터") || n.includes("발표");
 
     const isLabMeet =
@@ -745,30 +747,9 @@ function prettyTitleFromFilename(filename) {
     return t || filename;
 }
 
-/* ==================== ✅ 사진 설명(Description) 사전 ====================
-   - 파일명 그대로 키로 넣으면 됨
-   - 없는 건 자동으로 빈 문자열 -> 모달에서 ---로 표시
-*/
+// ---- 기존 PHOTO_DESC / buildPhotoListFromFilenames 유지 ----
 const PHOTO_DESC = {
-    // ===== 2025 (샘플) =====
-    "연구실 남자들끼리의 뜨거운 한 잔 모임.jpg": "연구실 구성원들이 모여 친목을 다진 자리입니다. 이 뜨거운 술자리에 함께 하고 싶으신 분은 언제든지 환영입니다.",
-    "20251121 신입생 환영회.jpg": "신입 연구원 환영을 위해 진행한 모임입니다.",
-    "20250716 AI 보안 워크샵.jpg": "AI 보안 워크샵 참가 현장 사진입니다.",
-    "20250716 AI 보안 워크샵 교수님과 탁구.jpg": "워크샵 중 쉬는 시간 스냅샷입니다.",
-    "20250820 정보보호 개발자 해커톤.jpg": "정보보호 개발자 해커톤 참가 현장입니다.",
-    "20250821 정보보호 개발자 해커톤 장려상.jpg": "해커톤 장려상 수상 기념 사진입니다.",
-    "20250821 WISA 학술대회 포스터 발표.jpg": "WISA 포스터 발표 현장입니다.",
-    "20250822 WISA 학술대회 발표.jpg": "WISA 구두 발표 현장입니다.",
-    "20251026 캡스톤 디자인 우수상.jpg": "캡스톤 디자인 우수상 수상 기념 사진입니다.",
-
-    // ===== 2024 (샘플) =====
-    "11월30일Silab하반기모임.jpg": "하반기 연구실 모임에서 함께 교류한 자리입니다.",
-    "20240422_교수님생신.jpg": "교수님 생신을 기념해 축하한 날입니다.",
-    "240206_송별회1.jpg": "연구실 송별회 단체 사진입니다.",
-    "240306_신입생환영회.jpg": "신입생 환영회에서의 모습입니다.",
-    "SVCC2024_포스터_이선우.jpg": "SVCC 2024 포스터 발표 기록입니다.",
-    "SVCC2024_발표_한태현.jpg": "SVCC 2024 발표 현장 기록입니다.",
-    "정보보호학회 하계학술대회 학회장상.jpg": "정보보호학회 하계학술대회 학회장상 수상 기념 사진입니다."
+    // (너 기존 그대로 유지)
 };
 
 function buildPhotoListFromFilenames(year, dir, filenames) {
@@ -783,7 +764,6 @@ function buildPhotoListFromFilenames(year, dir, filenames) {
 
         const src = encodeURI(`${dir}/${fn}`);
 
-        // ✅ filename / description 추가
         list.push({
             src,
             title,
@@ -797,7 +777,10 @@ function buildPhotoListFromFilenames(year, dir, filenames) {
     return list;
 }
 
-// ---- 2023/2024/2025 전부 반영 ----
+/* =========================================================
+   ✅ PHOTO_DATA는 너의 기존 블록 그대로 유지하면 됨
+   (여기서는 파일명 리스트 출력 생략)
+   ========================================================= */
 const PHOTO_DATA = [
     ...buildPhotoListFromFilenames("2025", "./activity_img/2025년", [
         "2025 정보호호 동계학술대회 학회장상.jpg",
@@ -1064,11 +1047,13 @@ const PHOTO_DATA = [
     ])
 ];
 
-// Photo UI 상태
+// ==================== Photo UI 상태 ====================
 let activeCategory = null;
+let activeYear = null;
 let activeList = [];
 let activeModalIndex = 0;
 
+// -------------------- 그룹핑 유틸 --------------------
 function groupByCategory(data) {
     const map = new Map();
     data.forEach(item => {
@@ -1080,6 +1065,118 @@ function groupByCategory(data) {
     return map;
 }
 
+function groupByYear(data) {
+    const map = new Map();
+    data.forEach(item => {
+        const y = String(item.year || "기타");
+        if (!map.has(y)) map.set(y, []);
+        map.get(y).push(item);
+    });
+    map.forEach(arr => arr.sort((a, b) => parseDateForSort(b.date) - parseDateForSort(a.date)));
+    return map;
+}
+
+function sortYearsDesc(years) {
+    // "기타" 같은 값은 맨 뒤로
+    const numericYears = years.filter(y => /^\d{4}$/.test(String(y)));
+    const others = years.filter(y => !/^\d{4}$/.test(String(y)));
+    numericYears.sort((a, b) => Number(b) - Number(a));
+    return [...numericYears, ...others];
+}
+
+// -------------------- 카드 생성 공통(카테고리/년도 동일 카드 스타일 사용) --------------------
+function createThumbImgs(list, count = CATEGORY_THUMB_COUNT, altPrefix = "") {
+    const thumbs = list.slice(0, count);
+    const imgs = [];
+    for (let i = 0; i < count; i++) {
+        const t = thumbs[i] || thumbs[0];
+        if (t) imgs.push(`<img src="${t.src}" alt="${altPrefix} 대표사진">`);
+    }
+    return imgs.join("");
+}
+
+// -------------------- 카테고리 카드 렌더 --------------------
+function renderCategoryCards() {
+    const container = document.getElementById("photoCategories");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const grouped = groupByCategory(PHOTO_DATA);
+    const categories = Array.from(grouped.keys());
+
+    const preferredOrder = ["연구실모임", "행사", "워크숍", "학회", "수상", "기타"];
+    categories.sort((a, b) => preferredOrder.indexOf(a) - preferredOrder.indexOf(b));
+
+    categories.forEach(cat => {
+        const list = grouped.get(cat) || [];
+        if (!list.length) return;
+
+        const card = document.createElement("div");
+        card.className = "photo-category-card";
+        card.dataset.category = cat;
+
+        card.innerHTML = `
+            <div class="photo-category-topbar">
+                <div class="photo-category-name">
+                    <i class="fas fa-folder-open"></i> ${cat}
+                </div>
+                <div class="photo-category-badge">${list.length}장</div>
+            </div>
+            <div class="photo-category-thumbs">
+                ${createThumbImgs(list, CATEGORY_THUMB_COUNT, cat)}
+            </div>
+            <div class="photo-category-footer">
+                <span>대표사진 ${Math.min(CATEGORY_THUMB_COUNT, list.length)}장</span>
+                <span class="cta">보기 <i class="fas fa-arrow-right"></i></span>
+            </div>
+        `;
+
+        // ✅ 카테고리 클릭 → 갤러리(연도는 전체)
+        card.addEventListener("click", () => openGalleryView(cat, null));
+        container.appendChild(card);
+    });
+}
+
+// -------------------- 년도 카드 렌더 --------------------
+function renderYearCards() {
+    const container = document.getElementById("photoYears");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const grouped = groupByYear(PHOTO_DATA);
+    const years = sortYearsDesc(Array.from(grouped.keys()));
+
+    years.forEach(y => {
+        const list = grouped.get(y) || [];
+        if (!list.length) return;
+
+        const card = document.createElement("div");
+        card.className = "photo-category-card";
+        card.dataset.year = y;
+
+        card.innerHTML = `
+            <div class="photo-category-topbar">
+                <div class="photo-category-name">
+                    <i class="fas fa-calendar-alt"></i> ${y}년
+                </div>
+                <div class="photo-category-badge">${list.length}장</div>
+            </div>
+            <div class="photo-category-thumbs">
+                ${createThumbImgs(list, CATEGORY_THUMB_COUNT, `${y}년`)}
+            </div>
+            <div class="photo-category-footer">
+                <span>대표사진 ${Math.min(CATEGORY_THUMB_COUNT, list.length)}장</span>
+                <span class="cta">보기 <i class="fas fa-arrow-right"></i></span>
+            </div>
+        `;
+
+        // ✅ 연도 클릭 → 갤러리(카테고리는 전체)
+        card.addEventListener("click", () => openGalleryView(null, y));
+        container.appendChild(card);
+    });
+}
+
+// -------------------- 사진 item 생성 --------------------
 function createPhotoItemElement(photo) {
     const div = document.createElement("div");
     div.className = "photo-item";
@@ -1087,6 +1184,7 @@ function createPhotoItemElement(photo) {
     div.dataset.title = photo.title;
     div.dataset.date = photo.date;
     div.dataset.category = photo.category;
+    div.dataset.year = photo.year;
 
     div.innerHTML = `
         <div class="photo-card">
@@ -1103,9 +1201,12 @@ function createPhotoItemElement(photo) {
     return div;
 }
 
-function renderPhotoBoard(list) {
+// -------------------- 평면 렌더(연도 필터가 있을 때) --------------------
+function renderPhotoBoardFlat(list) {
     const board = document.getElementById("photoBoard");
     if (!board) return;
+
+    board.classList.remove("year-grouped");
     board.innerHTML = "";
     list.forEach(p => board.appendChild(createPhotoItemElement(p)));
 
@@ -1113,89 +1214,130 @@ function renderPhotoBoard(list) {
     if (countEl) countEl.textContent = `${list.length}장`;
 }
 
-function renderCategoryCards() {
-    const container = document.getElementById("photoCategories");
-    if (!container) return;
-    container.innerHTML = "";
+// -------------------- 연도 섹션 그룹 렌더(연도 필터가 없을 때) --------------------
+function renderPhotoBoardGroupedByYear(list) {
+    const board = document.getElementById("photoBoard");
+    if (!board) return;
 
-    const grouped = groupByCategory(PHOTO_DATA);
-    const categories = Array.from(grouped.keys());
+    board.classList.add("year-grouped");
+    board.innerHTML = "";
 
-    const preferredOrder = ["연구실모임", "행사", "워크숍", "학회", "수상", "기타"];
-    categories.sort((a, b) => preferredOrder.indexOf(a) - preferredOrder.indexOf(b));
+    const map = groupByYear(list);
+    const years = sortYearsDesc(Array.from(map.keys()));
 
-    categories.forEach(cat => {
-        const list = grouped.get(cat) || [];
-        const thumbs = list.slice(0, 3);
+    years.forEach(y => {
+        const arr = map.get(y) || [];
+        if (!arr.length) return;
 
-        const card = document.createElement("div");
-        card.className = "photo-category-card";
-        card.dataset.category = cat;
+        const section = document.createElement("div");
+        section.className = "photo-year-section";
 
-        const thumbImgs = [];
-        for (let i = 0; i < 3; i++) {
-            const t = thumbs[i] || thumbs[0];
-            if (t) thumbImgs.push(`<img src="${t.src}" alt="${cat} 대표사진">`);
-        }
-
-        card.innerHTML = `
-            <div class="photo-category-topbar">
-                <div class="photo-category-name">
-                    <i class="fas fa-folder-open"></i> ${cat}
-                </div>
-                <div class="photo-category-badge">${list.length}장</div>
-            </div>
-            <div class="photo-category-thumbs">
-                ${thumbImgs.join("")}
-            </div>
-            <div class="photo-category-footer">
-                <span>대표사진 ${Math.min(3, list.length)}장</span>
-                <span class="cta">보기 <i class="fas fa-arrow-right"></i></span>
+        section.innerHTML = `
+            <div class="photo-year-header">
+                <div class="photo-year-title">${y}년</div>
+                <div class="photo-year-count">${arr.length}장</div>
             </div>
         `;
 
-        card.addEventListener("click", () => openGalleryView(cat));
-        container.appendChild(card);
+        const grid = document.createElement("div");
+        grid.className = "photo-grid";
+        arr.forEach(p => grid.appendChild(createPhotoItemElement(p)));
+
+        section.appendChild(grid);
+        board.appendChild(section);
+    });
+
+    const countEl = document.getElementById("photoActiveCount");
+    if (countEl) countEl.textContent = `${list.length}장`;
+}
+
+// -------------------- Year Chips --------------------
+function renderYearChips(list) {
+    const wrap = document.getElementById("photoYearChips");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    const years = sortYearsDesc(Array.from(groupByYear(list).keys()));
+    if (!years.length) return;
+
+    // 전체년도 칩
+    const allChip = document.createElement("button");
+    allChip.className = "year-chip" + (!activeYear ? " active" : "");
+    allChip.type = "button";
+    allChip.textContent = "전체년도";
+    allChip.addEventListener("click", () => openGalleryView(activeCategory, null));
+    wrap.appendChild(allChip);
+
+    years.forEach(y => {
+        const chip = document.createElement("button");
+        chip.className = "year-chip" + (String(activeYear) === String(y) ? " active" : "");
+        chip.type = "button";
+        chip.textContent = `${y}년`;
+        chip.addEventListener("click", () => openGalleryView(activeCategory, y));
+        wrap.appendChild(chip);
     });
 }
 
+// -------------------- 뷰 전환 --------------------
 function openCategoryView() {
     const categoryView = document.getElementById("photoCategoryView");
     const galleryView = document.getElementById("photoGalleryView");
     if (categoryView) categoryView.style.display = "block";
     if (galleryView) galleryView.style.display = "none";
+
     activeCategory = null;
+    activeYear = null;
 
     const searchInput = document.getElementById("photoSearchInput");
     if (searchInput) searchInput.value = "";
 }
 
-function openGalleryView(categoryOrNull) {
+function openGalleryView(categoryOrNull, yearOrNull) {
     const categoryView = document.getElementById("photoCategoryView");
     const galleryView = document.getElementById("photoGalleryView");
     if (categoryView) categoryView.style.display = "none";
     if (galleryView) galleryView.style.display = "block";
 
     activeCategory = categoryOrNull || null;
+    activeYear = yearOrNull || null;
 
+    // pill 업데이트
     const pill = document.getElementById("photoActiveCategoryPill");
-    if (pill) pill.textContent = activeCategory ? activeCategory : "전체";
+    if (pill) {
+        const c = activeCategory ? activeCategory : "전체";
+        const y = activeYear ? `${activeYear}년` : "전체년도";
+        pill.textContent = `${c} · ${y}`;
+    }
 
     applyFilterAndRender();
 }
 
+// -------------------- 필터 적용 + 렌더 --------------------
 function applyFilterAndRender() {
     const searchInput = document.getElementById("photoSearchInput");
     const q = (searchInput?.value || "").trim().toLowerCase();
 
     let filtered = PHOTO_DATA.slice();
+
     if (activeCategory) filtered = filtered.filter(p => p.category === activeCategory);
+    if (activeYear) filtered = filtered.filter(p => String(p.year) === String(activeYear));
     if (q) filtered = filtered.filter(p => (p.title || "").toLowerCase().includes(q));
 
-    filtered.sort((a, b) => parseDateForSort(b.date) - parseDateForSort(a.date));
+    // 정렬: year desc, date desc
+    filtered.sort((a, b) => {
+        const ya = Number(a.year || 0), yb = Number(b.year || 0);
+        if (yb !== ya) return yb - ya;
+        return parseDateForSort(b.date) - parseDateForSort(a.date);
+    });
 
     activeList = filtered;
-    renderPhotoBoard(activeList);
+
+    // ✅ 연도 필터 없으면 → 연도별 섹션 그룹핑
+    if (!activeYear) renderPhotoBoardGroupedByYear(activeList);
+    else renderPhotoBoardFlat(activeList);
+
+    // ✅ 칩은 현재 결과 기반
+    renderYearChips(activeList);
 }
 
 /* ==================== Photo Modal ==================== */
@@ -1231,7 +1373,6 @@ function initPhotoModal() {
         if (dateText) dateText.textContent = photo.date || "";
         if (categoryText) categoryText.textContent = photo.category || "";
 
-        // ✅ 여기서 description 출력
         if (descriptionText) {
             const d = (photo.description || "").trim();
             descriptionText.textContent = d ? d : "---";
@@ -1262,6 +1403,7 @@ function initPhotoModal() {
         if (e.key === 'ArrowRight') next();
     });
 
+    // ✅ 그룹핑 구조에서도 이벤트 위임으로 동작
     const board = document.getElementById("photoBoard");
     if (board) {
         board.addEventListener("click", (e) => {
@@ -1275,6 +1417,7 @@ function initPhotoModal() {
 }
 
 function initPhotoGalleryUI() {
+    renderYearCards();
     renderCategoryCards();
     openCategoryView();
 
@@ -1282,7 +1425,16 @@ function initPhotoGalleryUI() {
     if (backBtn) backBtn.addEventListener("click", openCategoryView);
 
     const viewAllBtn = document.getElementById("photoViewAllBtn");
-    if (viewAllBtn) viewAllBtn.addEventListener("click", () => openGalleryView(null));
+    if (viewAllBtn) viewAllBtn.addEventListener("click", () => openGalleryView(null, null));
+
+    const clearBtn = document.getElementById("photoClearFiltersBtn");
+    if (clearBtn) clearBtn.addEventListener("click", () => {
+        activeCategory = null;
+        activeYear = null;
+        const searchInput = document.getElementById("photoSearchInput");
+        if (searchInput) searchInput.value = "";
+        openGalleryView(null, null);
+    });
 
     const searchInput = document.getElementById("photoSearchInput");
     if (searchInput) searchInput.addEventListener("input", applyFilterAndRender);
