@@ -523,11 +523,12 @@
     }
     
     .alumni-name,
+    
     .alumni-year {
         min-width: auto;
     }
 }
-}
+
 
 /* 768px 이하 */
 @media (max-width: 768px) {
