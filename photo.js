@@ -800,6 +800,16 @@ function buildPhotoListFromFilenames(year, dir, filenames) {
    (여기서는 파일명 리스트 출력 생략)
    ========================================================= */
 const PHOTO_DATA = [
+        ...buildPhotoListFromFilenames("2026", "./activity_img/2026년", [
+        "2026 OB 회식.jpg",
+        "2026 OB 회식_1.jpg",
+        "2026 OB 회식_2.jpg",
+        "2026 OB 회식_3.jpg",
+        "2026 OB 회식_4.jpg",
+        "2026 OB 회식_5.jpg",
+    ]),
+
+
     ...buildPhotoListFromFilenames("2025", "./activity_img/2025년", [
         "2025 정보호호 동계학술대회 학회장상.jpg",
         "20250403 KISTI kick-off 4.jpg",
