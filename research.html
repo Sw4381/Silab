@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research - 보안 지능 연구실</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="research.css">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <a href="index.html">
+                <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+            </a>
+        </div>
+        <nav class="menu">
+            <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./research.html" class="active"><i class="fas fa-flask"></i> Research</a>
+            <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
+            <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- 페이지 타이틀 -->
+        <div class="page-header">
+            <h1>Research Areas</h1>
+            <p>보안 지능 연구실의 주요 연구 분야를 소개합니다</p>
+        </div>
+
+        <!-- 연구 카드 그리드 -->
+        <div class="research-container">
+            <!-- 연구 1 -->
+            <div class="research-slide">
+                <div class="slide-header">
+                    <h2 class="project-title">프로젝트명</h2>
+                    <div class="project-subtitle">
+                        <span class="highlight-blue">* 현재 시스템의 한계를 구조·데이터·특징 관점에서</span>
+                        <span class="highlight-red">* 프로젝트로 달성하고자 하는 목표를</span>
+                    </div>
+                    <div class="goals-row">
+                        <span class="goal-label">3줄로 간결히 작성</span>
+                        <span class="goal-label">3줄로 간결히 작성</span>
+                    </div>
+                </div>
+
+                <div class="slide-content">
+                    <!-- AS-IS 섹션 -->
+                    <div class="section-box as-is">
+                        <div class="section-title">AS-IS</div>
+                        <ul class="section-list">
+                            <li>기존 스마트 그리드 네트워크는 성능이 제한적</li>
+                            <li>시계열 기반 에너지 데이터에서 특징 추출이 어려움</li>
+                            <li>데이터에서 시공간적 패턴을 추출하는 데 어려움</li>
+                        </ul>
+                    </div>
+
+                    <!-- TO-BE 섹션 -->
+                    <div class="section-box to-be">
+                        <div class="section-title">TO-BE</div>
+                        <ul class="section-list">
+                            <li>병렬 구조 기반으로 시공간 특징 동시에 학습</li>
+                            <li>재생 에너지 포함 생산 및 소비 모두 효과적으로 예측</li>
+                            <li>정확하고 신뢰할 수 있는 에너지 예측 성능 확보</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- PROPOSED METHOD 섹션 -->
+                <div class="proposed-section">
+                    <div class="proposed-title">PROPOSED METHOD</div>
+                    <div class="proposed-content">
+                        <div class="method-image">
+                            <img src="./그림1.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Research+Method+Diagram'">
+                        </div>
+                        <div class="method-description">
+                            <ul>
+                                <li>이상치 제거, 결측치 대체, 정규화 등 전처리 수행</li>
+                                <li>ESN에 Self-Attention 결합 및 Spatial Attention 강화 RCNN 설계</li>
+                                <li>두 구조를 병렬 통합하여 시공간 특징 동시 추출</li>
+                            </ul>
+                            <div class="core-structure">
+                                <p class="core-label">* 핵심 구조·아이디어를</p>
+                                <p class="core-label">3~4줄로 간결히 작성</p>
+                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 연구 2 - 예시 템플릿 -->
+            <div class="research-slide">
+                <div class="slide-header">
+                    <h2 class="project-title">AI 기반 보안 위협 탐지 시스템 [예시]</h2>
+                    <div class="project-subtitle">
+                        <span class="highlight-blue">* 기존 시그니처 기반 탐지의 한계를 극복하고</span>
+                        <span class="highlight-red">* AI 에이전트 기반 자동화된 위협 탐지 및 대응으로</span>
+                    </div>
+                    <div class="goals-row">
+                        <span class="goal-label">실시간 보안 모니터링</span>
+                        <span class="goal-label">Zero-day 공격 탐지</span>
+                    </div>
+                </div>
+
+                <div class="slide-content">
+                    <div class="section-box as-is">
+                        <div class="section-title">AS-IS</div>
+                        <ul class="section-list">
+                            <li>시그니처 기반 탐지는 알려진 위협만 식별 가능</li>
+                            <li>대량의 보안 로그 데이터 분석에 많은 시간 소요</li>
+                            <li>새로운 변종 공격에 대한 대응 지연 발생</li>
+                        </ul>
+                    </div>
+
+                    <div class="section-box to-be">
+                        <div class="section-title">TO-BE</div>
+                        <ul class="section-list">
+                            <li>머신러닝 기반 이상 행위 패턴 자동 학습</li>
+                            <li>실시간 위협 탐지 및 즉각적인 대응 가능</li>
+                            <li>Zero-day 공격 및 변종 공격 탐지 능력 향상</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="proposed-section">
+                    <div class="proposed-title">PROPOSED METHOD</div>
+                    <div class="proposed-content">
+                        <div class="method-image">
+                            <img src="./그림1.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=AI+Security+System'">
+                        </div>
+                        <div class="method-description">
+                            <ul>
+                                <li>다양한 보안 로그 소스 통합 및 전처리</li>
+                                <li>Deep Learning 기반 이상 탐지 모델 구축</li>
+                                <li>AI 에이전트 기반 자동화된 대응 시스템 설계</li>
+                            </ul>
+                            <div class="core-structure">
+                                <p class="core-label">* 핵심 구조·아이디어를</p>
+                                <p class="core-label">3~4줄로 간결히 작성</p>
+                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:kinjecs0@gmail.com">kinjecs0@gmail.com</a>
+                </div>
+                <div class="divider"></div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>가천대학교 스마트보안학과</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
