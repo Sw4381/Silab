@@ -38,89 +38,150 @@
 
 /* ==================== 연구 컨테이너 ==================== */
 .research-container {
-    display: flex;
-    flex-direction: column;
-    gap: 35px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
 }
 
-/* ==================== 연구 슬라이드 카드 ==================== */
+/* ==================== 연구 슬라이드 카드 - 중간 크기 ==================== */
 .research-slide {
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     transition: all 0.3s ease;
-    border-left: 3px solid #4facfe;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
 }
 
 .research-slide:hover {
-    background-color: #f0f7ff;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
 }
 
-/* ==================== 슬라이드 헤더 ==================== */
+/* 카드 상단에 작은 인디케이터 */
+.research-slide::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #4facfe, #00b4d8);
+    border-radius: 16px 16px 0 0;
+    z-index: 1;
+}
+
+/* ==================== 카드 이미지 섹션 ==================== */
+.card-image {
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    position: relative;
+    margin-top: 5px;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.research-slide:hover .card-image img {
+    transform: scale(1.05);
+}
+
+/* ==================== 중간 크기 카드 헤더 ==================== */
 .slide-header {
-    background: white;
-    padding: 20px 25px;
-    border-bottom: 1px solid #e9ecef;
+    padding: 25px 25px 20px;
+    border-bottom: none;
+}
+
+/* 프로젝트 아이콘 숨김 */
+.project-icon {
+    display: none;
 }
 
 .project-title {
-    font-size: 1.6em;
+    font-size: 1.4em;
     color: #005792;
     margin-bottom: 12px;
     font-weight: 700;
     line-height: 1.3;
 }
 
-.project-subtitle {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 12px;
+/* 카드에 간단한 설명 표시 */
+.card-summary {
+    padding: 0 25px 20px;
+    color: #666;
+    font-size: 0.95em;
+    line-height: 1.6;
 }
 
-.highlight-blue {
+.summary-item {
+    margin-bottom: 10px;
+    padding-left: 18px;
+    position: relative;
+}
+
+.summary-item::before {
+    content: '•';
+    position: absolute;
+    left: 0;
     color: #4facfe;
-    font-weight: 600;
-    font-size: 0.95em;
+    font-weight: bold;
 }
 
-.highlight-red {
-    color: #005792;
-    font-weight: 600;
-    font-size: 0.95em;
+.project-subtitle {
+    display: none; /* 카드에서는 숨김 */
 }
 
 .goals-row {
     display: flex;
-    gap: 15px;
-    margin-top: 10px;
+    gap: 10px;
+    margin-top: 12px;
     flex-wrap: wrap;
+    padding: 0 25px 20px;
 }
 
 .goal-label {
-    background: #4facfe;
-    color: white;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.85em;
+    background: #e3f2fd;
+    color: #005792;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.8em;
     font-weight: 600;
     transition: all 0.3s ease;
 }
 
 .goal-label:hover {
-    background: #3d9ae6;
-    transform: scale(1.02);
+    background: #4facfe;
+    color: white;
 }
 
-/* ==================== 슬라이드 콘텐츠 (AS-IS / TO-BE) ==================== */
+/* ==================== 카드에서는 상세 내용 숨김 ==================== */
+.research-slide .slide-content,
+.research-slide .proposed-section {
+    display: none;
+}
+
+/* 클릭 유도 텍스트 */
+.click-hint {
+    font-size: 0.85em;
+    color: #999;
+    padding: 0 25px 20px;
+    font-style: italic;
+    text-align: center;
+}
+
+/* ==================== 슬라이드 콘텐츠 (AS-IS / TO-BE) - 모달용 ==================== */
 .slide-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    padding: 20px 25px;
+    padding: 30px 40px;
     background: white;
 }
 
@@ -204,8 +265,8 @@
 /* ==================== PROPOSED METHOD 섹션 ==================== */
 .proposed-section {
     background: #f8f9fa;
-    padding: 25px;
-    border-top: 1px solid #e9ecef;
+    padding: 15px 40px 40px;
+    margin-top: 0;
 }
 
 .proposed-title {
@@ -213,7 +274,7 @@
     color: #005792;
     font-weight: 700;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     padding: 10px 15px;
     background: white;
     border-radius: 8px;
@@ -234,8 +295,8 @@
 
 .proposed-content {
     display: grid;
-    grid-template-columns: 1.3fr 1fr;
-    gap: 25px;
+    grid-template-columns: 2fr 1fr;
+    gap: 35px;
     align-items: start;
 }
 
@@ -312,6 +373,150 @@
     margin: 4px 0;
 }
 
+/* ==================== 모달 스타일 ==================== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.active {
+    display: block;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 2% auto;
+    width: 90%;
+    max-width: 1400px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease;
+    max-height: 95vh;
+    overflow-y: auto;
+}
+
+.modal-close {
+    color: #999;
+    float: right;
+    font-size: 32px;
+    font-weight: bold;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    color: #005792;
+}
+
+/* 모달 내 연구 슬라이드 스타일 */
+.modal .research-slide {
+    cursor: default;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.modal .research-slide::before {
+    height: 0;
+}
+
+.modal .research-slide:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 모달에서 카드 이미지 숨김 */
+.modal .card-image {
+    display: none;
+}
+
+.modal .card-summary {
+    display: none;
+}
+
+.modal .project-icon {
+    display: none;
+}
+
+.modal .project-title {
+    font-size: 2.2em;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.modal .slide-header {
+    padding: 25px 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 모달에서 상세 정보 표시 */
+.modal .slide-content,
+.modal .proposed-section {
+    display: grid !important;
+}
+
+.modal .project-subtitle {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+    text-align: center;
+    width: 100%;
+}
+
+.modal .click-hint {
+    display: none;
+}
+
+.highlight-blue {
+    color: #4facfe;
+    font-weight: 600;
+    font-size: 1em;
+}
+
+.highlight-red {
+    color: #005792;
+    font-weight: 600;
+    font-size: 1em;
+}
+
+.modal .slide-content {
+    padding: 20px 40px 15px;
+}
+
+.modal .proposed-section {
+    padding: 10px 40px 40px;
+}
+
+.modal .section-box {
+    padding: 25px;
+}
+
+.modal .goal-label {
+    font-size: 0.9em;
+    padding: 8px 18px;
+    border-radius: 20px;
+    background: #4facfe;
+    color: white;
+}
+
+.modal .goals-row {
+    justify-content: center;
+    gap: 15px;
+    padding: 15px 0;
+}
+
 /* ==================== 애니메이션 효과 ==================== */
 .hidden {
     opacity: 0;
@@ -327,7 +532,16 @@
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
     }
     to {
         opacity: 1;
@@ -337,6 +551,11 @@
 
 /* ==================== 반응형 디자인 ==================== */
 @media (max-width: 1200px) {
+    .research-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+    }
+    
     .proposed-content {
         grid-template-columns: 1fr;
     }
@@ -348,16 +567,38 @@
 }
 
 @media (max-width: 992px) {
+    .research-container {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
     .page-header h1 {
         font-size: 2em;
     }
     
     .project-title {
-        font-size: 1.4em;
+        font-size: 1.3em;
+    }
+    
+    .card-image {
+        height: 200px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 3% auto;
     }
 }
 
 @media (max-width: 768px) {
+    .research-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .card-image {
+        height: 180px;
+    }
     .page-header {
         padding: 20px 12px 15px;
     }
@@ -394,7 +635,7 @@
     }
     
     .proposed-section {
-        padding: 20px 15px;
+        padding: 15px;
     }
     
     .proposed-title {
@@ -406,7 +647,19 @@
     }
     
     .research-container {
-        gap: 25px;
+        gap: 20px;
+    }
+    
+    .modal .slide-header {
+        padding: 20px 15px;
+    }
+    
+    .modal .slide-content {
+        padding: 15px;
+    }
+    
+    .modal .proposed-section {
+        padding: 10px 15px 20px;
     }
 }
 
@@ -454,7 +707,7 @@
     }
     
     .proposed-section {
-        padding: 18px 12px;
+        padding: 15px 12px;
     }
     
     .proposed-title {
@@ -484,7 +737,16 @@
     }
     
     .research-container {
-        gap: 20px;
+        gap: 15px;
+    }
+    
+    .modal-content {
+        width: 98%;
+        margin: 2% auto;
+    }
+    
+    .modal .project-title {
+        font-size: 1.4em;
     }
 }
 
@@ -520,6 +782,14 @@
     .research-slide:hover {
         transform: none;
     }
+    
+    .modal {
+        animation: none;
+    }
+    
+    .modal-content {
+        animation: none;
+    }
 }
 
 /* ==================== 인쇄 스타일 ==================== */
@@ -540,5 +810,9 @@
     
     .method-image {
         max-width: 100%;
+    }
+    
+    .modal {
+        display: none;
     }
 }
