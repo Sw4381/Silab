@@ -1,0 +1,544 @@
+/* research.css - Research 페이지 전용 스타일 */
+
+/* ==================== 페이지 헤더 스타일 ==================== */
+.page-header {
+    text-align: center;
+    padding: 25px 15px 20px;
+    margin-bottom: 25px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
+}
+
+.page-header h1 {
+    color: #005792;
+    font-size: 2.2em;
+    margin-bottom: 12px;
+    position: relative;
+    display: inline-block;
+}
+
+.page-header h1::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background-color: #4facfe;
+}
+
+.page-header p {
+    color: #555;
+    font-size: 1em;
+    max-width: 600px;
+    margin: 15px auto 0;
+}
+
+/* ==================== 연구 컨테이너 ==================== */
+.research-container {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+}
+
+/* ==================== 연구 슬라이드 카드 ==================== */
+.research-slide {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-left: 3px solid #4facfe;
+}
+
+.research-slide:hover {
+    background-color: #f0f7ff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+/* ==================== 슬라이드 헤더 ==================== */
+.slide-header {
+    background: white;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.project-title {
+    font-size: 1.6em;
+    color: #005792;
+    margin-bottom: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.project-subtitle {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.highlight-blue {
+    color: #4facfe;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+.highlight-red {
+    color: #005792;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+.goals-row {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.goal-label {
+    background: #4facfe;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.goal-label:hover {
+    background: #3d9ae6;
+    transform: scale(1.02);
+}
+
+/* ==================== 슬라이드 콘텐츠 (AS-IS / TO-BE) ==================== */
+.slide-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px 25px;
+    background: white;
+}
+
+.section-box {
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.section-box:hover {
+    background-color: #f0f7ff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+.section-box.as-is {
+    border-left: 3px solid #6c757d;
+}
+
+.section-box.to-be {
+    border-left: 3px solid #4facfe;
+}
+
+.section-title {
+    font-size: 1.2em;
+    font-weight: 700;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    color: white;
+}
+
+.section-box.as-is .section-title {
+    background: #6c757d;
+}
+
+.section-box.to-be .section-title {
+    background: #4facfe;
+}
+
+.section-list {
+    list-style: none;
+    padding: 0;
+}
+
+.section-list li {
+    padding: 8px 0;
+    padding-left: 20px;
+    position: relative;
+    line-height: 1.5;
+    font-size: 0.9em;
+    border-bottom: 1px solid #e9ecef;
+    color: #555;
+}
+
+.section-list li:last-child {
+    border-bottom: none;
+}
+
+.section-box.as-is .section-list li::before {
+    content: '▪';
+    position: absolute;
+    left: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.section-box.to-be .section-list li::before {
+    content: '▪';
+    position: absolute;
+    left: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #4facfe;
+}
+
+/* ==================== PROPOSED METHOD 섹션 ==================== */
+.proposed-section {
+    background: #f8f9fa;
+    padding: 25px;
+    border-top: 1px solid #e9ecef;
+}
+
+.proposed-title {
+    font-size: 1.5em;
+    color: #005792;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
+    position: relative;
+}
+
+.proposed-title::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 2px;
+    background-color: #4facfe;
+}
+
+.proposed-content {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 25px;
+    align-items: start;
+}
+
+.method-image {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+}
+
+.method-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.method-description {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e9ecef;
+}
+
+.method-description ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+}
+
+.method-description li {
+    padding: 8px 0;
+    padding-left: 20px;
+    position: relative;
+    line-height: 1.5;
+    color: #555;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.9em;
+}
+
+.method-description li:last-child {
+    border-bottom: none;
+}
+
+.method-description li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #4facfe;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.core-structure {
+    background: #f0f7ff;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #4facfe;
+    margin-top: 12px;
+}
+
+.core-label {
+    color: #005792;
+    font-weight: 600;
+    margin: 4px 0;
+    font-size: 0.85em;
+}
+
+.core-note {
+    color: #6c757d;
+    font-style: italic;
+    font-size: 0.8em;
+    margin: 4px 0;
+}
+
+/* ==================== 애니메이션 효과 ==================== */
+.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+}
+
+.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== 반응형 디자인 ==================== */
+@media (max-width: 1200px) {
+    .proposed-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .method-image {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 992px) {
+    .page-header h1 {
+        font-size: 2em;
+    }
+    
+    .project-title {
+        font-size: 1.4em;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        padding: 20px 12px 15px;
+    }
+    
+    .page-header h1 {
+        font-size: 1.8em;
+    }
+    
+    .page-header p {
+        font-size: 0.95em;
+    }
+    
+    .slide-content {
+        grid-template-columns: 1fr;
+        padding: 18px 15px;
+    }
+    
+    .slide-header {
+        padding: 18px 15px;
+    }
+    
+    .project-title {
+        font-size: 1.3em;
+    }
+    
+    .goals-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .goal-label {
+        text-align: center;
+        font-size: 0.8em;
+    }
+    
+    .proposed-section {
+        padding: 20px 15px;
+    }
+    
+    .proposed-title {
+        font-size: 1.3em;
+    }
+    
+    .method-description {
+        padding: 15px;
+    }
+    
+    .research-container {
+        gap: 25px;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-header {
+        padding: 18px 10px 12px;
+    }
+    
+    .page-header h1 {
+        font-size: 1.6em;
+    }
+    
+    .page-header p {
+        font-size: 0.9em;
+    }
+    
+    .slide-header {
+        padding: 15px 12px;
+    }
+    
+    .project-title {
+        font-size: 1.2em;
+    }
+    
+    .project-subtitle {
+        font-size: 0.85em;
+    }
+    
+    .slide-content {
+        padding: 15px 12px;
+    }
+    
+    .section-box {
+        padding: 15px;
+    }
+    
+    .section-title {
+        font-size: 1.1em;
+        padding: 6px 10px;
+    }
+    
+    .section-list li {
+        font-size: 0.85em;
+        padding-left: 18px;
+    }
+    
+    .proposed-section {
+        padding: 18px 12px;
+    }
+    
+    .proposed-title {
+        font-size: 1.2em;
+        padding: 8px 12px;
+    }
+    
+    .method-description {
+        padding: 12px;
+    }
+    
+    .method-description li {
+        font-size: 0.85em;
+        padding-left: 18px;
+    }
+    
+    .core-structure {
+        padding: 10px;
+    }
+    
+    .core-label {
+        font-size: 0.8em;
+    }
+    
+    .core-note {
+        font-size: 0.75em;
+    }
+    
+    .research-container {
+        gap: 20px;
+    }
+}
+
+/* ==================== 접근성 개선 ==================== */
+.research-slide:focus-within {
+    outline: 2px solid #4facfe;
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .research-slide {
+        border: 2px solid #000;
+    }
+    
+    .section-box {
+        border: 2px solid #000;
+    }
+}
+
+/* 애니메이션 감소 모드 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .hidden {
+        transition: none;
+    }
+    
+    .research-slide:hover {
+        transform: none;
+    }
+}
+
+/* ==================== 인쇄 스타일 ==================== */
+@media print {
+    .research-slide {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .page-header h1 {
+        color: #000;
+    }
+    
+    .section-title {
+        color: #000;
+    }
+    
+    .method-image {
+        max-width: 100%;
+    }
+}
