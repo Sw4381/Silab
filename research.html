@@ -36,18 +36,30 @@
         <!-- 연구 카드 그리드 -->
         <div class="research-container">
             <!-- 연구 1 -->
-            <div class="research-slide">
+            <div class="research-slide" onclick="openModal(this)">
                 <div class="slide-header">
-                    <h2 class="project-title">프로젝트명</h2>
+                    <h2 class="project-title">스마트 그리드 에너지 예측</h2>
                     <div class="project-subtitle">
                         <span class="highlight-blue">* 현재 시스템의 한계를 구조·데이터·특징 관점에서</span>
                         <span class="highlight-red">* 프로젝트로 달성하고자 하는 목표를</span>
                     </div>
                     <div class="goals-row">
-                        <span class="goal-label">3줄로 간결히 작성</span>
-                        <span class="goal-label">3줄로 간결히 작성</span>
+                        <span class="goal-label">시공간 특징 학습</span>
+                        <span class="goal-label">에너지 예측</span>
                     </div>
                 </div>
+                
+                <div class="card-image">
+                    <img src="./그림1.png" alt="스마트 그리드" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Smart+Grid+Energy+Prediction'">
+                </div>
+                
+                <div class="card-summary">
+                    <div class="summary-item">기존 시스템의 성능 제한과 특징 추출의 어려움</div>
+                    <div class="summary-item">병렬 구조로 시공간 특징을 동시 학습</div>
+                    <div class="summary-item">정확하고 신뢰할 수 있는 에너지 예측 달성</div>
+                </div>
+                
+                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
 
                 <div class="slide-content">
                     <!-- AS-IS 섹션 -->
@@ -94,19 +106,31 @@
                 </div>
             </div>
 
-            <!-- 연구 2 - 예시 템플릿 -->
-            <div class="research-slide">
+            <!-- 연구 2 -->
+            <div class="research-slide" onclick="openModal(this)">
                 <div class="slide-header">
-                    <h2 class="project-title">AI 기반 보안 위협 탐지 시스템 [예시]</h2>
+                    <h2 class="project-title">AI 보안 위협 탐지(예시_1_)</h2>
                     <div class="project-subtitle">
                         <span class="highlight-blue">* 기존 시그니처 기반 탐지의 한계를 극복하고</span>
                         <span class="highlight-red">* AI 에이전트 기반 자동화된 위협 탐지 및 대응으로</span>
                     </div>
                     <div class="goals-row">
-                        <span class="goal-label">실시간 보안 모니터링</span>
-                        <span class="goal-label">Zero-day 공격 탐지</span>
+                        <span class="goal-label">실시간 모니터링</span>
+                        <span class="goal-label">Zero-day 탐지</span>
                     </div>
                 </div>
+                
+                <div class="card-image">
+                    <img src="./그림1.png" alt="AI 보안" onerror="this.src='https://via.placeholder.com/600x220/667eea/ffffff?text=AI+Security+Threat+Detection'">
+                </div>
+                
+                <div class="card-summary">
+                    <div class="summary-item">시그니처 기반 탐지는 알려진 위협만 식별 가능</div>
+                    <div class="summary-item">머신러닝으로 이상 행위 패턴을 자동 학습</div>
+                    <div class="summary-item">실시간 탐지 및 Zero-day 공격 대응 가능</div>
+                </div>
+                
+                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
 
                 <div class="slide-content">
                     <div class="section-box as-is">
@@ -150,7 +174,286 @@
                 </div>
             </div>
 
+            <!-- 연구 3 -->
+            <div class="research-slide" onclick="openModal(this)">
+                <div class="slide-header">
+                    <h2 class="project-title">딥러닝 기반 악성코드 탐지(예시_2)</h2>
+                    <div class="project-subtitle">
+                        <span class="highlight-blue">* 전통적 시그니처 기반 탐지의 한계를 극복하고</span>
+                        <span class="highlight-red">* 딥러닝 기술을 활용한 지능형 악성코드 탐지로</span>
+                    </div>
+                    <div class="goals-row">
+                        <span class="goal-label">패턴 학습</span>
+                        <span class="goal-label">자동 탐지</span>
+                    </div>
+                </div>
+                
+                <div class="card-image">
+                    <img src="./그림1.png" alt="악성코드 탐지" onerror="this.src='https://via.placeholder.com/600x220/f093fb/ffffff?text=Malware+Detection'">
+                </div>
+                
+                <div class="card-summary">
+                    <div class="summary-item">시그니처 기반은 알려진 악성코드만 식별 가능</div>
+                    <div class="summary-item">딥러닝으로 악성코드 패턴을 자동 학습</div>
+                    <div class="summary-item">변종 악성코드도 실시간 탐지 및 대응</div>
+                </div>
+                
+                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
+                
+                <div class="slide-content">
+                    <div class="section-box as-is">
+                        <div class="section-title">AS-IS</div>
+                        <ul class="section-list">
+                            <li>시그니처 기반 탐지는 알려진 악성코드만 식별</li>
+                            <li>변종 악성코드에 대한 대응이 느림</li>
+                            <li>수동 분석에 많은 시간과 인력 소요</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-box to-be">
+                        <div class="section-title">TO-BE</div>
+                        <ul class="section-list">
+                            <li>딥러닝 모델로 악성코드 패턴 자동 학습</li>
+                            <li>알려지지 않은 변종 악성코드도 탐지 가능</li>
+                            <li>실시간 자동 분석 및 대응 체계 구축</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="proposed-section">
+                    <div class="proposed-title">PROPOSED METHOD</div>
+                    <div class="proposed-content">
+                        <div class="method-image">
+                            <img src="./그림1.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Deep+Learning+Malware+Detection'">
+                        </div>
+                        <div class="method-description">
+                            <ul>
+                                <li>대규모 악성코드 데이터셋 수집 및 전처리</li>
+                                <li>CNN 기반 바이너리 분석 모델 구축</li>
+                                <li>Transfer Learning을 활용한 성능 최적화</li>
+                            </ul>
+                            <div class="core-structure">
+                                <p class="core-label">* 핵심 구조·아이디어를</p>
+                                <p class="core-label">3~4줄로 간결히 작성</p>
+                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- 연구 4 -->
+            <div class="research-slide" onclick="openModal(this)">
+                <div class="slide-header">
+                    <h2 class="project-title">네트워크 침입 탐지(예시_3)</h2>
+                    <div class="project-subtitle">
+                        <span class="highlight-blue">* 기존 규칙 기반 IDS의 한계를 극복하고</span>
+                        <span class="highlight-red">* AI 기반 실시간 네트워크 이상 탐지로</span>
+                    </div>
+                    <div class="goals-row">
+                        <span class="goal-label">실시간 탐지</span>
+                        <span class="goal-label">이상 행위 분석</span>
+                    </div>
+                </div>
+                
+                <div class="card-image">
+                    <img src="./그림1.png" alt="네트워크 보안" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Network+Intrusion+Detection'">
+                </div>
+                
+                <div class="card-summary">
+                    <div class="summary-item">규칙 기반 탐지는 알려진 공격만 차단</div>
+                    <div class="summary-item">머신러닝으로 정상 패턴 학습 및 이상 탐지</div>
+                    <div class="summary-item">실시간 트래픽 분석으로 탐지 정확도 향상</div>
+                </div>
+                
+                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
+                
+                <div class="slide-content">
+                    <div class="section-box as-is">
+                        <div class="section-title">AS-IS</div>
+                        <ul class="section-list">
+                            <li>규칙 기반 탐지는 알려진 공격만 차단</li>
+                            <li>정상 트래픽과 공격 트래픽 구분 어려움</li>
+                            <li>False Positive 비율이 높음</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-box to-be">
+                        <div class="section-title">TO-BE</div>
+                        <ul class="section-list">
+                            <li>머신러닝 기반 정상 패턴 학습</li>
+                            <li>이상 트래픽 실시간 탐지 및 차단</li>
+                            <li>지속적 학습으로 탐지 정확도 향상</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="proposed-section">
+                    <div class="proposed-title">PROPOSED METHOD</div>
+                    <div class="proposed-content">
+                        <div class="method-image">
+                            <img src="./그림1.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Network+IDS'">
+                        </div>
+                        <div class="method-description">
+                            <ul>
+                                <li>네트워크 트래픽 데이터 수집 및 특징 추출</li>
+                                <li>LSTM 기반 시계열 이상 탐지 모델 구축</li>
+                                <li>Ensemble 기법으로 탐지 성능 개선</li>
+                            </ul>
+                            <div class="core-structure">
+                                <p class="core-label">* 핵심 구조·아이디어를</p>
+                                <p class="core-label">3~4줄로 간결히 작성</p>
+                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 연구 5 -->
+            <div class="research-slide" onclick="openModal(this)">
+                <div class="slide-header">
+                    <h2 class="project-title">암호화 통신 보안(예시_4)</h2>
+                    <div class="project-subtitle">
+                        <span class="highlight-blue">* 기존 암호화 프로토콜의 취약점을 분석하고</span>
+                        <span class="highlight-red">* 양자 내성 암호 기반 안전한 통신 프로토콜로</span>
+                    </div>
+                    <div class="goals-row">
+                        <span class="goal-label">양자 내성</span>
+                        <span class="goal-label">안전한 통신</span>
+                    </div>
+                </div>
+                
+                <div class="card-image">
+                    <img src="./그림1.png" alt="암호화" onerror="this.src='https://via.placeholder.com/600x220/667eea/ffffff?text=Quantum+Safe+Cryptography'">
+                </div>
+                
+                <div class="card-summary">
+                    <div class="summary-item">기존 RSA 암호는 양자컴퓨터에 취약</div>
+                    <div class="summary-item">양자 내성 암호 알고리즘 적용</div>
+                    <div class="summary-item">안전한 키 교환 및 종단간 암호화 구현</div>
+                </div>
+                
+                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
+                
+                <div class="slide-content">
+                    <div class="section-box as-is">
+                        <div class="section-title">AS-IS</div>
+                        <ul class="section-list">
+                            <li>기존 RSA 암호는 양자컴퓨터에 취약</li>
+                            <li>키 교환 프로토콜의 보안 위험 존재</li>
+                            <li>중간자 공격에 대한 대응 부족</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-box to-be">
+                        <div class="section-title">TO-BE</div>
+                        <ul class="section-list">
+                            <li>양자 내성 암호 알고리즘 적용</li>
+                            <li>안전한 키 교환 프로토콜 설계</li>
+                            <li>종단간 암호화로 통신 보안 강화</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="proposed-section">
+                    <div class="proposed-title">PROPOSED METHOD</div>
+                    <div class="proposed-content">
+                        <div class="method-image">
+                            <img src="./그림1.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Quantum+Safe+Crypto'">
+                        </div>
+                        <div class="method-description">
+                            <ul>
+                                <li>격자 기반 암호 알고리즘 연구</li>
+                                <li>하이브리드 암호 프로토콜 설계</li>
+                                <li>양자 키 분배 시스템 통합</li>
+                            </ul>
+                            <div class="core-structure">
+                                <p class="core-label">* 핵심 구조·아이디어를</p>
+                                <p class="core-label">3~4줄로 간결히 작성</p>
+                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 연구 6 -->
+            <div class="research-slide" onclick="openModal(this)">
+                <div class="slide-header">
+                    <h2 class="project-title">(예시_5)</h2>
+                    <div class="project-subtitle">
+                        <span class="highlight-blue">* 기존 비밀번호 기반 인증의 취약점을 개선하고</span>
+                        <span class="highlight-red">* 생체인식 기반 다중 인증 시스템으로</span>
+                    </div>
+                    <div class="goals-row">
+                        <span class="goal-label">생체인식</span>
+                        <span class="goal-label">다중 인증</span>
+                    </div>
+                </div>
+                
+                <div class="card-image">
+                    <img src="./그림1.png" alt="인증 시스템" onerror="this.src='https://via.placeholder.com/600x220/f093fb/ffffff?text=Biometric+Authentication'">
+                </div>
+                
+                <div class="card-summary">
+                    <div class="summary-item">비밀번호 기반 인증은 보안이 취약</div>
+                    <div class="summary-item">생체인식 기반 강력한 다단계 인증</div>
+                    <div class="summary-item">행동 패턴 분석으로 추가 검증 수행</div>
+                </div>
+                
+                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
+                
+                <div class="slide-content">
+                    <div class="section-box as-is">
+                        <div class="section-title">AS-IS</div>
+                        <ul class="section-list">
+                            <li>비밀번호 기반 인증은 보안이 취약</li>
+                            <li>피싱 공격으로 인한 계정 탈취 빈번</li>
+                            <li>단일 인증 방식의 한계</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-box to-be">
+                        <div class="section-title">TO-BE</div>
+                        <ul class="section-list">
+                            <li>생체인식 기반 강력한 인증</li>
+                            <li>다단계 인증으로 보안 강화</li>
+                            <li>행동 패턴 분석 추가 검증</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="proposed-section">
+                    <div class="proposed-title">PROPOSED METHOD</div>
+                    <div class="proposed-content">
+                        <div class="method-image">
+                            <img src="./그림1.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Biometric+Auth'">
+                        </div>
+                        <div class="method-description">
+                            <ul>
+                                <li>지문, 얼굴, 홍채 등 다중 생체정보 활용</li>
+                                <li>행동 패턴 기반 연속 인증 시스템</li>
+                                <li>블록체인 기반 인증 데이터 관리</li>
+                            </ul>
+                            <div class="core-structure">
+                                <p class="core-label">* 핵심 구조·아이디어를</p>
+                                <p class="core-label">3~4줄로 간결히 작성</p>
+                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 모달 -->
+        <div id="researchModal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+                <div id="modalBody"></div>
+            </div>
+        </div>
 
         <!-- 푸터 -->
         <footer>
@@ -167,5 +470,53 @@
             </div>
         </footer>
     </div>
+
+    <script>
+        // 모달 열기
+        function openModal(slideElement) {
+            const modal = document.getElementById('researchModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            // 클릭한 슬라이드의 내용을 복사
+            const clonedSlide = slideElement.cloneNode(true);
+            
+            // 클릭 이벤트 제거
+            clonedSlide.removeAttribute('onclick');
+            
+            // 모달에 내용 삽입
+            modalBody.innerHTML = '';
+            modalBody.appendChild(clonedSlide);
+            
+            // 모달 표시
+            modal.classList.add('active');
+            
+            // body 스크롤 방지
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            const modal = document.getElementById('researchModal');
+            modal.classList.remove('active');
+            
+            // body 스크롤 복원
+            document.body.style.overflow = 'auto';
+        }
+
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('researchModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
 </body>
 </html>
