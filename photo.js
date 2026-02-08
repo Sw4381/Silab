@@ -807,6 +807,7 @@ const PHOTO_DATA = [
         "2026 OB 회식_3.jpg",
         "2026 OB 회식_4.jpg",
         "2026 OB 회식_5.jpg",
+        "2026 부산 출장.jpg"
     ]),
 
 
