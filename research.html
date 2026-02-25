@@ -106,6 +106,151 @@
                     </div>
                 </div>
             </div>
+
+
+            <div class="research-slide" onclick="openModal(this)">
+                <div class="slide-header">
+                    <h2 class="project-title">Endpoint 공격 분석</h2>
+                    <div class="project-subtitle">
+                        <span class="highlight-red">행위 맥락 기반 로그 그룹화로 공격 시퀀스 재구성 및 의미 기반 자동 공격 분석 체계로 미지 위협까지 확장 분석/대응</span>
+                    </div>
+                    <div class="goals-row">
+                        <span class="goal-label">행위 기반 로그 그룹화</span>
+                        <span class="goal-label">LLM 기반 공격 분석 모듈</span>
+                    </div>
+                </div>
+                
+                <div class="card-image">
+                    <img src="./Research_Photo/Research-2.png" alt="스마트 그리드" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Smart+Grid+Energy+Prediction'">
+                </div>
+                
+                <div class="card-summary">
+                    <div class="summary-item">Anchor–Supporting 이벤트 그룹핑으로 행위 흐름 재구성 가능</div>
+                    <div class="summary-item">행위 카테고리 기반 Feature 구조화로 공격 맥락 연속성 확보</div>
+                    <div class="summary-item">임베딩 유사도 기반 자동 TTP 매핑으로 확장성과 유연성 강화</div>
+                </div>
+                
+                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
+
+                <div class="slide-content">
+                    <!-- AS-IS 섹션 -->
+                    <div class="section-box as-is">
+                        <div class="section-title">AS-IS</div>
+                        <ul class="section-list">
+                            <li>단일 이벤트 기반 분석으로 공격 행위 흐름 식별이 제한됨</li>
+                            <li>고정 Time-window 상관분석 방식은 공격 맥락 단절 위험 有</li>
+                            <li>GNN 기반 구조 분석은 대규모 로그 환경에서 확장성과 설명 가능성에 한계 존재</li>
+                        </ul>
+                    </div>
+
+                    <!-- TO-BE 섹션 -->
+                    <div class="section-box to-be">
+                        <div class="section-title">TO-BE</div>
+                        <ul class="section-list">
+                            <li>Anchor–Supporting 이벤트 그룹핑으로 행위 흐름 재구성 가능</li>
+                            <li>행위 카테고리 기반 Feature 구조화로 공격 맥락 연속성 확보</li>
+                            <li>임베딩 유사도 기반 자동 TTP 매핑으로 확장성과 유연성 강화</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- PROPOSED METHOD 섹션 -->
+                <div class="proposed-section">
+                    <div class="proposed-title">PROPOSED METHOD</div>
+                    <div class="proposed-content">
+                        <div class="method-image">
+                            <img src="./Research_Photo/Research-2.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Research+Method+Diagram'">
+                        </div>
+                        <div class="method-description">
+                            <ul>
+                                <li>행위 기반 로그 그룹화 엔진을 구현하여 공격 흐름 재구성 체계 확립</li>
+                                <li>그룹 단위 Feature를 7개 행위 카테고리로 구조화하여 공격 행위 특성을 대표적으로 표현</li>
+                                <li>LLM 기반 공격 서술 생성 모듈 개발 및 의미 해석 정확도 고도화</li>
+                                <li>임베딩 유사도 기반 TTP 매핑 모듈 개발 및 Unknown 위협 대응 범위 확장</li>
+                                <li>분석 결과를 지식화하여 재활용 가능한 공격 패턴 DB 구축 및 지속적 성능 개선</li>
+                            </ul>
+                            <!-- <div class="core-structure">
+                                <p class="core-label">* 핵심 구조·아이디어를</p>
+                                <p class="core-label">3~4줄로 간결히 작성</p>
+                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="research-slide" onclick="openModal(this)">
+                <div class="slide-header">
+                    <h2 class="project-title">피드백 기반 알림 재해석을 통한 SOC 효율화</h2>
+                    <div class="project-subtitle">
+                        <span class="highlight-red">Feedback-driven alert refinement로 SOC의 Validation Queue 병목을 완화하고, 분석가 검증 부담을 구조적으로 감소</span>
+                    </div>
+                    <div class="goals-row">
+                        <span class="goal-label">FP(오탐) Reduction</span>
+                        <span class="goal-label">SOC 운영 최적화</span>
+                    </div>
+                </div>
+                
+                <div class="card-image">
+                    <img src="./Research_Photo/Research-3.png" alt="스마트 그리드" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Smart+Grid+Energy+Prediction'">
+                </div>
+                
+                <div class="card-summary">
+                    <div class="summary-item">반복·저가치 알림을 선별/억제해 Validation Queue 적체를 완화</div>
+                    <div class="summary-item">필요한 컨텍스트 수집·판단 단계를 축약해 처리 시간을 단축</div>
+                    <div class="summary-item">과거 판정/근거를 재사용해 유사 알림의 재검증을 최소화</div>
+                </div>
+                
+                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
+
+                <div class="slide-content">
+                    <!-- AS-IS 섹션 -->
+                    <div class="section-box as-is">
+                        <div class="section-title">AS-IS</div>
+                        <ul class="section-list">
+                            <li>운영 알림 총량이 분석가 처리량을 지속적으로 초과</li>
+                            <li>알림 1건 판단에 컨텍스트 수집·상관분석이 필요해 건당 소요가 큼</li>
+                            <li>FP/benign trigger가 유사 알림으로 재발해 동일 검증이 반복됨</li>
+                        </ul>
+                    </div>
+
+                    <!-- TO-BE 섹션 -->
+                    <div class="section-box to-be">
+                        <div class="section-title">TO-BE</div>
+                        <ul class="section-list">
+                            <li>반복·저가치 알림을 선별/억제해 Validation Queue 적체를 완화</li>
+                            <li>필요한 컨텍스트 수집·판단 단계를 축약해 처리 시간을 단축</li>
+                            <li>과거 판정/근거를 재사용해 유사 알림의 재검증을 최소화</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- PROPOSED METHOD 섹션 -->
+                <div class="proposed-section">
+                    <div class="proposed-title">PROPOSED METHOD</div>
+                    <div class="proposed-content">
+                        <div class="method-image">
+                            <img src="./Research_Photo/Research-3.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Research+Method+Diagram'">
+                        </div>
+                        <div class="method-description">
+                            <ul>
+                                <li>Feedback Memory: 알림의 최종 판정(attack/attempt/benign)과 근거 특징을 케이스로 축적</li>
+                                <li>Similarity Retrieval: 신규 알림에 대해 유사 케이스를 검색해 과거 판단 근거를 우선 참조</li>
+                                <li>Alert Refinement: 유사도·컨텍스트·과거 오류 패턴을 반영해 알림을 재점수화/재분류(필터링 포함)</li>
+                                <li>분석가의 최종 결정으로 memory를 갱신해 반복 FP/benign을 점진적으로 감소</li>
+                            </ul>
+                            <!-- <div class="core-structure">
+                                <p class="core-label">* 핵심 구조·아이디어를</p>
+                                <p class="core-label">3~4줄로 간결히 작성</p>
+                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- 모달 -->
