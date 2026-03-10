@@ -805,13 +805,14 @@ function buildPhotoListFromFilenames(year, dir, filenames) {
    ========================================================= */
 const PHOTO_DATA = [
         ...buildPhotoListFromFilenames("2026", "./activity_img/2026년", [
+        "20260309 가천대 Lab-pair.jpg",
+        "20260309 가천대 Lab-pair-2.jpg",
         "2026 OB 회식.jpg",
         "2026 OB 회식_1.jpg",
         "2026 OB 회식_2.jpg",
         "2026 OB 회식_3.jpg",
         "2026 OB 회식_4.jpg",
         "2026 OB 회식_5.jpg",
-        "2026 부산 출장.jpg",
         "20260224졸업식 단체사진.jpg",
         "20260224졸업식 단체사진_2.jpg",
         "20260224졸업식 단체사진_3.jpg",
