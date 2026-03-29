@@ -750,6 +750,7 @@ function prettyTitleFromFilename(filename) {
 // ---- 기존 PHOTO_DESC / buildPhotoListFromFilenames 유지 ----
 const PHOTO_DESC = {
 
+    "20260130바나나 먹구 시픈 따람~.jpg" : "하~~~~~~잇!!!!!!!!!!",
     "20260224졸업식 주인공 3인방.jpg" : "잘생겼네요 ㅎㅎ 가운데 친구 관심 있으신 분은 010-6693-9177 언제든 연락 바랍니다^&^",
     "20260224졸업식 서유민.jpg" : "잘생겼죠?? 아쉽지만 여자친구가 이미 있으셔요.... 다음 기회를 노려주세요..",
 
@@ -805,6 +806,8 @@ function buildPhotoListFromFilenames(year, dir, filenames) {
    ========================================================= */
 const PHOTO_DATA = [
         ...buildPhotoListFromFilenames("2026", "./activity_img/2026년", [
+        "260213 OB 분들과의 회식.jpg",
+        "20260130바나나 먹구 시픈 따람~.jpg",
         "20260309 가천대 Lab-pair.jpg",
         "20260309 가천대 Lab-pair-2.jpg",
         "2026 OB 회식.jpg",
@@ -830,7 +833,8 @@ const PHOTO_DATA = [
 
 
     ...buildPhotoListFromFilenames("2025", "./activity_img/2025년", [
-        "2025 정보호호 동계학술대회 학회장상.jpg",
+        "2025 정보보호 동계학술대회 학회장상 2.jpg",
+        "2025 정보보호 동계학술대회 학회장상.jpg",
         "20250403 KISTI kick-off 4.jpg",
         "20250403 KISTI kick-off 5.jpg",
         "20250624 정보보호학회 하계학술대회 학회장상.jpg",
