@@ -818,6 +818,14 @@ const PHOTO_DATA = [
         "20260224졸업식 단체사진_3.jpg",
         "20260224졸업식 주인공 3인방.jpg",
         "20260224졸업식 서유민.jpg",
+        "260319-KISTI kick-off.jpg",
+        "260319-KISTI kick-off 2.jpg",
+        "260319-KISTI kick-off 3.jpg",
+        "260319-KISTI kick-off 4.jpg",
+        "260319-KISTI kick-off 5.jpg",
+        "260327 현서의 마지막 음주.jpg",
+        "260327 현서의 마지막 음주 2.jpg"
+        
     ]),
 
 
