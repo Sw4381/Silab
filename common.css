@@ -1,6 +1,49 @@
 /* 공통 스타일 (common.css) */
 
-/* 기본 리셋 및 전체 스타일 */
+/* ==================== 구글 폰트 (타이포그래피) ==================== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ==================== CSS 변수 (컬러 팔레트) ==================== */
+:root {
+    /* Primary Colors */
+    --color-primary: #005792;
+    --color-accent: #4facfe;
+    --color-accent-light: #88b4ff;
+    --color-accent-mid: #588fe2;
+
+    /* Semantic Colors */
+    --color-success: #28a745;
+    --color-danger: #dc3545;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-secondary: #6c757d;
+
+    /* Text Colors */
+    --text-dark: #333;
+    --text-medium: #555;
+    --text-light: #666;
+    --text-muted: #999;
+
+    /* Backgrounds */
+    --bg-light: #f8f9fa;
+    --bg-white: #ffffff;
+
+    /* Card Design */
+    --card-radius: 12px;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.15);
+    --card-transition: all 0.3s ease;
+
+    /* Gradients */
+    --navbar-gradient: linear-gradient(90deg, var(--color-accent-light), var(--color-accent-mid));
+    --footer-gradient: linear-gradient(135deg, #95ccfc, #5ea9fa);
+
+    /* Typography */
+    --font-kr: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    --font-en: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+/* ==================== 기본 리셋 및 전체 스타일 ==================== */
 *, *::before, *::after {
     box-sizing: border-box;
 }
@@ -8,24 +51,22 @@
 body, h1, h2, h3, h4, p, ul, ol, li {
     margin: 0;
     padding: 0;
-    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Segoe UI', Arial, sans-serif;
+    font-family: var(--font-kr);
 }
 
 body {
-    background-color: #f8f9fa;
+    background-color: var(--bg-light);
     font-size: 16px;
     line-height: 1.6;
-    color: #333;
+    color: var(--text-dark);
 }
 
-
-/* 헤더 및 네비게이션 */
+/* ==================== 헤더 및 네비게이션 ==================== */
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: linear-gradient(90deg, #88b4ff, #588fe2);
-    /*  #629cff, #215eb9); */
+    background: var(--navbar-gradient);
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     position: fixed;
     top: 0;
@@ -33,8 +74,7 @@ body {
     z-index: 1000;
     padding: 10px;
     padding-left: 20px;
-} 
-
+}
 
 .menu {
     display: flex;
@@ -47,17 +87,29 @@ body {
     text-decoration: none;
     color: #ffffff;
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: 600;
     padding: 8px 12px;
     border-radius: 30px;
     background: rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
+    transition: var(--card-transition);
     white-space: nowrap;
+    font-family: var(--font-en);
+    letter-spacing: 0.01em;
 }
 
-.menu a:hover, .menu a.active {
-    background: rgba(255, 255, 255, 0.4);
-    transform: scale(1.1);
+/* 호버: 반투명 강조 */
+.menu a:hover {
+    background: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+}
+
+/* 현재 페이지: 흰 배경 + 파란 텍스트 */
+.menu a.active {
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--color-primary);
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: none;
 }
 
 .logo-picture {
@@ -65,7 +117,7 @@ body {
     height: auto;
 }
 
-/* 컨테이너 스타일 */
+/* ==================== 컨테이너 스타일 ==================== */
 .container {
     width: 100%;
     max-width: 1700px;
@@ -74,11 +126,12 @@ body {
     display: flex;
     flex-direction: column;
     min-height: calc(100vh - 150px);
+    animation: fadeInUp 0.35s ease both;
 }
 
-/* 푸터 스타일 */
+/* ==================== 푸터 스타일 ==================== */
 footer {
-    background: linear-gradient(135deg, #95ccfc, #5ea9fa);
+    background: var(--footer-gradient);
     color: #fff;
     text-align: center;
     padding: 15px;
@@ -90,7 +143,7 @@ footer a {
     color: #ffffff;
     text-decoration: none;
     font-weight: bold;
-    transition: all 0.3s ease;
+    transition: var(--card-transition);
 }
 
 footer a:hover {
@@ -98,7 +151,7 @@ footer a:hover {
     text-decoration: underline;
 }
 
-/* 연락처 정보 스타일 - 가로 정렬 */
+/* 연락처 정보 스타일 */
 .contact-info {
     margin: 0 auto;
     display: flex;
@@ -121,7 +174,6 @@ footer a:hover {
     font-size: 1.2rem;
 }
 
-/* 구분선 추가 */
 .divider {
     width: 1px;
     height: 24px;
@@ -129,7 +181,110 @@ footer a:hover {
     display: inline-block;
 }
 
-/* 애니메이션 효과 */
+/* ==================== 빈 화면 처리 (Empty State) ==================== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 24px;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 3.5rem;
+    color: #ced4da;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-size: 1.15em;
+    color: #495057;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.empty-state p {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    max-width: 280px;
+    line-height: 1.5;
+}
+
+/* ==================== 로딩 상태 ==================== */
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f0f0f0;
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 스켈레톤 UI */
+@keyframes skeleton-shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: calc(400px + 100%) 0; }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+    background-size: 400px 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+    border-radius: 4px;
+}
+
+.skeleton-card {
+    background: var(--bg-white);
+    border-radius: var(--card-radius);
+    padding: 20px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+}
+
+.skeleton-line {
+    height: 14px;
+    margin-bottom: 12px;
+    border-radius: 7px;
+}
+
+.skeleton-line.short  { width: 40%; }
+.skeleton-line.medium { width: 65%; }
+.skeleton-line.full   { width: 100%; }
+
+.skeleton-image {
+    width: 100%;
+    height: 180px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+/* ==================== 공통 카드 유틸리티 ==================== */
+.card {
+    background: var(--bg-white);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    transition: var(--card-transition);
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-4px);
+}
+
+/* ==================== 애니메이션 효과 ==================== */
 .hidden {
     opacity: 0;
     transform: translateY(30px);
@@ -141,7 +296,17 @@ footer a:hover {
     transform: translateY(0);
 }
 
-/* 반응형 디자인 */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ==================== 반응형 디자인 ==================== */
 @media (max-width: 1200px) {
     .menu a {
         font-size: 0.9rem;
@@ -153,7 +318,7 @@ footer a:hover {
     .container {
         width: 95%;
     }
-    
+
     .logo-picture {
         width: 140px;
     }
@@ -163,41 +328,46 @@ footer a:hover {
     .navbar {
         padding: 10px 3%;
     }
-    
+
     .menu {
         gap: 8px;
         margin-right: 0;
     }
-    
+
     .menu a {
         font-size: 0.8rem;
         padding: 5px 8px;
     }
-    
-    /* 작은 화면에서는 연락처 정보 세로 배치 */
+
     .contact-info {
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .divider {
-        display: none; /* 모바일에서는 구분선 숨김 */
+        display: none;
     }
 }
 
 @media (max-width: 576px) {
     .container {
         width: 98%;
+        padding-top: 130px; /* 세로 배치 navbar 높이 보정 */
     }
-    
+
     .menu {
         justify-content: center;
         width: 100%;
         margin-top: 10px;
     }
-    
+
     .navbar {
         flex-direction: column;
-        padding-bottom: 15px;
+        padding-bottom: 12px;
+    }
+
+    .menu a {
+        font-size: 0.75rem;
+        padding: 5px 7px;
     }
 }

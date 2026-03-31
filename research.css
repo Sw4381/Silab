@@ -45,18 +45,18 @@
 
 /* ==================== 연구 슬라이드 카드 - 중간 크기 ==================== */
 .research-slide {
-    background: white;
+    background: var(--bg-white, white);
     border-radius: 16px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--card-shadow, 0 3px 12px rgba(0, 0, 0, 0.08));
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: var(--card-transition, all 0.3s ease);
     cursor: pointer;
     display: flex;
     flex-direction: column;
 }
 
 .research-slide:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--card-shadow-hover, 0 8px 24px rgba(0, 0, 0, 0.15));
     transform: translateY(-4px);
 }
 

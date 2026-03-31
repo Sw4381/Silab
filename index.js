@@ -121,6 +121,10 @@ function saveWelcomeText(e) {
 
 // ==================== 슬라이더 ====================
 function loadAndRenderSlides() {
+    const container = document.getElementById('slides-container');
+    if (container) {
+        container.innerHTML = '<div class="skeleton skeleton-image" style="width:100%;height:100%;border-radius:10px;"></div>';
+    }
     database.ref('home/slides').once('value').then(snap => {
         const dbData = snap.val();
         if (dbData) {
@@ -243,7 +247,22 @@ async function addSlideSubmit(e) {
 }
 
 // ==================== 연구분야 카드 ====================
+function showGridLoading() {
+    const grid = document.getElementById('research-grid');
+    if (!grid) return;
+    grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    grid.innerHTML = [1,2,3].map(() => `
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-line short" style="margin-bottom:16px;height:28px;border-radius:8px;"></div>
+            <div class="skeleton skeleton-line medium"></div>
+            <div class="skeleton skeleton-line full"></div>
+            <div class="skeleton skeleton-line medium" style="width:55%;"></div>
+        </div>
+    `).join('');
+}
+
 function loadAndRenderResearchCards() {
+    showGridLoading();
     database.ref('home/researchCards').once('value').then(snap => {
         const dbData = snap.val();
         if (dbData) {
@@ -262,7 +281,13 @@ function renderResearchCardsUI() {
     grid.innerHTML = '';
 
     if (researchCardsData.length === 0 && !currentUser) {
-        grid.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">등록된 연구분야가 없습니다.</p>';
+        grid.style.gridTemplateColumns = '1fr';
+        grid.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-flask"></i>
+                <h3>등록된 연구분야가 없습니다</h3>
+                <p>관리자가 로그인하여 연구분야를 추가할 수 있습니다.</p>
+            </div>`;
         return;
     }
 
