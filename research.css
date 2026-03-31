@@ -38,34 +38,9 @@
 
 /* ==================== 연구 컨테이너 ==================== */
 .research-container {
-    display: flex;
-    flex-direction: row;
-    gap: 25px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 12px;
-    cursor: grab;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-}
-
-.research-container::-webkit-scrollbar {
-    height: 6px;
-}
-
-.research-container::-webkit-scrollbar-track {
-    background: #f0f0f0;
-    border-radius: 3px;
-}
-
-.research-container::-webkit-scrollbar-thumb {
-    background: #4facfe;
-    border-radius: 3px;
-}
-
-.research-container.dragging {
-    cursor: grabbing;
-    user-select: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
 }
 
 /* ==================== 연구 슬라이드 카드 - 중간 크기 ==================== */
@@ -74,13 +49,9 @@
     border-radius: 16px;
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
-    min-width: 380px;
-    max-width: 380px;
-    flex-shrink: 0;
-    scroll-snap-align: start;
     flex-direction: column;
 }
 
@@ -411,7 +382,7 @@
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
     background-color: rgba(0, 0, 0, 0.7);
     animation: fadeIn 0.3s ease;
 }
@@ -428,8 +399,26 @@
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     animation: slideDown 0.3s ease;
-    max-height: 95vh;
-    overflow-y: auto;
+    max-height: 90vh;
+    overflow-y: scroll;
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 0 12px 12px 0;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #4facfe;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #005792;
 }
 
 .modal-close {

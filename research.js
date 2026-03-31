@@ -162,48 +162,6 @@ function renderResearchCards(data) {
     sorted.forEach(([key, item]) => {
         container.appendChild(createResearchCard(key, item));
     });
-
-    initDragScroll(container);
-}
-
-function initDragScroll(container) {
-    let isDown = false;
-    let startX, scrollLeft, moved;
-
-    container.addEventListener('mousedown', e => {
-        isDown = true;
-        moved = false;
-        startX = e.pageX - container.offsetLeft;
-        scrollLeft = container.scrollLeft;
-        container.classList.add('dragging');
-    });
-
-    container.addEventListener('mouseleave', () => {
-        isDown = false;
-        container.classList.remove('dragging');
-    });
-
-    container.addEventListener('mouseup', () => {
-        isDown = false;
-        container.classList.remove('dragging');
-    });
-
-    container.addEventListener('mousemove', e => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - container.offsetLeft;
-        const walk = (x - startX) * 1.5;
-        if (Math.abs(walk) > 5) moved = true;
-        container.scrollLeft = scrollLeft - walk;
-    });
-
-    // 드래그 중 카드 클릭 방지
-    container.addEventListener('click', e => {
-        if (moved) {
-            e.stopPropagation();
-            moved = false;
-        }
-    }, true);
 }
 
 function createResearchCard(key, item) {
@@ -600,6 +558,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     setupEventListeners();
+
+    const modal = document.getElementById('researchModal');
+    const modalContent = modal.querySelector('.modal-content');
+    modal.addEventListener('wheel', e => {
+        e.preventDefault();
+        modalContent.scrollTop += e.deltaY;
+    }, { passive: false });
 });
 
 // 애니메이션 스타일 추가
