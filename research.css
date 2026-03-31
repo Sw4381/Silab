@@ -3,7 +3,7 @@
 /* ==================== 페이지 헤더 스타일 ==================== */
 .page-header {
     text-align: center;
-    padding: 25px 15px 20px;
+    padding: 10px 15px 20px;
     margin-bottom: 25px;
     background-color: white;
     border-radius: 8px;
@@ -207,7 +207,7 @@
     border-left: 3px solid #4facfe;
 }
 
-.section-title {
+.box-label {
     font-size: 1.2em;
     font-weight: 700;
     text-align: center;
@@ -217,11 +217,11 @@
     color: white;
 }
 
-.section-box.as-is .section-title {
+.section-box.as-is .box-label {
     background: #6c757d;
 }
 
-.section-box.to-be .section-title {
+.section-box.to-be .box-label {
     background: #4facfe;
 }
 
@@ -696,7 +696,7 @@
         padding: 15px;
     }
     
-    .section-title {
+    .box-label {
         font-size: 1.1em;
         padding: 6px 10px;
     }
@@ -804,7 +804,7 @@
         color: #000;
     }
     
-    .section-title {
+    .box-label {
         color: #000;
     }
     
