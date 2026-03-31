@@ -243,6 +243,22 @@ async function saveProfessor(e) {
 // ==================== 데이터 로드 및 렌더링 ====================
 async function loadAndRenderMembers() {
     if (!database) return;
+    // 로딩 스켈레톤 표시
+    ['phd-list', 'ms-list', 'bs-list'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = [1,2].map(() => `
+                <div class="skeleton-card" style="display:flex;gap:20px;margin-bottom:20px;border-radius:16px;">
+                    <div class="skeleton" style="width:110px;height:120px;border-radius:50%;flex-shrink:0;"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;">
+                        <div class="skeleton skeleton-line short" style="height:20px;"></div>
+                        <div class="skeleton skeleton-line medium"></div>
+                        <div class="skeleton skeleton-line full"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    });
     try {
         const snapshot = await database.ref('members').once('value');
         const data = snapshot.val();
@@ -267,6 +283,17 @@ function renderStudentSection(section, members) {
 
     const sorted = Object.entries(members)
         .sort(([, a], [, b]) => (a.order || 0) - (b.order || 0));
+
+    if (sorted.length === 0) {
+        const sectionLabels = { phd: '박사과정', ms: '석사과정', bs: '학부생' };
+        container.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+                <i class="fas fa-user-graduate"></i>
+                <h3>${sectionLabels[section] || '구성원'}이 없습니다</h3>
+                <p>관리자가 로그인하여 구성원을 추가할 수 있습니다.</p>
+            </div>`;
+        return;
+    }
 
     sorted.forEach(([key, member]) => {
         container.appendChild(createStudentCard(section, key, member));

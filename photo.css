@@ -16,21 +16,21 @@
 }
 
 .login-btn, .logout-btn {
-    background: #4facfe;
+    background: var(--color-accent, #4facfe);
     color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 20px;
     cursor: pointer;
     font-size: 0.9em;
-    transition: all 0.3s ease;
+    transition: var(--card-transition, all 0.3s ease);
     display: flex;
     align-items: center;
     gap: 5px;
 }
 
 .login-btn:hover, .logout-btn:hover {
-    background: #005792;
+    background: var(--color-primary, #005792);
     transform: translateY(-2px);
 }
 
@@ -567,18 +567,18 @@
 }
 
 .photo-category-card {
-    background: #fff;
-    border-radius: 14px;
+    background: var(--bg-white, #fff);
+    border-radius: var(--card-radius, 12px);
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08));
     border: 1px solid rgba(0,0,0,0.04);
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: var(--card-transition, all 0.25s ease);
 }
 
 .photo-category-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+    box-shadow: var(--card-shadow-hover, 0 12px 28px rgba(0,0,0,0.12));
 }
 
 .photo-category-topbar {
@@ -718,17 +718,17 @@
 
 /* 카드 */
 .photo-item {
-    background: white;
-    border-radius: 12px;
+    background: var(--bg-white, white);
+    border-radius: var(--card-radius, 12px);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow, 0 2px 8px rgba(0, 0, 0, 0.08));
+    transition: var(--card-transition, all 0.3s ease);
     cursor: pointer;
 }
 
 .photo-item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14);
+    box-shadow: var(--card-shadow-hover, 0 10px 26px rgba(0, 0, 0, 0.14));
 }
 
 .photo-card {
@@ -1003,8 +1003,9 @@
 }
 
 @media (max-width: 768px) {
-    .navbar { flex-direction: column; gap: 15px; padding: 20px; }
+    .navbar { flex-direction: column; gap: 10px; padding: 12px 3%; }
     .auth-section { margin-right: 0; }
+    .container { padding-top: 140px; } /* 세로 배치 navbar 높이 보정 */
 
     .section { padding: 18px 15px; }
     .photo-board { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }

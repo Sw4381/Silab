@@ -194,14 +194,14 @@
     border-radius: 16px;
     padding: 30px;
     border: 1px solid #e0f0ff;
-    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.08);
-    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow, 0 4px 15px rgba(79, 172, 254, 0.08));
+    transition: var(--card-transition, all 0.3s ease);
 }
 
 .student-item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 35px rgba(79, 172, 254, 0.18);
-    border-color: #4facfe;
+    box-shadow: var(--card-shadow-hover, 0 12px 35px rgba(79, 172, 254, 0.18));
+    border-color: var(--color-accent, #4facfe);
 }
 
 .student-item .student-photo {

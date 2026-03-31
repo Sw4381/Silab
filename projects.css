@@ -70,12 +70,12 @@
     display: flex;
     padding: 15px;
     background-color: #f8f9fa;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: var(--card-radius, 8px);
+    transition: var(--card-transition, all 0.3s ease);
     box-shadow: 0 1px 4px rgba(0,0,0,0.03);
     position: relative;
     overflow: hidden;
-    border-left: 3px solid #4facfe;
+    border-left: 3px solid var(--color-accent, #4facfe);
 }
 
 .project-item:hover {
@@ -874,13 +874,15 @@
 @media (max-width: 768px) {
     .navbar {
         flex-direction: column;
-        gap: 15px;
-        padding: 20px;
+        gap: 10px;
+        padding: 12px 3%;
     }
 
     .auth-section {
         margin-right: 0;
     }
+
+    .container { padding-top: 140px; }
 
     .project-section {
         padding: 18px 15px;

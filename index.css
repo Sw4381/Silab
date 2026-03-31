@@ -27,17 +27,19 @@
 }
 
 .main-text h1 {
-    color: #005792;
-    margin-bottom: 18px; /* 여백 축소 */
-    font-size: 2.2em; /* 폰트 크기 축소 */
+    color: var(--color-primary, #005792);
+    margin-bottom: 18px;
+    font-size: 2.2em;
     line-height: 1.2;
+    font-weight: 700;
 }
 
 .main-text h2 {
-    color: #005792;
-    margin-top: 22px; /* 여백 축소 */
-    margin-bottom: 12px; /* 여백 축소 */
-    font-size: 1.4em; /* 폰트 크기 축소 */
+    color: var(--color-primary, #005792);
+    margin-top: 22px;
+    margin-bottom: 12px;
+    font-size: 1.4em;
+    font-weight: 600;
 }
 
 .welcome-emoji {
@@ -204,11 +206,11 @@
 }
 
 .research-card {
-    background: white;
-    border-radius: 12px;
+    background: var(--bg-white, white);
+    border-radius: var(--card-radius, 12px);
     padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08));
+    transition: var(--card-transition, all 0.3s ease);
     position: relative;
     overflow: hidden;
 }
@@ -220,12 +222,12 @@
     left: 0;
     right: 0;
     height: 5px;
-    background: linear-gradient(135deg, #005792 0%, #0077be 100%);
+    background: linear-gradient(135deg, var(--color-primary, #005792) 0%, #0077be 100%);
 }
 
 .research-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    box-shadow: var(--card-shadow-hover, 0 8px 25px rgba(0,0,0,0.15));
 }
 
 .research-card:nth-child(1)::before {
