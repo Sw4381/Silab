@@ -62,8 +62,49 @@ function showAlert(message, type) {
     setTimeout(() => alert.remove(), 3000);
 }
 
+// ==================== 이미지 압축 ====================
+async function compressImage(file) {
+    const COMPRESS_TARGET = 8 * 1024 * 1024;
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            const MAX_PX = 4000;
+            if (width > MAX_PX || height > MAX_PX) {
+                const ratio = Math.min(MAX_PX / width, MAX_PX / height);
+                width  = Math.round(width  * ratio);
+                height = Math.round(height * ratio);
+            }
+            canvas.width  = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            let quality = 0.85;
+            const tryCompress = () => {
+                canvas.toBlob(blob => {
+                    if (!blob) { resolve(file); return; }
+                    if (blob.size <= COMPRESS_TARGET || quality <= 0.3) {
+                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                    } else {
+                        quality -= 0.1;
+                        tryCompress();
+                    }
+                }, 'image/jpeg', quality);
+            };
+            tryCompress();
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+    });
+}
+
 // ==================== Cloudinary 업로드 ====================
 async function uploadMemberPhoto(file, onProgress) {
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_SIZE) file = await compressImage(file);
+
     return new Promise((resolve, reject) => {
         const formData = new FormData();
         formData.append('file', file);
