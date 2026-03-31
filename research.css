@@ -38,9 +38,34 @@
 
 /* ==================== 연구 컨테이너 ==================== */
 .research-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 30px;
+    display: flex;
+    flex-direction: row;
+    gap: 25px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 12px;
+    cursor: grab;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.research-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.research-container::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+.research-container::-webkit-scrollbar-thumb {
+    background: #4facfe;
+    border-radius: 3px;
+}
+
+.research-container.dragging {
+    cursor: grabbing;
+    user-select: none;
 }
 
 /* ==================== 연구 슬라이드 카드 - 중간 크기 ==================== */
@@ -49,9 +74,13 @@
     border-radius: 16px;
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
     cursor: pointer;
     display: flex;
+    min-width: 380px;
+    max-width: 380px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
     flex-direction: column;
 }
 
