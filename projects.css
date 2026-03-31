@@ -1,7 +1,7 @@
 /* ==================== 페이지 헤더 스타일 ==================== */
 .page-header {
     text-align: center;
-    padding: 25px 15px 20px;
+    padding: 10px 15px 20px;
     margin-bottom: 25px;
     background-color: white;
     border-radius: 8px;
@@ -369,9 +369,9 @@
 .admin-panel {
     display: none;
     background: white;
-    padding: 20px;
+    padding: 10px 20px 20px;
     border-radius: 12px;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 

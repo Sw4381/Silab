@@ -1,15 +1,21 @@
 /* 공통 스타일 (common.css) */
 
 /* 기본 리셋 및 전체 스타일 */
-body, h1, h2, h3, p {
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body, h1, h2, h3, h4, p, ul, ol, li {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Segoe UI', Arial, sans-serif;
 }
 
 body {
     background-color: #f8f9fa;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
 }
 
 
