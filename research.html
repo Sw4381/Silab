@@ -7,6 +7,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="research.css">
+    <link rel="stylesheet" href="photo.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
     <!-- 헤더 -->
@@ -24,310 +30,127 @@
             <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
             <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
         </nav>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i>
+                로그아웃
+            </button>
+        </div>
     </header>
 
+    <!-- Firebase 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fab fa-firebase"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">
+                    연구실 멤버만 접근 가능합니다.
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="container">
+
+        <!-- 관리자 패널 -->
+        <div class="admin-panel" id="researchAdminPanel" style="display:none;">
+            <h3><i class="fas fa-tools"></i> 연구 관리</h3>
+            <div class="admin-buttons">
+                <button class="admin-btn" id="addResearchBtn"><i class="fas fa-plus"></i> 연구 추가</button>
+                <button class="admin-btn edit" id="researchEditModeBtn"><i class="fas fa-edit"></i> 수정 모드 토글</button>
+                <button class="admin-btn delete" id="researchDeleteModeBtn"><i class="fas fa-trash"></i> 삭제 모드 토글</button>
+            </div>
+        </div>
+
         <!-- 페이지 타이틀 -->
         <div class="page-header">
             <h1>Research Areas</h1>
             <p>보안 지능 연구실의 주요 연구 분야를 소개합니다</p>
         </div>
 
-        <!-- 연구 카드 그리드 -->
-        <div class="research-container">
-            <!-- 연구 1 -->
-            <div class="research-slide" onclick="openModal(this)">
-                <div class="slide-header">
-                    <h2 class="project-title">LLM 보안위협 관리 및 안전수준 진단</h2>
-                    <div class="project-subtitle">
-                        <span class="highlight-red">정교한 llm jailbreaking 기술을 개발하여 점검모델의 보안취약점을 탐색하고, 보안위협을 체계적으로 지속관리함</span>
-                    </div>
-                    <div class="goals-row">
-                        <span class="goal-label">LLM 취약성 평가</span>
-                        <span class="goal-label">LLM jailbreaking</span>
-                    </div>
-                </div>
-                
-                <div class="card-image">
-                    <img src="./Research_Photo/Research-1.png" alt="스마트 그리드" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Smart+Grid+Energy+Prediction'">
-                </div>
-                
-                <div class="card-summary">
-                    <div class="summary-item">공격사례를 구조화한 threat intelligence로 보안위협을 지속관리</div>
-                    <div class="summary-item">(안전수준) red-teaming 기반 동적 취약점 탐색 및 정밀 진단</div>
-                    <div class="summary-item">(공격기술) 엄격한 성공기준과 jailbreaking 자가개선 파이프라인</div>
-                </div>
-                
-                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
+        <!-- 연구 카드 그리드 (동적 렌더링) -->
+        <div class="research-container" id="research-container"></div>
 
-                <div class="slide-content">
-                    <!-- AS-IS 섹션 -->
-                    <div class="section-box as-is">
-                        <div class="section-title">AS-IS</div>
-                        <ul class="section-list">
-                            <li>LLM jailbreaking에 대한 ad-hoc 방어 한계, 체계적 관리방안 부재</li>
-                            <li>(안전수준) 정적셋 기반의 고정된 수준평가 및 Goodhart’s law</li>
-                            <li>(공격기술) 미흡한 성공기준에 의존적인 무차별 공격(DAN) 방식</li>
-                        </ul>
-                    </div>
-
-                    <!-- TO-BE 섹션 -->
-                    <div class="section-box to-be">
-                        <div class="section-title">TO-BE</div>
-                        <ul class="section-list">
-                            <li>공격사례를 구조화한 threat intelligence로 보안위협을 지속관리</li>
-                            <li>(안전수준) red-teaming 기반 동적 취약점 탐색 및 정밀 진단</li>
-                            <li>(공격기술) 엄격한 성공기준과 jailbreaking 자가개선 파이프라인</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- PROPOSED METHOD 섹션 -->
-                <div class="proposed-section">
-                    <div class="proposed-title">PROPOSED METHOD</div>
-                    <div class="proposed-content">
-                        <div class="method-image">
-                            <img src="./Research_Photo/Research-1.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Research+Method+Diagram'">
-                        </div>
-                        <div class="method-description">
-                            <ul>
-                                <li>LLM 기반 공격-평가-분석 파이프라인을 구현하여 지능적 자가개선 루프 및 지식체계 정립</li>
-                                <li>다양한 전략을 조합해 효율적인 공격 수행</li>
-                                <li>jailbreak 성공여부(공격의도 분석, 사회적 영향력, 도메인지식 반영 등) 정밀 평가모듈 개발</li>
-                                <li>공격사례로부터 LLM 취약점을 도출하는 전략 분석 모듈 개발 및 전략DB에 저장해 재활용함</li>
-                                <li>LLM의 구조적 취약점 발견: 공격 프롬프트를 정상처럼 위장해서 차단정책을 우회 가능함</li>
-                            </ul>
-                            <!-- <div class="core-structure">
-                                <p class="core-label">* 핵심 구조·아이디어를</p>
-                                <p class="core-label">3~4줄로 간결히 작성</p>
-                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
-                            </div> -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="research-slide" onclick="openModal(this)">
-                <div class="slide-header">
-                    <h2 class="project-title">Endpoint 공격 분석</h2>
-                    <div class="project-subtitle">
-                        <span class="highlight-red">행위 맥락 기반 로그 그룹화로 공격 시퀀스 재구성 및 의미 기반 자동 공격 분석 체계로 미지 위협까지 확장 분석/대응</span>
-                    </div>
-                    <div class="goals-row">
-                        <span class="goal-label">행위 기반 로그 그룹화</span>
-                        <span class="goal-label">LLM 기반 공격 분석 모듈</span>
-                    </div>
-                </div>
-                
-                <div class="card-image">
-                    <img src="./Research_Photo/Research-2.png" alt="스마트 그리드" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Smart+Grid+Energy+Prediction'">
-                </div>
-                
-                <div class="card-summary">
-                    <div class="summary-item">Anchor–Supporting 이벤트 그룹핑으로 행위 흐름 재구성 가능</div>
-                    <div class="summary-item">행위 카테고리 기반 Feature 구조화로 공격 맥락 연속성 확보</div>
-                    <div class="summary-item">임베딩 유사도 기반 자동 TTP 매핑으로 확장성과 유연성 강화</div>
-                </div>
-                
-                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
-
-                <div class="slide-content">
-                    <!-- AS-IS 섹션 -->
-                    <div class="section-box as-is">
-                        <div class="section-title">AS-IS</div>
-                        <ul class="section-list">
-                            <li>단일 이벤트 기반 분석으로 공격 행위 흐름 식별이 제한됨</li>
-                            <li>고정 Time-window 상관분석 방식은 공격 맥락 단절 위험 有</li>
-                            <li>GNN 기반 구조 분석은 대규모 로그 환경에서 확장성과 설명 가능성에 한계 존재</li>
-                        </ul>
-                    </div>
-
-                    <!-- TO-BE 섹션 -->
-                    <div class="section-box to-be">
-                        <div class="section-title">TO-BE</div>
-                        <ul class="section-list">
-                            <li>Anchor–Supporting 이벤트 그룹핑으로 행위 흐름 재구성 가능</li>
-                            <li>행위 카테고리 기반 Feature 구조화로 공격 맥락 연속성 확보</li>
-                            <li>임베딩 유사도 기반 자동 TTP 매핑으로 확장성과 유연성 강화</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- PROPOSED METHOD 섹션 -->
-                <div class="proposed-section">
-                    <div class="proposed-title">PROPOSED METHOD</div>
-                    <div class="proposed-content">
-                        <div class="method-image">
-                            <img src="./Research_Photo/Research-2.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Research+Method+Diagram'">
-                        </div>
-                        <div class="method-description">
-                            <ul>
-                                <li>행위 기반 로그 그룹화 엔진을 구현하여 공격 흐름 재구성 체계 확립</li>
-                                <li>그룹 단위 Feature를 7개 행위 카테고리로 구조화하여 공격 행위 특성을 대표적으로 표현</li>
-                                <li>LLM 기반 공격 서술 생성 모듈 개발 및 의미 해석 정확도 고도화</li>
-                                <li>임베딩 유사도 기반 TTP 매핑 모듈 개발 및 Unknown 위협 대응 범위 확장</li>
-                                <li>분석 결과를 지식화하여 재활용 가능한 공격 패턴 DB 구축 및 지속적 성능 개선</li>
-                            </ul>
-                            <!-- <div class="core-structure">
-                                <p class="core-label">* 핵심 구조·아이디어를</p>
-                                <p class="core-label">3~4줄로 간결히 작성</p>
-                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
-                            </div> -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="research-slide" onclick="openModal(this)">
-                <div class="slide-header">
-                    <h2 class="project-title">Agentic AI 시스템 안전수준 진단/평가기술</h2>
-                    <div class="project-subtitle">
-                        <span class="highlight-red">17개 Threat 기반 공격 테크닉을 체계화하고, Agent 환경 맞춤 프롬프트 레드티밍으로 취약점 탐색–개선–회귀검증을 지속 관리</span>
-                    </div>
-                    <div class="goals-row">
-                        <span class="goal-label">Agent 환경 맞춤 프롬프트 레드티밍</span>
-                        <span class="goal-label">Agent 프로파일 기반 맞춤형 공격 시나리오 생성</span>
-                    </div>
-                </div>
-                
-                <div class="card-image">
-                    <img src="./Research_Photo/Research-4.png" alt="스마트 그리드" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Smart+Grid+Energy+Prediction'">
-                </div>
-                
-                <div class="card-summary">
-                    <div class="summary-item">입력→도구→실행→메모리 단일 공격 체인을 재구성·가시화</div>
-                    <div class="summary-item">분석대상 Agent 프로파일 기반 맞춤형 공격 시나리오 생성</div>
-                    <div class="summary-item">시나리오별 자동화된 성공/실패 분석</div>
-                </div>
-                
-                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
-
-                <div class="slide-content">
-                    <!-- AS-IS 섹션 -->
-                    <div class="section-box as-is">
-                        <div class="section-title">AS-IS</div>
-                        <ul class="section-list">
-                            <li>입력-도구-실행-메모리가 분절 점검되어, 연쇄공격 분석 어려움</li>
-                            <li>외부 입력/도구 출력/메모리 오염의 누적·전이 원인 규명 어려움</li>
-                            <li>방어 전·후를 동일 조건으로 재현·비교할 표준 절차/기준이 부족함</li>
-                        </ul>
-                    </div>
-
-                    <!-- TO-BE 섹션 -->
-                    <div class="section-box to-be">
-                        <div class="section-title">TO-BE</div>
-                        <ul class="section-list">
-                            <li>입력→도구→실행→메모리 단일 공격 체인을 재구성·가시화</li>
-                            <li>분석대상 Agent 프로파일 기반 맞춤형 공격 시나리오 생성</li>
-                            <li>시나리오별 자동화된 성공/실패 분석</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- PROPOSED METHOD 섹션 -->
-                <div class="proposed-section">
-                    <div class="proposed-title">PROPOSED METHOD</div>
-                    <div class="proposed-content">
-                        <div class="method-image">
-                            <img src="./Research_Photo/Research-4.png" alt="Agent" onerror="this.src='https://via.placeholder.com/800x400?text=Research+Method+Diagram'">
-                        </div>
-                        <div class="method-description">
-                            <ul>
-                                <li>Threat–Technique DB 구축, 17개 Threat별 Technique·프롬프트 템플릿·성공/실패 기준 Oracle 표준화</li>
-                                <li>Agent 프로파일 정규화, 목적·노출 Tool·권한·메모리·정상 업무 플로우 입력 스키마 고정</li>
-                                <li>Technique→시나리오/프롬프트 생성, 대상 Agent 환경에 맞춘 멀티턴 페이로드 구성</li>
-                                <li>Oracle 기반 판정·비교, 동일 조건 반복 실행 후 방어 전·후를 정량 평가</li>
-                            </ul>
-                            <!-- <div class="core-structure">
-                                <p class="core-label">* 핵심 구조·아이디어를</p>
-                                <p class="core-label">3~4줄로 간결히 작성</p>
-                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
-                            </div> -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-
-            <div class="research-slide" onclick="openModal(this)">
-                <div class="slide-header">
-                    <h2 class="project-title">피드백 기반 알림 재해석을 통한 SOC 효율화</h2>
-                    <div class="project-subtitle">
-                        <span class="highlight-red">Feedback-driven alert refinement로 SOC의 Validation Queue 병목을 완화하고, 분석가 검증 부담을 구조적으로 감소</span>
-                    </div>
-                    <div class="goals-row">
-                        <span class="goal-label">FP(오탐) Reduction</span>
-                        <span class="goal-label">SOC 운영 최적화</span>
-                    </div>
-                </div>
-                
-                <div class="card-image">
-                    <img src="./Research_Photo/Research-3.png" alt="네트워크" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Smart+Grid+Energy+Prediction'">
-                </div>
-                
-                <div class="card-summary">
-                    <div class="summary-item">반복·저가치 알림을 선별/억제해 Validation Queue 적체를 완화</div>
-                    <div class="summary-item">필요한 컨텍스트 수집·판단 단계를 축약해 처리 시간을 단축</div>
-                    <div class="summary-item">과거 판정/근거를 재사용해 유사 알림의 재검증을 최소화</div>
-                </div>
-                
-                <p class="click-hint">클릭하여 상세 정보 보기 →</p>
-
-                <div class="slide-content">
-                    <!-- AS-IS 섹션 -->
-                    <div class="section-box as-is">
-                        <div class="section-title">AS-IS</div>
-                        <ul class="section-list">
-                            <li>운영 알림 총량이 분석가 처리량을 지속적으로 초과</li>
-                            <li>알림 1건 판단에 컨텍스트 수집·상관분석이 필요해 건당 소요가 큼</li>
-                            <li>FP/benign trigger가 유사 알림으로 재발해 동일 검증이 반복됨</li>
-                        </ul>
-                    </div>
-
-                    <!-- TO-BE 섹션 -->
-                    <div class="section-box to-be">
-                        <div class="section-title">TO-BE</div>
-                        <ul class="section-list">
-                            <li>반복·저가치 알림을 선별/억제해 Validation Queue 적체를 완화</li>
-                            <li>필요한 컨텍스트 수집·판단 단계를 축약해 처리 시간을 단축</li>
-                            <li>과거 판정/근거를 재사용해 유사 알림의 재검증을 최소화</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- PROPOSED METHOD 섹션 -->
-                <div class="proposed-section">
-                    <div class="proposed-title">PROPOSED METHOD</div>
-                    <div class="proposed-content">
-                        <div class="method-image">
-                            <img src="./Research_Photo/Research-3.png" alt="연구 방법론" onerror="this.src='https://via.placeholder.com/800x400?text=Research+Method+Diagram'">
-                        </div>
-                        <div class="method-description">
-                            <ul>
-                                <li>Feedback Memory: 알림의 최종 판정(attack/attempt/benign)과 근거 특징을 케이스로 축적</li>
-                                <li>Similarity Retrieval: 신규 알림에 대해 유사 케이스를 검색해 과거 판단 근거를 우선 참조</li>
-                                <li>Alert Refinement: 유사도·컨텍스트·과거 오류 패턴을 반영해 알림을 재점수화/재분류(필터링 포함)</li>
-                                <li>분석가의 최종 결정으로 memory를 갱신해 반복 FP/benign을 점진적으로 감소</li>
-                            </ul>
-                            <!-- <div class="core-structure">
-                                <p class="core-label">* 핵심 구조·아이디어를</p>
-                                <p class="core-label">3~4줄로 간결히 작성</p>
-                                <p class="core-note">(수치는 프로젝트마다 유무가 달라 배제)</p>
-                            </div> -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- 모달 -->
+        <!-- 상세 모달 (detail) -->
         <div id="researchModal" class="modal">
             <div class="modal-content">
-                <span class="modal-close" onclick="closeModal()">&times;</span>
+                <span class="modal-close" onclick="closeResearchModal()">&times;</span>
                 <div id="modalBody"></div>
+            </div>
+        </div>
+
+        <!-- 연구 추가/수정 모달 -->
+        <div id="researchModal2" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; overflow-y:auto;">
+            <div style="background:white; max-width:700px; margin:40px auto; padding:30px; border-radius:12px;">
+                <h3 id="researchModalTitle">연구 추가</h3>
+                <form id="researchForm">
+                    <div class="form-group">
+                        <label>제목 *</label>
+                        <input type="text" id="researchTitle" required placeholder="연구 제목" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+                    </div>
+                    <div class="form-group">
+                        <label>부제목 (빨간색 강조 텍스트) *</label>
+                        <textarea id="researchSubtitle" rows="2" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;resize:vertical;box-sizing:border-box;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>목표 태그 (한 줄에 하나씩)</label>
+                        <textarea id="researchGoals" rows="3" placeholder="LLM 취약성 평가&#10;LLM jailbreaking" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;resize:vertical;box-sizing:border-box;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>카드 요약 항목 (한 줄에 하나씩, 3개 권장)</label>
+                        <textarea id="researchSummary" rows="4" placeholder="항목1&#10;항목2&#10;항목3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;resize:vertical;box-sizing:border-box;"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label>AS-IS 항목 (한 줄에 하나씩)</label>
+                            <textarea id="researchAsIs" rows="4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;resize:vertical;box-sizing:border-box;"></textarea>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>TO-BE 항목 (한 줄에 하나씩)</label>
+                            <textarea id="researchToBe" rows="4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;resize:vertical;box-sizing:border-box;"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>PROPOSED METHOD 항목 (한 줄에 하나씩)</label>
+                        <textarea id="researchMethod" rows="5" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;resize:vertical;box-sizing:border-box;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>연구 이미지</label>
+                        <input type="file" id="researchImage" accept="image/*">
+                        <div id="researchImagePreview" style="margin-top:8px;"></div>
+                    </div>
+                    <div id="researchUploadProgress" style="display:none;margin-bottom:10px;">
+                        <div style="background:#e9ecef;border-radius:4px;overflow:hidden;">
+                            <div id="researchProgressBar" style="height:6px;background:#3b6cf7;width:0%;transition:width 0.3s;"></div>
+                        </div>
+                        <small>이미지 업로드 중...</small>
+                    </div>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                        <button type="button" class="cancel-btn" id="researchModalClose">취소</button>
+                        <button type="submit" class="submit-btn" id="researchSaveBtn"><i class="fas fa-save"></i> 저장</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -347,52 +170,6 @@
         </footer>
     </div>
 
-    <script>
-        // 모달 열기
-        function openModal(slideElement) {
-            const modal = document.getElementById('researchModal');
-            const modalBody = document.getElementById('modalBody');
-            
-            // 클릭한 슬라이드의 내용을 복사
-            const clonedSlide = slideElement.cloneNode(true);
-            
-            // 클릭 이벤트 제거
-            clonedSlide.removeAttribute('onclick');
-            
-            // 모달에 내용 삽입
-            modalBody.innerHTML = '';
-            modalBody.appendChild(clonedSlide);
-            
-            // 모달 표시
-            modal.classList.add('active');
-            
-            // body 스크롤 방지
-            document.body.style.overflow = 'hidden';
-        }
-
-        // 모달 닫기
-        function closeModal() {
-            const modal = document.getElementById('researchModal');
-            modal.classList.remove('active');
-            
-            // body 스크롤 복원
-            document.body.style.overflow = 'auto';
-        }
-
-        // 모달 외부 클릭 시 닫기
-        window.onclick = function(event) {
-            const modal = document.getElementById('researchModal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-
-        // ESC 키로 모달 닫기
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeModal();
-            }
-        });
-    </script>
+    <script src="research.js"></script>
 </body>
 </html>

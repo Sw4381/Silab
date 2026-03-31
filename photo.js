@@ -23,11 +23,6 @@ let currentEditingItem = null;
 // Firebase에서 업로드된 사진 목록
 let FIREBASE_PHOTOS = [];
 
-// 전체 사진(로컬 + Firebase 업로드)
-function getAllPhotos() {
-    return [...PHOTO_DATA, ...FIREBASE_PHOTOS];
-}
-
 // ==================== 허용된 사용자 목록 ====================
 const ALLOWED_USERS = ['kinjecs0@gmail.com'];
 
@@ -221,6 +216,43 @@ async function loadUploadedPhotosFromDB() {
     }
 }
 
+async function compressImage(file) {
+    const COMPRESS_TARGET = 8 * 1024 * 1024;
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            const MAX_PX = 4000;
+            if (width > MAX_PX || height > MAX_PX) {
+                const ratio = Math.min(MAX_PX / width, MAX_PX / height);
+                width  = Math.round(width  * ratio);
+                height = Math.round(height * ratio);
+            }
+            canvas.width  = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            let quality = 0.85;
+            const tryCompress = () => {
+                canvas.toBlob(blob => {
+                    if (!blob) { resolve(file); return; }
+                    if (blob.size <= COMPRESS_TARGET || quality <= 0.3) {
+                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                    } else {
+                        quality -= 0.1;
+                        tryCompress();
+                    }
+                }, 'image/jpeg', quality);
+            };
+            tryCompress();
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+    });
+}
+
 async function uploadPhotoToCloudinary(file, metadata) {
     if (!database) throw new Error('Firebase 초기화 필요');
 
@@ -228,6 +260,14 @@ async function uploadPhotoToCloudinary(file, metadata) {
     const progressBar = document.getElementById('photoUploadProgressBar');
     const progressText = document.getElementById('photoUploadProgressText');
     if (progressWrap) progressWrap.style.display = 'block';
+
+    // 10MB 초과 시 자동 압축
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+        if (progressText) progressText.textContent = `압축 중... (${(file.size/1024/1024).toFixed(1)}MB)`;
+        file = await compressImage(file);
+        if (progressText) progressText.textContent = `압축 완료 (${(file.size/1024/1024).toFixed(1)}MB), 업로드 중...`;
+    }
 
     return new Promise((resolve, reject) => {
         const formData = new FormData();
@@ -859,56 +899,11 @@ function parseDateFromFilename(filename) {
     return null;
 }
 
-function normalizeDateWithYear(dateStr, fallbackYear) {
-    if (!dateStr) return `${fallbackYear}.--.--`;
-    if (dateStr.startsWith("MMDD:")) return `${fallbackYear}.${dateStr.replace("MMDD:", "")}`;
-    return dateStr;
-}
-
 function parseDateForSort(dateStr) {
     if (!dateStr) return 0;
     const clean = dateStr.replace(/\./g, "").replace(/-/g, "");
     const n = parseInt(clean, 10);
     return Number.isFinite(n) ? n : 0;
-}
-
-function autoCategoryByName(name) {
-    const n = name.toLowerCase();
-
-    const isWorkshop =
-        n.includes("워크숍") || n.includes("workshop") || n.includes("워크샵") ||
-        n.includes("ai 보안 워크샵") || n.includes("kisa") ||  n.includes("kisa") ||
-        n.includes("kisti") || n.includes("kick-off") || n.includes("kickoff");
-
-    const isAward =
-        n.includes("수상") || n.includes("상") || n.includes("금상") || n.includes("은상") ||
-        n.includes("장려상") || n.includes("최우수") ||
-        n.includes("학회장상") || n.includes("우수상") ||
-        n.includes("한국인터넷진흥원장상") || n.includes("netsec");
-
-    const isConference =
-        n.includes("학회") || n.includes("wisa") || n.includes("학술대회") || n.includes("netsec") ||
-        n.includes("포스터") || n.includes("발표");
-
-    const isLabMeet =
-        n.includes("lab") || n.includes("모임") || n.includes("송별회") || n.includes("회식") ||
-        n.includes("환영회") || n.includes("신입생 환영회");
-
-    const isHackathon =
-        n.includes("해커톤") || n.includes("hackathon") || n.includes("행사");
-
-    const isEvent =
-        n.includes("openlabday") || n.includes("open lab day") ||
-        n.includes("졸업식") || n.includes("스승의날") ||
-        n.includes("교수님") || n.includes("생신") || n.includes("구글");
-
-    if (isAward) return "수상";
-    if (isHackathon) return "행사";
-    if (isWorkshop) return "워크숍";
-    if (isConference) return "학회";
-    if (isEvent) return "행사";
-    if (isLabMeet) return "연구실모임";
-    return "연구실모임";
 }
 
 function prettyTitleFromFilename(filename) {
@@ -920,387 +915,6 @@ function prettyTitleFromFilename(filename) {
     return t || filename;
 }
 
-// ---- 기존 PHOTO_DESC / buildPhotoListFromFilenames 유지 ----
-const PHOTO_DESC = {
-
-    "20260130바나나 먹구 시픈 따람~.jpg" : "하~~~~~~잇!!!!!!!!!!",
-    "20260224졸업식 주인공 3인방.jpg" : "잘생겼네요 ㅎㅎ 가운데 친구 관심 있으신 분은 010-6693-9177 언제든 연락 바랍니다^&^",
-    "20260224졸업식 서유민.jpg" : "잘생겼죠?? 아쉽지만 여자친구가 이미 있으셔요.... 다음 기회를 노려주세요..",
-
-    // ===== 2025 (샘플) =====
-    "연구실 남자들끼리의 뜨거운 한 잔 모임.jpg": "연구실 구성원들이 모여 친목을 다진 자리입니다.",
-    "20251121 신입생 환영회.jpg": "신입 연구원 환영을 위해 진행한 모임입니다.",
-    "20250716 AI 보안 워크샵.jpg": "AI 보안 워크샵 참가 현장 사진입니다.",
-    "20250716 AI 보안 워크샵 교수님과 탁구.jpg": "워크샵 중 쉬는 시간 스냅샷입니다.",
-    "20250820 정보보호 개발자 해커톤.jpg": "정보보호 개발자 해커톤 참가 현장입니다.",
-    "20250821 정보보호 개발자 해커톤 장려상.jpg": "해커톤 장려상 수상 기념 사진입니다.",
-    "20250821 WISA 학술대회 포스터 발표.jpg": "WISA 포스터 발표 현장입니다.",
-    "20250822 WISA 학술대회 발표.jpg": "WISA 구두 발표 현장입니다.",
-    "20251026 캡스톤 디자인 우수상.jpg": "캡스톤 디자인 우수상 수상 기념 사진입니다.",
-
-    // ===== 2024 (샘플) =====
-    "11월30일Silab하반기모임.jpg": "하반기 연구실 모임에서 함께 교류한 자리입니다.",
-    "20240422_교수님생신.jpg": "교수님 생신을 기념해 축하한 날입니다.",
-    "240206_송별회1.jpg": "연구실 송별회 단체 사진입니다.",
-    "240306_신입생환영회.jpg": "신입생 환영회에서의 모습입니다.",
-    "SVCC2024_포스터_이선우.jpg": "SVCC 2024 포스터 발표 기록입니다.",
-    "SVCC2024_발표_한태현.jpg": "SVCC 2024 발표 현장 기록입니다.",
-    "정보보호학회 하계학술대회 학회장상.jpg": "정보보호학회 하계학술대회 학회장상 수상 기념 사진입니다."
-};
-
-function buildPhotoListFromFilenames(year, dir, filenames) {
-    const list = [];
-    filenames.forEach(fn => {
-        if (/\.(pdf)$/i.test(fn)) return;
-
-        const rawDate = parseDateFromFilename(fn);
-        const date = normalizeDateWithYear(rawDate, year);
-        const title = prettyTitleFromFilename(fn);
-        const category = autoCategoryByName(fn);
-
-        const src = encodeURI(`${dir}/${fn}`);
-
-        list.push({
-            src,
-            title,
-            date,
-            category,
-            year,
-            filename: fn,
-            description: (PHOTO_DESC[fn] || "")
-        });
-    });
-    return list;
-}
-
-/* =========================================================
-   ✅ PHOTO_DATA는 너의 기존 블록 그대로 유지하면 됨
-   (여기서는 파일명 리스트 출력 생략)
-   ========================================================= */
-const PHOTO_DATA = [
-        ...buildPhotoListFromFilenames("2026", "./activity_img/2026년", [
-        "260213 OB 분들과의 회식.jpg",
-        "20260130바나나 먹구 시픈 따람~.jpg",
-        "20260309 가천대 Lab-pair.jpg",
-        "20260309 가천대 Lab-pair-2.jpg",
-        "2026 OB 회식.jpg",
-        "2026 OB 회식_1.jpg",
-        "2026 OB 회식_2.jpg",
-        "2026 OB 회식_3.jpg",
-        "2026 OB 회식_4.jpg",
-        "2026 OB 회식_5.jpg",
-        "20260224졸업식 단체사진.jpg",
-        "20260224졸업식 단체사진_2.jpg",
-        "20260224졸업식 단체사진_3.jpg",
-        "20260224졸업식 주인공 3인방.jpg",
-        "20260224졸업식 서유민.jpg",
-        "260319-KISTI kick-off.jpg",
-        "260319-KISTI kick-off 2.jpg",
-        "260319-KISTI kick-off 3.jpg",
-        "260319-KISTI kick-off 4.jpg",
-        "260319-KISTI kick-off 5.jpg",
-        "260327 현서의 마지막 음주.jpg",
-        "260327 현서의 마지막 음주 2.jpg"
-        
-    ]),
-
-
-    ...buildPhotoListFromFilenames("2025", "./activity_img/2025년", [
-        "20250419 교수님 생신 2.jpg",
-        "20250419 교수님 생신.jpg",
-        "2025 정보보호 동계학술대회 학회장상 2.jpg",
-        "2025 정보보호 동계학술대회 학회장상.jpg",
-        "20250403 KISTI kick-off 4.jpg",
-        "20250403 KISTI kick-off 5.jpg",
-        "20250624 정보보호학회 하계학술대회 학회장상.jpg",
-        "20250624 정보호호학회 하계학술대회 발표(선우).jpg",
-        "20250624 정보호호학회 하계학술대회 발표(태현).jpg",
-        "20250716 AI 보안 워크샵 교수님과 탁구.jpg",
-        "20250716 AI 보안 워크샵.jpg",
-        "20250820 정보보호 개발자 해커톤.jpg",
-        "20250821 WISA 학술대회 포스터 발표.jpg",
-        "20250821 정보보호 개발자 해커톤 장려상.jpg",
-        "20250822 WISA 학술대회 발표.jpg",
-        "20251026 캡스톤 디자인 우수상.jpg",
-        "20251121 신입생 환영회.jpg",
-        "20251121 신입생 환영회 2.jpg",
-        "20251127 정보보호학회 동계학술대회(유민).jpg",
-        "20251127 정보보호학회 동계학술대회(현서).jpg",
-        "정보보호학회 동계학술대회 학회장상.jpg",
-        "20251128 정보보호 동계학술대회(정민).jpg",
-        "250220-졸업식2.jpg",
-        "250403-KISTI kick-off 1.jpg",
-        "250403-KISTI kick-off 2.jpg",
-        "250403-KISTI kick-off 3.jpg",
-        "250404-KISTI kick-off 1.jpg",
-        "250404-KISTI kick-off 2.jpg",
-        "250404-KISTI kick-off 3.jpg",
-        "교수님 구글 행사.jpg",
-        "정보보호학회 동계학술대회.jpg",
-        "정보보호학회 하계학술대회 학회장상.jpg",
-        "연구실 남자들끼리의 뜨거운 한 잔 모임.jpg"
-    ]),
-
-    ...buildPhotoListFromFilenames("2024", "./activity_img/2024년", [
-        "11월30일Silab하반기모임.jpg",
-        "20240403_OpenLabDay_첫세미나1.jpg",
-        "20240403_OpenLabDay_첫세미나2.jpg",
-        "20240422_교수님생신.jpg",
-        "240206_송별회1.jpg",
-        "240206_송별회2.jpg",
-        "240206_송별회3.jpg",
-        "240206_송별회4.jpg",
-        "240206_송별회5.jpg",
-        "240216_졸업식2.jpg",
-        "240216_졸업식3.jpg",
-        "240306_신입생환영회.jpg",
-        "240314_KISA워크숍.jpg",
-        "240314_KISA워크숍2.jpg",
-        "240314_KISA워크숍3.jpg",
-        "240411_KISTI_Kick-off.jpg",
-        "240411_KISTI_Kick-off2.jpg",
-        "스승의날_1.jpg",
-        "SVCC2024_발표_한태현.jpg",
-        "SVCC2024_포스터_이선우.jpg",
-        "융합보안학회 하계학술대회_정혜란_장려상.png",
-        "융합보안학회 하계학술대회_황상연_우수논문상.png",
-        "정보보호학회 하계학술대회 학회장상.jpg",
-    ]),
-
-    ...buildPhotoListFromFilenames("2023", "./activity_img/2023년", [
-        "2023 한국정보처리학회 추계학술대회 학부생논문 금상.jpg",
-        "2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상1.jpg",
-        "2023 한국정보처리학회 춘계학술대회 학부생논문경진대회 은상2.jpg",
-        "2023 한국정보처리학회 춘계학술대회.jpg",
-        "2023_WISA학회.jpeg",
-        "2023_부산_정보처리학회.jpg",
-        "2023_소개딩_행사.JPG",
-        "2023_소개딩_행사_2.png",
-        "2023_소개딩_행사_단체사진.jpg",
-        "2023_소개딩_장려상.PNG",
-        "2023_소개딩_한국인터넷진흥원장상.JPG",
-        "2023_융합보안학술대회_수상.jpg",
-        "230601_kisti_kick-off.jpg",
-        "230622_KISTI_정보보호학회_하계학술대회_최우수논문상.jpg",
-        "23_11_11 Lab 모임.jpg",
-        "2차년도 KISA 워크샵.jpg",
-        "KISA_워크샵_제주도_1.jpg",
-        "Netsec 수상(교수님).png",
-        "Security 분야에서의 XAI 연구 동향 및 시사점_장려상.jpg",
-        "선우,시온 학술대회 수상.jpg",
-        "위험관리 RMF 워크숍.jpg",
-        "정보보호학회_충청지부_학술대회_수상.png",
-        "정보보호학회_충청지부_학술대회_포스터 (2).jpg",
-        "정보보호학회_충청지부_학술대회_포스터 (3).jpg",
-        "정보보호학회_충청지부_학술대회_포스터.jpg",
-        "정보보호학회_충청지부_학술대회_포스터발표_1.jpg",
-        "정보보호학회_충청지부_학술대회_포스터발표_2.jpg",
-        "정보보호학회_충청지부_학술대회_포스터발표_3.jpg",
-        "한국정보보호학회 충청지부 - 호서대 총장상(이선우).png"
-    ]),
-
-    ...buildPhotoListFromFilenames("2022", "./activity_img/2022년", [
-        "2022 AI Week 졸업작품경진대회 우수상1.jp2.jpg",
-        "2022 AI Week 졸업작품경진대회 우수상1.jpg",
-        "2022 AI Week 학술논문발표.jpg",
-        "2022 캡스톤 디자인 및 AI 해커톤1.jpg",
-        "2022 캡스톤 디자인 및 AI 해커톤2.jpg",
-        "2022 캡스톤 디자인 및 AI 해커톤3.jpg",
-        "2022 한국정보보호학회 하계학술대회.jpeg",
-        "2022년 AI+Security 우수논문 아이디어 공모전(수상증빙_2).jpg",
-        "9_24 SILAB OB_YB 단체 서울 회식.jpg",
-        "AI+Security 우수논문 아이디어 공모전 우수상.jpg",
-        "AI+Security 우수논문 아이디어 공모전 우수상_2.jpg",
-        "KISA kick-off 제주도.jpg",
-        "KISA kick-off 제주도2.jpg",
-        "KISA kick-off 제주도_10.jpg",
-        "KISA kick-off 제주도_11.jpg",
-        "KISA kick-off 제주도_12.jpg",
-        "KISA kick-off 제주도_13.jpg",
-        "KISA kick-off 제주도_14.jpg",
-        "KISA kick-off 제주도_3.jpg",
-        "KISA kick-off 제주도_4.jpg",
-        "KISA kick-off 제주도_5.jpg",
-        "KISA kick-off 제주도_6.jpg",
-        "KISA kick-off 제주도_7.jpg",
-        "KISA kick-off 제주도_8.jpg",
-        "KISA kick-off 제주도_9.jpg",
-        "사이버 보안 AI 빅데이터 챌린지 C트랙 발표.jpg",
-        "사이버 보안 AI빅데이터 챌린지 C트랙 최우수상1.jpg",
-        "사이버 보안 AI빅데이터 챌린지 C트랙 최우수상2.jpg",
-        "사이버 보안 AI빅데이터 챌린지 C트랙 최우수상3.jpg",
-        "사이버 보안 AI빅데이터 챌린지 C트랙 최우수상4.jpg",
-        "사이버보안 AI_빅데이터 챌린지 2022_수상.png",
-        "삼성 Z플립 행사참여.jpg",
-        "스승의날_1.jpg",
-        "스승의날_2.jpg",
-        "학교 벚꽃1_모임.jpg",
-        "학교 벚꽃2_모임.jpg",
-        "학사 졸업식.jpg"
-    ]),
-    ...buildPhotoListFromFilenames("2021", "./activity_img/2021년", [
-        // WISA 제주도
-        "2021 WISA 제주도1.jpg",
-        "2021 WISA 제주도2.jpg",
-        "2021 WISA 제주도3.jpg",
-        "2021 WISA 제주도4.jpg",
-        "2021 WISA 제주도5.jpg",
-        "2021 WISA 제주도6.jpg",
-        "2021 WISA 제주도7.jpg",
-        "2021 WISA 제주도8.jpg",
-        "2021 WISA 제주도9.jpg",
-        // 학회 / 수상
-        "20210827-정보보호학회_충청지부학술대회_우수상.jpg",
-        "20211118_ICS보안위협탐지_AI경진대회_최우수상.jpg",
-        // 행사 / 컨퍼런스
-        "HAIcon사진.jpg",
-        "NetSec-KR1.jpg",
-        "NetSec-KR2.jpg",
-        "NetSec-KR3.jpg",
-
-        // 정보보호학회 충청지부
-        "정보보호학회 충청지부 학술대회1.jpg",
-        "정보보호학회 충청지부 학술되회2.jpg",
-        "정보보호학회 충청지부 학술되회3.jpg"
-    ]),
-
-    ...buildPhotoListFromFilenames("2020", "./activity_img/2020년", [
-        "20200106-회식_1.jpg",
-        "20200106-회식_2.jpg",
-        "20200106-회식_3.jpg",
-        "20200106-회식_4.jpg",
-        "20200106-회식_5.jpg",
-        "20200106-회식_6.jpg",
-        "20200106-회식_7.jpg",
-        "20200106-회식_8.jpg",
-        "20200106-회식_9.jpg",
-
-        "20200224-최우수졸업논문상-황준호.jpg",
-
-        "20200706-APIC-IST 2020 논문발표_1.jpg",
-        "20200706-APIC-IST 2020 논문발표_2.jpg",
-        "20200706-APIC-IST 2020 논문발표_3.jpg",
-        "20200706-APIC-IST 2020 논문발표_4.jpg",
-        "20200706-APIC-IST 2020 논문발표_5.jpg",
-        "20200706-APIC-IST 2020 논문발표_6.jpg",
-
-        "20200804-미래융합보안기술워크숍_1.jpg",
-        "20200804-미래융합보안기술워크숍_2.jpg",
-        "20200804-미래융합보안기술워크숍_3.jpg",
-        "20200804-미래융합보안기술워크숍_4.jpg",
-        "20200804-미래융합보안기술워크숍_5.jpg",
-        "20200804-미래융합보안기술워크숍_6.jpg",
-        "20200804-미래융합보안기술워크숍_7.jpg",
-        "20200804-미래융합보안기술워크숍_8.jpg",
-
-        "20201021-ICS 단체사진.jpg",
-        "20201027_ICS보안위협탐지_AI경진대회_최우수상_1.jpg",
-        "20201030-한국인터넷정보학회_추계학술대회_1.jpg",
-        "20201030-한국인터넷정보학회_추계학술대회_시상식_1.jpg",
-
-        "20201119_SILAB_연구실_신입생환영회_1.jpg",
-
-        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_1.jpg",
-        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_2.jpg",
-        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_3.jpg",
-        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_4.jpg",
-        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_5.jpg",
-        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_6.jpg",
-        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_상장.jpg",
-        "20201203-K-사이버_시큐리티챌린지_AI_데이터셋_공모분야_상장_1.jpg",
-        "20201203-K-사이버_시큐리티챌린지_악성코드탐지분야_1.jpg"
-    ]),
-
-    ...buildPhotoListFromFilenames("2019", "./activity_img/2019년", [
-        "20190409 교수님과의 식사.jpg",
-        "20190516-제주도워크샵_1.jpg",
-        "20190516-제주도워크샵_2.jpg",
-        "20190516-제주도워크샵_3.jpg",
-        "20190620_부산학술대회_회식사진_1.jpg",
-        "20190620_부산학술대회_회식사진_2.jpg",
-        "20190620_부산학술대회_회식사진_3.jpg",
-        "20190620_부산학술대회_회식사진_4.jpg",
-        "20190620_부산학술대회_회식사진_5.jpg",
-        "20190822_메이커톤_1.jpg",
-        "20190822_메이커톤_2.jpg",
-        "20190910_회식_1.jpg",
-        "20190926_ETRI 국방AI백신 출장_1.jpg",
-        "20190926_ETRI 국방AI백신 출장_2.jpg",
-        "20190927_ETRI 국방AI백신 출장_1.jpg",
-        "20190927_ETRI 국방AI백신 출장_2.jpg",
-        "20191209_Bigdata Challenge_1.jpg",
-        "20191209_Bigdata Challenge_2.jpg",
-        "20191209_Bigdata Challenge_3.jpg",
-        "20191216-ICONI_1.jpg",
-        "20191216-ICONI_2.jpg",
-        "20191216-ICONI_3.jpg",
-        "20191216-ICONI_4.jpg",
-        "20191216-ICONI_5.jpg",
-        "20191216-ICONI_6.jpg",
-        "20191216-ICONI_7.jpg",
-    ]),
-
-    ...buildPhotoListFromFilenames("2018", "./activity_img/2018년", [
-        "181208-AI기반 악성코드탐지(KISA원장상)-우수상.GIF",
-        "181208-AI기반 악성코드탐지(침해사고대응협의회장상).GIF",
-        "2018-1210_데이터챌린지_R&D부상.jpg",
-        "20180129_호경생일날_1.jpg",
-        "20180220_졸업식_1.jpg",
-        "20180220_졸업식_2.jpg",
-        "20180220_졸업식_3.jpg",
-        "20180227_펜타포트점 아웃백.jpg",
-        "20180323_513-2호 이전.jpg",
-        "20180328_회의중_1.png",
-        "20180409_deepweb 발표(엠진)_1.jpg",
-        "20180409_deepweb 발표(엠진)_2.jpg",
-        "20180409_deepweb 발표(엠진)_3.jpg",
-        "20180417_교수님,수정생일,인호,현석환영식_2.jpg",
-        "20180515_스승의날교수님얼음.jpg",
-        "20180717_Alcohol_time.jpg",
-        "20180717_BBQ Time.jpg",
-        "20180717_poker_teaching.jpg",
-        "20180717_the_Goddess_of_fortune.jpg",
-        "20180717_강화도1.jpg",
-        "20180717_강화도2.jpg",
-        "20180717_강화도3.jpg",
-        "20180717_강화도4.jpg",
-        "20180717_단체샷.jpg",
-        "20180717_해질녘.jpg",
-        "20180717_흡연자.jpg",
-        "20180718_CoffeeBreak.jpg",
-        "20181208_R&D시상식1.jpg",
-        "20181208_R&D시상식2.jpg",
-        "20181208_R&D시상식3.jpg",
-        "20181208_R&D시상식4.jpg",
-        "20181208_R&D시상식5.jpg",
-        "20181210_R&D기념사진_수상_1.1.jpg",
-        "20181210_R&D기념사진_수상_1.jpg",
-        "2018데이터챌린지-우수상.jpg",
-        "2018데이터챌린지_예선_경기 충정  2위 상장.jpg"
-    ]),
-
-    ...buildPhotoListFromFilenames("2017", "./activity_img/2017년", [
-        "20170726_용현계곡_워크샵_1.jpg",
-        "20170726_용현계곡_워크샵_2.jpg",
-        "20170726_용현계곡_워크샵_3(호경,선빈,준호 뒷풀이).jpg",
-        "20171028_해커톤.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_1.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_2.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_3.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_4.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_5.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_6.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_7.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_8.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_9.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_10.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_11.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_12.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_13.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_14.jpg",
-        "20171220_부산벡스코(한국정보과학회논문발표)_15.jpg"
-    ])
-];
 
 // ==================== Photo UI 상태 ====================
 let activeCategory = null;
@@ -1356,7 +970,7 @@ function renderCategoryCards() {
     if (!container) return;
     container.innerHTML = "";
 
-    const grouped = groupByCategory(getAllPhotos());
+    const grouped = groupByCategory(FIREBASE_PHOTOS);
     const categories = Array.from(grouped.keys());
 
     const preferredOrder = ["연구실모임", "행사", "워크숍", "학회", "수상", "기타"];
@@ -1398,7 +1012,7 @@ function renderYearCards() {
     if (!container) return;
     container.innerHTML = "";
 
-    const grouped = groupByYear(getAllPhotos());
+    const grouped = groupByYear(FIREBASE_PHOTOS);
     const years = sortYearsDesc(Array.from(grouped.keys()));
 
     years.forEach(y => {
@@ -1581,7 +1195,7 @@ function applyFilterAndRender() {
     const searchInput = document.getElementById("photoSearchInput");
     const q = (searchInput?.value || "").trim().toLowerCase();
 
-    let filtered = getAllPhotos().slice();
+    let filtered = FIREBASE_PHOTOS.slice();
 
     if (activeCategory) filtered = filtered.filter(p => p.category === activeCategory);
     if (activeYear) filtered = filtered.filter(p => String(p.year) === String(activeYear));

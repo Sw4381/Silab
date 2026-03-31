@@ -9,31 +9,13 @@
     <link rel="stylesheet" href="common.css">
     <!-- 멤버 페이지 전용 CSS 파일 연결 -->
     <link rel="stylesheet" href="members.css">
+    <!-- photo.css - admin-panel, auth-section, login-modal 등 공통 스타일 -->
+    <link rel="stylesheet" href="photo.css">
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const hiddenElements = document.querySelectorAll(".hidden");
-
-            const handleScroll = () => {
-                hiddenElements.forEach(element => {
-                    const elementTop = element.getBoundingClientRect().top;
-                    const windowHeight = window.innerHeight;
-
-                    if (elementTop < windowHeight - 50) {
-                        element.classList.add("visible");
-                    } else {
-                        element.classList.remove("visible");
-                    }
-                });
-            };
-
-            window.addEventListener("scroll", handleScroll);
-
-            // 초기 호출로 애니메이션 활성화
-            handleScroll();
-        });
-
-    </script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
     <!-- 헤더 -->
@@ -41,8 +23,8 @@
         <div class="logo">
             <a href="index.html">
                 <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
-                </a>
-            </div>
+            </a>
+        </div>
         <nav class="menu">
             <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
             <a href="./members.html" class="active"><i class="fas fa-users"></i> Members</a>
@@ -51,668 +33,222 @@
             <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
             <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
         </nav>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i>
+                로그아웃
+            </button>
+        </div>
     </header>
 
-    
+    <!-- Firebase 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fab fa-firefox"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">
+                    연구실 멤버만 접근 가능합니다.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 학생 추가/수정 모달 -->
+    <div id="memberModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; overflow-y:auto;">
+        <div style="background:white; max-width:500px; margin:50px auto; padding:30px; border-radius:12px;">
+            <h3 id="memberModalTitle">멤버 추가</h3>
+            <form id="memberForm">
+                <div class="form-group">
+                    <label>섹션 *</label>
+                    <select id="memberSection" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                        <option value="phd">Ph.D. Students</option>
+                        <option value="ms">M.S. Students</option>
+                        <option value="bs">B.S. Students</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>이름 * (예: 홍길동(Gil Dong Hong))</label>
+                    <input type="text" id="memberName" required placeholder="홍길동(Gil Dong Hong)">
+                </div>
+                <div class="form-group">
+                    <label>직책 *</label>
+                    <input type="text" id="memberRole" required placeholder="예: 박사과정">
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="text" id="memberEmail" placeholder="example@email.com">
+                </div>
+                <div class="form-group">
+                    <label>연구분야</label>
+                    <input type="text" id="memberResearch" placeholder="예: AI Security">
+                </div>
+                <div class="form-group">
+                    <label>학위 정보</label>
+                    <input type="text" id="memberDegree" placeholder="예: 박사과정 (2025.3~), KISA">
+                </div>
+                <div class="form-group">
+                    <label>사진</label>
+                    <input type="file" id="memberPhoto" accept="image/*">
+                    <div id="memberPhotoPreview" style="margin-top:8px;"></div>
+                </div>
+                <div id="memberUploadProgress" style="display:none;margin-bottom:10px;">
+                    <div style="background:#e9ecef;border-radius:4px;overflow:hidden;">
+                        <div id="memberProgressBar" style="height:6px;background:#3b6cf7;width:0%;transition:width 0.3s;"></div>
+                    </div>
+                    <small>사진 업로드 중...</small>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                    <button type="button" class="cancel-btn" id="memberModalClose">취소</button>
+                    <button type="submit" class="submit-btn" id="memberSaveBtn"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 졸업생 추가/수정 모달 -->
+    <div id="alumniModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+        <div style="background:white; max-width:500px; margin:150px auto; padding:30px; border-radius:12px;">
+            <h3 id="alumniModalTitle">졸업생 추가</h3>
+            <form id="alumniForm">
+                <div class="form-group">
+                    <label>이름 *</label>
+                    <input type="text" id="alumniName" required placeholder="홍길동">
+                </div>
+                <div class="form-group">
+                    <label>기간 * (예: (2019~2025))</label>
+                    <input type="text" id="alumniPeriod" required placeholder="(2019~2025)">
+                </div>
+                <div class="form-group">
+                    <label>정보 (학위, 회사, 이메일 등)</label>
+                    <input type="text" id="alumniInfo" placeholder="M.S, 회사명, email">
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                    <button type="button" class="cancel-btn" id="alumniModalClose">취소</button>
+                    <button type="submit" class="submit-btn"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 교수님 정보 수정 모달 -->
+    <div id="professorModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; overflow-y:auto;">
+        <div style="background:white; max-width:600px; margin:50px auto; padding:30px; border-radius:12px;">
+            <h3><i class="fas fa-chalkboard-teacher"></i> 교수님 정보 수정</h3>
+            <form id="professorForm">
+                <div class="form-group">
+                    <label>이름</label>
+                    <input type="text" id="profName" placeholder="이태진 교수">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>직함</label>
+                        <input type="text" id="profTitle" placeholder="Associate Professor">
+                    </div>
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="text" id="profEmail" placeholder="kinjecs0@gmail.com">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>학과</label>
+                        <input type="text" id="profDept" placeholder="Department of Smart Security">
+                    </div>
+                    <div class="form-group">
+                        <label>대학교</label>
+                        <input type="text" id="profUniv" placeholder="Gachon University">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Academic Background & Experience</label>
+                    <textarea id="profBio" rows="5" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Research Focus</label>
+                    <textarea id="profResearch" rows="4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>교수님 사진</label>
+                    <input type="file" id="profPhoto" accept="image/*">
+                    <div id="profPhotoPreview" style="margin-top:8px;"></div>
+                </div>
+                <div id="profUploadProgress" style="display:none;margin-bottom:10px;">
+                    <div style="background:#e9ecef;border-radius:4px;overflow:hidden;">
+                        <div id="profProgressBar" style="height:6px;background:#3b6cf7;width:0%;transition:width 0.3s;"></div>
+                    </div>
+                    <small>사진 업로드 중...</small>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                    <button type="button" class="cancel-btn" id="professorModalClose">취소</button>
+                    <button type="submit" class="submit-btn" id="profSaveBtn"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="container">
         <div class="content-section">
-            
-            <!-- 교수님 섹션 -->
-            <section class="professor-section hidden section-base">
-                <h2 class="professor-title section-title">Professor</h2>
-                <div class="professor-content">
-                    <div class="professor-card">
-                        <img src="./members_img/tjlee.jpg" alt="Professor Photo">
-                        <h3>이태진 교수</h3>
-                        <p><strong>Associate Professor</strong></p>
-                        <p><strong>Department of Smart Security</strong></p>
-                        <p><strong>Gachon University</strong></p>
-                        <p class="email"><i class="fas fa-envelope"></i> kinjecs0@gmail.com</p>
-                    </div>
-                    <div class="professor-history">
-                        <h3><i class="fas fa-graduation-cap"></i> Academic Background & Experience</h3>
-                        <div class="bio-details" id="bio-details">
-                            <p class="full-bio text-box">
-                                Taejin Lee is currently an Associate Professor in the Department of Information Security at Gachon University (2025–present). Prior to this, he served as an Associate Professor in the School of Computer Engineering at Hoseo University (2017–2024). Before transitioning to academia, he worked at the Korea Internet & Security Agency (KISA) as an R&D Team Leader (2003–2017), where he was involved in cybersecurity research and development. He received his Ph.D. in Computer Engineering from Ajou University, his M.S. in Computer Engineering from Yonsei University, and his B.S. in Computer Engineering from POSTECH.
-                            </p>
-                        </div>
-                        <hr>
-                        <h3><i class="fas fa-flask"></i> Research Focus</h3>
-                        <p class="research-desc text-box">
-                            <strong>Our lab conducts advanced cybersecurity research across LLM/AI security, network security, and endpoint security. We focus on security threats in large language models and Agent AI systems, including attack techniques, safety evaluation, guardrails, and privacy protection.
-Our research emphasizes practical, implementable, and verifiable outcomes, such as prototypes, demonstrations, and high-impact publications. In parallel, we develop network and endpoint attack detection and analysis technologies validated with real-world data.
-Through close collaboration with industry and government-funded projects, we aim to bridge cutting-edge security research and real-world deployment.</strong>
-                        </p>
-                    </div>
+
+            <!-- 관리자 패널 -->
+            <div class="admin-panel" id="memberAdminPanel" style="display:none;">
+                <h3><i class="fas fa-tools"></i> 멤버 관리</h3>
+                <div class="admin-buttons">
+                    <button class="admin-btn" id="addStudentBtn"><i class="fas fa-plus"></i> 학생 추가</button>
+                    <button class="admin-btn" id="addAlumniBtn"><i class="fas fa-plus"></i> 졸업생 추가</button>
+                    <button class="admin-btn" id="editProfessorBtn"><i class="fas fa-chalkboard-teacher"></i> 교수님 정보 수정</button>
+                    <button class="admin-btn edit" id="memberEditModeBtn"><i class="fas fa-edit"></i> 수정 모드 토글</button>
+                    <button class="admin-btn delete" id="memberDeleteModeBtn"><i class="fas fa-trash"></i> 삭제 모드 토글</button>
                 </div>
+            </div>
+
+            <!-- 교수님 섹션 (JS로 렌더링) -->
+            <section class="professor-section hidden section-base" id="professor-section"></section>
+
+            <!-- 박사과정 섹션 -->
+            <section class="members-section hidden section-base">
+                <h2 class="section-title"><i class="fas fa-user-graduate"></i> Ph.D. Students</h2>
+                <div class="student-list" id="phd-list"></div>
             </section>
 
-    <!-- 박사과정 섹션 -->
-    <section class="members-section hidden section-base">
-        <h2 class="section-title"><i class="fas fa-user-graduate"></i> Ph.D. Students</h2>
-        <div class="student-list">
-            <div class="student-item">
-                <img src="./members_img/profile_wh.jpg" alt="김원형" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">김원형(Won Hyeong Kim)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">박사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">kwh9667@naver.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Zero Trust Security, Cloud Security</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">박사과정 (2025.3~), 앰진</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- 석사과정 섹션 -->
+            <section class="members-section hidden section-base">
+                <h2 class="section-title"><i class="fas fa-user-tie"></i> M.S Student</h2>
+                <div class="student-list" id="ms-list"></div>
+            </section>
 
-        <div class="student-item">
-            <img src="./members_img/f4.png" alt="유선모" class="student-photo">
-            <div class="student-info">
-                <div class="student-name">유선모(Sun Mo Yoo)</div>
-                <div class="student-details">
-                    <div class="detail-row">
-                        <span class="detail-label">직책(직급):</span>
-                        <span class="detail-value">박사과정</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">이메일:</span>
-                        <span class="detail-value email">smyoo@amgine.co.kr</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">연구분야:</span>
-                        <span class="detail-value Re">Trustworthy AI and Security</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">학위:</span>
-                        <span class="detail-value degree">박사과정 (2017.9~), 앰진</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="student-item">
-            <img src="./members_img/pf_찬웅.jpg" alt="황찬웅" class="student-photo">
-            <div class="student-info">
-                <div class="student-name">황찬웅(Chan Woong Hwang)</div>
-                <div class="student-details">
-                    <div class="detail-row">
-                        <span class="detail-label">직책(직급):</span>
-                        <span class="detail-value">박사과정</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">이메일:</span>
-                        <span class="detail-value email">hcw85123@gmail.com</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">연구분야:</span>
-                        <span class="detail-value Re">AI Security, Threat Hunting</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">학위:</span>
-                        <span class="detail-value degree">박사과정 (2025.3~), KISA</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="student-item">
-            <img src="./members_img/profile_th.jpg" alt="한태현" class="student-photo">
-            <div class="student-info">
-                <div class="student-name">한태현(Tae Hyun Han)</div>
-                <div class="student-details">
-                    <div class="detail-row">
-                        <span class="detail-label">직책(직급):</span>
-                        <span class="detail-value">박사과정</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">이메일:</span>
-                        <span class="detail-value email">12lilliput@gmail.com</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">연구분야:</span>
-                        <span class="detail-value Re">LLM alignment and privacy</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">학위:</span>
-                        <span class="detail-value degree">박사과정 (2025.3~), Silab 5대 랩장</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="student-item">
-            <img src="./members_img/JinKang.jpg" alt="김진강" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">김진강(Jin Kang Kim)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">박사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">krch9707@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">eXplainable AI & Security</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">박사과정 (2025.9~), KISA, Silab 3대랩장</span>
-                        </div>
-                    </div>
-                </div>
-        </div>
-
-        <div class="student-item">
-            <img src="./members_img/Soojung.jpg" alt="김수정" class="student-photo">
-            <div class="student-info">
-                <div class="student-name">김수정(Su Jeong Kim)</div>
-                <div class="student-details">
-                    <div class="detail-row">
-                        <span class="detail-label">직책(직급):</span>
-                        <span class="detail-value">박사과정</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">이메일:</span>
-                        <span class="detail-value email">sjkim395@gmail.com</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">연구분야:</span>
-                        <span class="detail-value Re">AI for security and privacy</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">학위:</span>
-                        <span class="detail-value degree">박사과정 (2025.9~), KISA</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="student-item">
-            <img src="./members_img/BGW.jpg" alt="배근우" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">배근우(Keun Woo Bae)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">박사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">bkw1402@naver.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">AI for Security</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">박사과정 (2025.9~), KISA</span>
-                        </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="student-item">
-            <img src="./members_img/f4.png" alt="조호영" class="student-photo">
-            <div class="student-info">
-                <div class="student-name">조호영(Ho Young Jo)</div>
-                <div class="student-details">
-                    <div class="detail-row">
-                        <span class="detail-label">직책(직급):</span>
-                        <span class="detail-value">박사과정</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">이메일:</span>
-                        <span class="detail-value email">hoyoung.cho@igloo.co.kr</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">연구분야:</span>
-                        <span class="detail-value Re">AI for security and privacy</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">학위:</span>
-                        <span class="detail-value degree">박사과정 (2026.03~), 이글루코퍼레이션</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-      
-
-        <div class="student-item">
-            <img src="./members_img/이현우.jpg" alt="이현우" class="student-photo">
-            <div class="student-info">
-                <div class="student-name">이현우(Hyun Woo Lee)</div>
-                <div class="student-details">
-                    <div class="detail-row">
-                        <span class="detail-label">직책(직급):</span>
-                        <span class="detail-value">박사과정</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">이메일:</span>
-                        <span class="detail-value email">yi0545@kisti.re.k</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">연구분야:</span>
-                        <span class="detail-value Re">AI for security and privacy</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">학위:</span>
-                        <span class="detail-value degree">박사과정 (2026.03~), KISTI</span>
-                    </div>
-                </div>
-            </div>
-        </div>     
-
-        <div class="student-item">
-            <img src="./members_img/f4.png" alt="지승구" class="student-photo">
-            <div class="student-info">
-                <div class="student-name">지승구(Seung Gu Ji)</div>
-                <div class="student-details">
-                    <div class="detail-row">
-                        <span class="detail-label">직책(직급):</span>
-                        <span class="detail-value">박사과정</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">이메일:</span>
-                        <span class="detail-value email">--</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">연구분야:</span>
-                        <span class="detail-value Re">AI for security and privacy</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">학위:</span>
-                        <span class="detail-value degree">박사과정 (2026.03~), KISA</span>
-                    </div>
-                </div>
-            </div>
-        </div>  
-
-
-    </div>  
-
-    </section>
-
-    <!-- 석사과정 섹션 -->
-    <section class="members-section hidden section-base">
-        <h2 class="section-title"><i class="fas fa-user-tie"></i> M.S Student</h2>
-        <div class="student-list">
-            <div class="student-item">
-                <img src="./members_img/profile_sw.jpg" alt="이선우" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">이선우(Sun Woo Lee)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">dltjs5621@gachon.ac.kr</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Network Security</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2023.3~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="student-item">
-                <img src="./members_img/profile_hr.jpg" alt="정혜란" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">정혜란(Hye Ran Jung)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">0110jhr@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Incident Severity Analysis </span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2023.6~), Silab 6대 랩장</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="student-item">
-                <img src="./members_img/profile_ljy.jpg" alt="이주영" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">이주영(Ju Young Lee)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">jylee0741@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Trustworthy AI and Security</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2023.6~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="student-item">
-                <img src="./members_img/jys.jpg" alt="정연수" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">정연수(Yeon Su Jeong)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">kitesu,j@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Intelligent Security Automation & Threat Intelligence</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2024.4~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="student-item">
-                <img src="./members_img/서유민.jpg" alt="서유민" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">서유민(Yu Min Seo)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">1052da@naver.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Natural language security with LLMs</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2023.12~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="student-item">
-                <img src="./members_img/profile_hs2.png" alt="김현서" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">김현서(Hyun Seo Kim)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">00hskim@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">AI RedTeaming & Security  </span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2024.4~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="student-item">
-                <img src="./members_img/최유정.jpg" alt="최유정" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">최유진(Yu Jin Choi) </div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">choiyujin020706@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Intelligent Security Automation & Threat Intelligence</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2026.3~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="student-item">
-                <img src="./members_img/라혜경.png" alt="라혜경" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">라혜경(Hye Kyung Ra)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">fkzhd7577@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">AI for security and privacy</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2026.03~), 국방부</span>
-                        </div>
-                    </div>
-                </div>
-            </div>  
-            <div class="student-item">
-                <img src="./members_img/f4.png" alt="백종현" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">백종현(Jong Hyun Baek) </div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">석사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">---</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Intelligent Security Automation & Threat Intelligence</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">석사과정 (2026.3~) C2Lab</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-        </div>
-    </section>
-
-    <!-- 학부생 섹션 -->
-    <section class="members-section hidden section-base">
-        <h2 class="section-title"><i class="fas fa-user"></i> B.S Student</h2>
-        <div class="student-list">
-
-        <div class="student-item">
-                <img src="./members_img/OJM.png" alt="오정민" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">오정민(Jeong Min Oh)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">학사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">ojmes5790@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">AI RedTeaming & Security</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">학사과정 (2025.8~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-        <div class="student-item">
-                <img src="./members_img/전수아.jpg" alt="전수아" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">전수아(Su A Jeon)</div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">학사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">jsa4576@gachon.ac.kr</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Network Security</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">학사과정 (2025.12~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="student-item">
-                <img src="./members_img/최유나.jpg" alt="최유나" class="student-photo">
-                <div class="student-info">
-                    <div class="student-name">최유나(Yoo Na Choi) </div>
-                    <div class="student-details">
-                        <div class="detail-row">
-                            <span class="detail-label">직책(직급):</span>
-                            <span class="detail-value">학사과정</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">이메일:</span>
-                            <span class="detail-value email">choiyoona122@gmail.com</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">연구분야:</span>
-                            <span class="detail-value Re">Intelligent Security Automation & Threat Intelligence</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">학위:</span>
-                            <span class="detail-value degree">학사과정 (2025.12~)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-        </div> 
-<!--------------------------------------------------------------------------------------------------------->
-
-        
-        
-    </section>
+            <!-- 학사과정 섹션 -->
+            <section class="members-section hidden section-base">
+                <h2 class="section-title"><i class="fas fa-user"></i> B.S Student</h2>
+                <div class="student-list" id="bs-list"></div>
+            </section>
 
             <!-- 졸업생 섹션 -->
-    <section class="graduates-section hidden section-base">
+            <section class="graduates-section hidden section-base">
                 <h2 class="section-title"><i class="fas fa-award"></i> Alumni</h2>
-                <div class="graduates-text" id="graduates-list">
-        <p class="alumni-entry"><span class="alumni-name">서주현</span> <span class="alumni-year">(2019~2025)</span><span class="alumni-info">, M.S, seo99832@gmail.com</span></p>            
-        <p class="alumni-entry"><span class="alumni-name">박현우</span> <span class="alumni-year">(2024~2025)</span><span class="alumni-info">, B.S, 다날, dusnqkr@naver.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">윤주한</span> <span class="alumni-year">(2024~2024)</span><span class="alumni-info">, B.S, 핀시큐리티, 20171247@vision.hoseo.edu</span></p>
-        <p class="alumni-entry"><span class="alumni-name">황상연</span> <span class="alumni-year">(2023~2024)</span><span class="alumni-info">, B.S, 시큐레이어, hwangsangyeon1941@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">송준영</span> <span class="alumni-year">(2023~2023)</span><span class="alumni-info">, B.S, pubacc1214@naver.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">박영지</span> <span class="alumni-year">(2022~2023)</span><span class="alumni-info">, B.S, 20201035@vision.hoseo.edu</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김익선</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, qhfkdt9599@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">송현진</span> <span class="alumni-year">(2021~2023)</span><span class="alumni-info">, Assistant, wlstlqwert@naver.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">정시온</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, 엔피코어, 20181263@vision.hoseo.edu</span></p>
-        <p class="alumni-entry"><span class="alumni-name">박정욱</span> <span class="alumni-year">(2022~2024)</span><span class="alumni-info">, M.S, 안랩</span></p>
-        <p class="alumni-entry"><span class="alumni-name">임승범</span> <span class="alumni-year">(2021~2024)</span><span class="alumni-info">, M.S, 샌즈랩, gksrkdmftkfkd@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">이현나</span> <span class="alumni-year">(2021~2022)</span><span class="alumni-info">, B.S, 인포섹, jinnajjang1@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">이예은</span> <span class="alumni-year">(2021~2024)</span><span class="alumni-info">, M.S, 이글루시큐리티, judiaye4477@gmail.com, Silab 4대랩장</span></p>
-        <p class="alumni-entry"><span class="alumni-name">배성호</span> <span class="alumni-year">(2021~2021)</span><span class="alumni-info">, B.S, 안랩, --</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김형래</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 이글루시큐리티, kkd04310@naver.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">정아연</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 안랩, j1117j71@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">이은규</span> <span class="alumni-year">(2020~2023)</span><span class="alumni-info">, M.S, 이노룰스, legleg1216@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">이용수</span> <span class="alumni-year">(2020~2023)</span><span class="alumni-info">, M.S, 덕유산cc, sooky2001@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김보미</span> <span class="alumni-year">(2020~2021)</span><span class="alumni-info">, B.S, 자람테크놀로지, 010-5732-7493</span></p>
-        <p class="alumni-entry"><span class="alumni-name">윤재헌</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, B.S, 이글루시큐리티 </span></p>
-        <p class="alumni-entry"><span class="alumni-name">김선진</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, B.S, 롯데정보통신</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김효식</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, B.S, 시큐레터</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김도연</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, ICB, ehdus3342@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김세진</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, B.S, tpwls224@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김홍비</span> <span class="alumni-year">(2019~2021)</span><span class="alumni-info">, M.S, 이글루시큐리티, tlp3a1@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">안준연</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, 윈스, lommy101@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">신현석</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, Philasso, --</span></p>
-        <p class="alumni-entry"><span class="alumni-name">황선빈</span> <span class="alumni-year">(2017~2018)</span><span class="alumni-info">, B.S, 충남척수장애인협회, tjsqlsdl2@naver.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김호경</span> <span class="alumni-year">(2017~2018)</span><span class="alumni-info">, B.S, 인포인, khgyeong0129@naver.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">김인호</span> <span class="alumni-year">(2018~2019)</span><span class="alumni-info">, B.S, 하이브, mono995@naver.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">이영주</span> <span class="alumni-year">(2019~2019)</span><span class="alumni-info">, B.S, 한국시스템보증, yjlee2@kosyas.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">하지희</span> <span class="alumni-year">(2017~2020)</span><span class="alumni-info">, M.S, hjh1590@gmail.com</span></p>
-        <p class="alumni-entry"><span class="alumni-name">황준호</span> <span class="alumni-year">(2017~2020)</span><span class="alumni-info">, M.S, Philasso, hwangso93@gmail.com, Silab 1대랩장</span></p>
-                </div>
+                <div class="graduates-text" id="alumni-list"></div>
             </section>
+
         </div>
 
         <!-- 푸터 -->
@@ -730,5 +266,7 @@ Through close collaboration with industry and government-funded projects, we aim
             </div>
         </footer>
     </div>
+
+    <script src="members.js"></script>
 </body>
-aa
+</html>

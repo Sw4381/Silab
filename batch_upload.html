@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사진 일괄 업로드 도구</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.6rem;
+            color: #005792;
+            margin-bottom: 8px;
+        }
+        .desc {
+            color: #555;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        label { font-weight: bold; font-size: 0.9rem; color: #444; }
+        input, select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+        .form-group { margin-bottom: 14px; }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #005792; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger  { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #fileInput { display: none; }
+        .pick-area {
+            border: 2px dashed #adb5bd;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .pick-area:hover { border-color: #005792; }
+        .pick-area p { color: #6c757d; margin-top: 8px; font-size: 0.9rem; }
+
+        /* 미리보기 테이블 */
+        #previewSection { display: none; }
+        .table-wrap { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+        th {
+            background: #005792;
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+        tr:hover td { background: #f8f9fa; }
+        td input, td select {
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            margin-top: 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .status-pending  { background: #e9ecef; color: #555; }
+        .status-uploading { background: #cce5ff; color: #004085; }
+        .status-done     { background: #d4edda; color: #155724; }
+        .status-error    { background: #f8d7da; color: #721c24; }
+        .status-skip     { background: #fff3cd; color: #856404; }
+
+        /* 진행 상황 */
+        #progressSection { display: none; }
+        .progress-bar-wrap {
+            background: #e9ecef;
+            border-radius: 8px;
+            height: 24px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #005792, #0077be);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .log-box {
+            background: #212529;
+            color: #adb5bd;
+            border-radius: 8px;
+            padding: 14px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+        .log-ok  { color: #69db7c; }
+        .log-err { color: #ff6b6b; }
+        .log-info { color: #74c0fc; }
+
+        .stats { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0; }
+        .stat { background: #f8f9fa; border-radius: 8px; padding: 10px 18px; text-align: center; }
+        .stat .num { font-size: 1.6rem; font-weight: bold; color: #005792; }
+        .stat .lbl { font-size: 0.8rem; color: #6c757d; }
+        .stat.done .num { color: #28a745; }
+        .stat.err  .num { color: #dc3545; }
+        .stat.skip .num { color: #f0ad4e; }
+
+        /* 로그인 */
+        #loginSection { text-align: center; padding: 40px; }
+        #loginSection input { max-width: 320px; margin: 6px auto; display: block; }
+        #appContent { display: none; }
+
+        .row { display: flex; gap: 12px; align-items: flex-end; }
+        .row .form-group { flex: 1; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+        /* 업로드된 사진 관리 */
+        #manageSection { display: none; }
+        .manage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .manage-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            background: #f8f9fa;
+        }
+        .manage-card img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            display: block;
+        }
+        .manage-card .card-info {
+            padding: 6px 8px;
+            font-size: 0.75rem;
+            color: #555;
+            line-height: 1.4;
+        }
+        .manage-card .card-info strong {
+            display: block;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .manage-card .del-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(220,53,69,0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .manage-card .del-btn:hover { background: #dc3545; }
+        .manage-card.selected { outline: 3px solid #dc3545; }
+        .manage-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+        .manage-filter select, .manage-filter input { width: auto; padding: 6px 10px; font-size: 0.85rem; }
+        #manageCount { font-size: 0.85rem; color: #6c757d; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>🗂️ 사진 일괄 업로드 도구</h1>
+    <p class="desc">
+        <strong>activity_img</strong> 폴더를 선택하면 파일명에서 날짜·제목을 자동 추출하고<br>
+        Cloudinary + Firebase에 일괄 업로드합니다. (관리자 로그인 필요)
+    </p>
+
+    <!-- 로그인 섹션 -->
+    <div class="card" id="loginSection">
+        <h2>관리자 로그인</h2>
+        <div class="form-group">
+            <label>이메일</label>
+            <input type="email" id="loginEmail" value="kinjecs0@gmail.com">
+        </div>
+        <div class="form-group">
+            <label>비밀번호</label>
+            <input type="password" id="loginPassword" placeholder="비밀번호">
+        </div>
+        <button class="btn btn-primary" onclick="doLogin()">로그인</button>
+        <p id="loginError" style="color:red; margin-top:10px;"></p>
+    </div>
+
+    <div id="appContent">
+
+    <!-- STEP 1: 폴더 선택 -->
+    <div class="card">
+        <h2>① 폴더 선택</h2>
+        <input type="file" id="fileInput" multiple accept="image/*" webkitdirectory>
+        <div class="pick-area" onclick="document.getElementById('fileInput').click()">
+            <div style="font-size:2.5rem;">📁</div>
+            <strong>activity_img 폴더 선택</strong>
+            <p>클릭하여 폴더를 통째로 선택하세요 (하위 폴더 포함)</p>
+        </div>
+        <p id="fileCount" style="margin-top:10px; color:#555;"></p>
+    </div>
+
+    <!-- STEP 2: 미리보기 / 카테고리 설정 -->
+    <div class="card" id="previewSection">
+        <div class="summary-row">
+            <h2 style="border:none; padding:0; margin:0;">② 업로드 목록 확인</h2>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="selectAll(true)">전체 선택</button>
+                <button class="btn btn-secondary" onclick="selectAll(false)">전체 해제</button>
+                <button class="btn btn-success" id="startBtn" onclick="startUpload()">▶ 업로드 시작</button>
+            </div>
+        </div>
+        <p style="color:#888; font-size:0.85rem; margin:10px 0 14px;">
+            카테고리·제목을 수정할 수 있습니다. 체크 해제한 항목은 건너뜁니다.
+        </p>
+        <div class="table-wrap">
+            <table id="previewTable">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkAll" onclick="syncAll(this)"></th>
+                        <th>폴더(연도)</th>
+                        <th>파일명</th>
+                        <th>날짜</th>
+                        <th>카테고리</th>
+                        <th>제목</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody id="previewBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- STEP 3: 진행 상황 -->
+    <div class="card" id="progressSection">
+        <h2>③ 업로드 진행</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="num" id="statTotal">0</div>
+                <div class="lbl">전체</div>
+            </div>
+            <div class="stat done">
+                <div class="num" id="statDone">0</div>
+                <div class="lbl">완료</div>
+            </div>
+            <div class="stat err">
+                <div class="num" id="statErr">0</div>
+                <div class="lbl">실패</div>
+            </div>
+            <div class="stat skip">
+                <div class="num" id="statSkip">0</div>
+                <div class="lbl">건너뜀</div>
+            </div>
+        </div>
+        <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progressFill" style="width:0%">0%</div>
+        </div>
+        <p id="currentFile" style="color:#555; font-size:0.9rem; margin-bottom:10px;"></p>
+        <div class="log-box" id="logBox"></div>
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-danger" id="stopBtn" onclick="stopUpload()">⏹ 중단</button>
+            <button class="btn btn-warning" id="retryBtn" style="display:none; background:#f0ad4e; color:white;" onclick="retryFailed()">🔄 실패한 항목 재시도</button>
+            <button class="btn btn-primary" id="doneBtn" style="display:none;" onclick="location.reload()">새로 시작</button>
+        </div>
+    </div>
+
+    <!-- STEP 4: 업로드된 사진 관리 -->
+    <div class="card" id="manageSection">
+        <div class="summary-row" style="margin-bottom:14px;">
+            <h2 style="border:none; padding:0; margin:0;">④ Firebase 사진 관리 <span id="manageCount"></span></h2>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="loadManagePhotos()">🔄 새로고침</button>
+                <button class="btn btn-danger" id="bulkDeleteBtn" onclick="bulkDelete()" style="display:none;">선택 삭제</button>
+            </div>
+        </div>
+        <!-- Cloudinary 자격증명 (삭제용) -->
+        <details style="margin-bottom:14px;">
+            <summary style="cursor:pointer; font-weight:bold; color:#005792; font-size:0.9rem;">
+                🔑 Cloudinary API 설정 (삭제 시 필요)
+            </summary>
+            <div style="background:#f8f9fa; border-radius:8px; padding:14px; margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                <div class="form-group" style="margin:0; flex:1; min-width:180px;">
+                    <label>API Key</label>
+                    <input type="text" id="cldApiKey" placeholder="Cloudinary API Key">
+                </div>
+                <div class="form-group" style="margin:0; flex:1; min-width:180px;">
+                    <label>API Secret</label>
+                    <input type="password" id="cldApiSecret" placeholder="Cloudinary API Secret">
+                </div>
+                <div>
+                    <button class="btn btn-secondary" style="padding:8px 16px; font-size:0.85rem;" onclick="saveCldCreds()">저장</button>
+                </div>
+                <p style="width:100%; margin:6px 0 0; font-size:0.8rem; color:#6c757d;">
+                    Cloudinary 대시보드 → Settings → API Keys에서 확인. 이 페이지 메모리에만 보관됩니다.
+                </p>
+            </div>
+        </details>
+        <div class="manage-filter">
+            <label style="font-weight:normal;">카테고리:</label>
+            <select id="filterCat" onchange="applyFilter()">
+                <option value="">전체</option>
+                <option>워크샵</option><option>졸업식</option><option>수상</option>
+                <option>학회/발표</option><option>해커톤</option><option>체육행사</option>
+                <option>회식/모임</option><option>신입생</option><option>세미나</option><option>기타</option>
+            </select>
+            <label style="font-weight:normal;">연도:</label>
+            <select id="filterYear" onchange="applyFilter()"><option value="">전체</option></select>
+            <input type="text" id="filterText" placeholder="제목/파일명 검색..." oninput="applyFilter()" style="width:180px;">
+            <label style="font-weight:normal; cursor:pointer;">
+                <input type="checkbox" id="multiSelectMode" onchange="toggleMultiSelect()"> 다중선택 삭제
+            </label>
+        </div>
+        <div class="manage-grid" id="manageGrid"></div>
+    </div>
+
+    </div><!-- /appContent -->
+</div>
+
+<!-- Firebase v8 SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+// ============================================================
+//  설정
+// ============================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
+    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
+    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
+    projectId: "security-lab-projects-4d1cb",
+    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
+    messagingSenderId: "1075416037204",
+    appId: "1:1075416037204:web:89db47137971d40485bac1"
+};
+const CLOUDINARY_CLOUD_NAME  = 'dtgwtdf3q';
+const CLOUDINARY_UPLOAD_PRESET = 'jfwl9ton';
+const ALLOWED_EMAIL = 'kinjecs0@gmail.com';
+
+firebase.initializeApp(firebaseConfig);
+const auth     = firebase.auth();
+const database = firebase.database();
+
+// ============================================================
+//  카테고리 자동 감지 키워드 매핑
+// ============================================================
+const CATEGORY_KEYWORDS = [
+    { kw: ['워크샵', '워크숍', 'workshop'],         cat: '워크샵' },
+    { kw: ['졸업', '졸업식'],                        cat: '졸업식' },
+    { kw: ['수상', '우수상', '장관상', '원장상', '대상', '최우수', 'award', '특별상', '논문상', '상장'], cat: '수상' },
+    { kw: ['학회', '발표', '컨퍼런스', '심포지엄', 'symposium', 'conference', '벡스코', '코엑스', 'ksc', 'icisc', 'ndss'], cat: '학회/발표' },
+    { kw: ['해커톤', 'hackathon'],                   cat: '해커톤' },
+    { kw: ['체육', '스포츠', '등산', '볼링', '축구', '야구', '배드민턴'], cat: '체육행사' },
+    { kw: ['회식', '식사', '점심', '저녁', '생일', '회포'],             cat: '회식/모임' },
+    { kw: ['신입', '환영', '오리엔테이션', '면접'],  cat: '신입생' },
+    { kw: ['세미나'],                                 cat: '세미나' },
+    { kw: ['교수님', '교수'],                         cat: '기타' },
+];
+
+function autoCat(filename, folderName) {
+    const lower = (filename + ' ' + folderName).toLowerCase();
+    for (const { kw, cat } of CATEGORY_KEYWORDS) {
+        if (kw.some(k => lower.includes(k.toLowerCase()))) return cat;
+    }
+    return '기타';
+}
+
+// ============================================================
+//  파일명에서 날짜 추출
+// ============================================================
+function parseDateFromFilename(filename) {
+    const m8 = filename.match(/(^|[^0-9])(20\d{2})(\d{2})(\d{2})([^0-9]|$)/);
+    if (m8) return `${m8[2]}.${m8[3]}.${m8[4]}`;
+
+    const m6 = filename.match(/(^|[^0-9])(\d{2})(\d{2})(\d{2})([^0-9]|$)/);
+    if (m6) return `20${m6[2]}.${m6[3]}.${m6[4]}`;
+
+    return null;
+}
+
+function extractYear(relativePath) {
+    // e.g.  "activity_img/2023년/filename.jpg"  →  "2023"
+    const m = relativePath.match(/\b(20\d{2})[년/]/);
+    if (m) return m[1];
+    // fallback: parse from filename date
+    return null;
+}
+
+function prettyTitle(filename) {
+    let t = filename.replace(/\.(jpg|jpeg|png|gif|webp|gif)$/i, '').trim();
+    t = t.replace(/^20\d{6}[_\-]?/, '');
+    t = t.replace(/^\d{6}[_\-]?/, '');
+    t = t.replace(/[_]/g, ' ').trim();
+    t = t.replace(/\s+/g, ' ');
+    return t || filename;
+}
+
+// ============================================================
+//  파일 목록 처리
+// ============================================================
+let fileList = []; // { file, row index, ... }
+let stopFlag = false;
+
+document.getElementById('fileInput').addEventListener('change', function () {
+    const files = Array.from(this.files).filter(f =>
+        /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name)
+    );
+    fileList = files.map(f => {
+        const rel   = f.webkitRelativePath || f.name;
+        const parts = rel.split('/');
+        const folder = parts.length >= 2 ? parts[parts.length - 2] : '';
+        const year  = extractYear(rel) || (parseDateFromFilename(f.name) || '').slice(0, 4) || '기타';
+        const date  = parseDateFromFilename(f.name) || `${year}.--.--`;
+        return {
+            file:     f,
+            rel,
+            folder,
+            year,
+            date,
+            category: autoCat(f.name, folder),
+            title:    prettyTitle(f.name),
+            status:   'pending',
+        };
+    });
+
+    document.getElementById('fileCount').textContent =
+        `이미지 ${files.length}개 감지됨 (비이미지 파일 제외)`;
+    buildPreviewTable();
+    document.getElementById('previewSection').style.display = 'block';
+    document.getElementById('progressSection').style.display = 'none';
+});
+
+function buildPreviewTable() {
+    const tbody = document.getElementById('previewBody');
+    tbody.innerHTML = '';
+
+    const CATS = ['워크샵','졸업식','수상','학회/발표','해커톤','체육행사','회식/모임','신입생','세미나','기타'];
+
+    fileList.forEach((item, i) => {
+        const tr = document.createElement('tr');
+        tr.id = `row-${i}`;
+        tr.innerHTML = `
+            <td><input type="checkbox" class="rowChk" data-i="${i}" checked></td>
+            <td style="white-space:nowrap;">${item.year}년</td>
+            <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
+                title="${item.file.name}">${item.file.name}</td>
+            <td><input type="text" id="date-${i}" value="${item.date}" style="width:110px;"></td>
+            <td>
+                <select id="cat-${i}" style="width:110px;">
+                    ${CATS.map(c => `<option ${c===item.category?'selected':''}>${c}</option>`).join('')}
+                </select>
+            </td>
+            <td><input type="text" id="title-${i}" value="${item.title}"></td>
+            <td><span class="status-badge status-pending" id="badge-${i}">대기</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function selectAll(v) {
+    document.querySelectorAll('.rowChk').forEach(c => c.checked = v);
+    document.getElementById('chkAll').checked = v;
+}
+function syncAll(el) {
+    document.querySelectorAll('.rowChk').forEach(c => c.checked = el.checked);
+}
+
+// ============================================================
+//  업로드 로직
+// ============================================================
+let doneCount = 0, errCount = 0, skipCount = 0, totalSelected = 0;
+// 실패한 항목의 인덱스 추적
+let failedIndices = [];
+
+function log(msg, cls='') {
+    const box = document.getElementById('logBox');
+    const p = document.createElement('p');
+    if (cls) p.className = cls;
+    p.textContent = msg;
+    box.appendChild(p);
+    box.scrollTop = box.scrollHeight;
+}
+
+function updateStats() {
+    document.getElementById('statDone').textContent  = doneCount;
+    document.getElementById('statErr').textContent   = errCount;
+    document.getElementById('statSkip').textContent  = skipCount;
+    const done = doneCount + errCount + skipCount;
+    const pct  = totalSelected ? Math.round((done / totalSelected) * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressFill').textContent = pct + '%';
+}
+
+function setBadge(i, text, cls) {
+    const el = document.getElementById(`badge-${i}`);
+    if (!el) return;
+    el.textContent = text;
+    el.className = `status-badge ${cls}`;
+}
+
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+const COMPRESS_TARGET = 8 * 1024 * 1024; // 압축 목표 8MB
+
+async function compressImage(file) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+
+            // 최대 4000px로 제한
+            const MAX_PX = 4000;
+            if (width > MAX_PX || height > MAX_PX) {
+                const ratio = Math.min(MAX_PX / width, MAX_PX / height);
+                width  = Math.round(width  * ratio);
+                height = Math.round(height * ratio);
+            }
+            canvas.width  = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+            // 품질을 낮춰가며 목표 크기 맞추기
+            let quality = 0.85;
+            const tryCompress = () => {
+                canvas.toBlob(blob => {
+                    if (!blob) { resolve(file); return; }
+                    if (blob.size <= COMPRESS_TARGET || quality <= 0.3) {
+                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                    } else {
+                        quality -= 0.1;
+                        tryCompress();
+                    }
+                }, 'image/jpeg', quality);
+            };
+            tryCompress();
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+    });
+}
+
+async function uploadToCloudinary(file) {
+    return new Promise((resolve, reject) => {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                resolve(JSON.parse(xhr.responseText));
+            } else {
+                let detail = xhr.responseText;
+                try { detail = JSON.parse(xhr.responseText).error?.message || detail; } catch {}
+                reject(new Error(`HTTP ${xhr.status}: ${detail}`));
+            }
+        };
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send(fd);
+    });
+}
+
+async function runUploadQueue(toUpload) {
+    totalSelected = toUpload.length;
+    doneCount = errCount = skipCount = 0;
+    failedIndices = [];
+    stopFlag = false;
+
+    document.getElementById('statTotal').textContent = totalSelected;
+    document.getElementById('progressSection').style.display = 'block';
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('retryBtn').style.display = 'none';
+    document.getElementById('doneBtn').style.display = 'none';
+    document.getElementById('stopBtn').disabled = false;
+    document.getElementById('logBox').innerHTML = '';
+    updateStats();
+
+    // 업로드 전 토큰 갱신
+    try {
+        if (auth.currentUser) await auth.currentUser.getIdToken(true);
+        log('✓ 인증 토큰 갱신 완료', 'log-info');
+    } catch (e) {
+        log('⚠ 토큰 갱신 실패 - 계속 진행', 'log-info');
+    }
+
+    for (const { item, i } of toUpload) {
+        if (stopFlag) {
+            setBadge(i, '중단됨', 'status-skip');
+            skipCount++;
+            updateStats();
+            continue;
+        }
+
+        const date     = document.getElementById(`date-${i}`)?.value  || item.date;
+        const category = document.getElementById(`cat-${i}`)?.value   || item.category;
+        const title    = document.getElementById(`title-${i}`)?.value || item.title;
+
+        setBadge(i, '업로드 중...', 'status-uploading');
+        document.getElementById('currentFile').textContent = `진행중: ${item.file.name}`;
+
+        let uploadFile = item.file;
+        if (item.file.size > MAX_SIZE) {
+            setBadge(i, '압축 중...', 'status-uploading');
+            log(`⚙ 압축 중 (${(item.file.size/1024/1024).toFixed(1)}MB): ${item.file.name}`, 'log-info');
+            uploadFile = await compressImage(item.file);
+            log(`  → 압축 완료: ${(uploadFile.size/1024/1024).toFixed(1)}MB`, 'log-info');
+        }
+
+        let cloudinaryResult = null;
+        try {
+            // 1단계: Cloudinary 업로드
+            cloudinaryResult = await uploadToCloudinary(uploadFile);
+        } catch (e) {
+            setBadge(i, '실패(Cloudinary)', 'status-error');
+            log(`✗ [Cloudinary 실패] ${item.file.name}: ${e.message}`, 'log-err');
+            errCount++;
+            failedIndices.push(i);
+            updateStats();
+            await new Promise(r => setTimeout(r, 300));
+            continue;
+        }
+
+        try {
+            // 2단계: Firebase 저장 (토큰 만료 대비 1회 재시도)
+            const user = auth.currentUser;
+            const photoData = {
+                src:         cloudinaryResult.secure_url,
+                storagePath: cloudinaryResult.public_id,
+                title,
+                date,
+                year:        item.year,
+                category,
+                description: '',
+                filename:    item.file.name,
+                createdAt:   Date.now(),
+                uploadedBy:  user ? user.email : ''
+            };
+            try {
+                await database.ref('photos').push(photoData);
+            } catch (fbErr) {
+                if (fbErr.code === 'PERMISSION_DENIED') {
+                    // 토큰 강제 갱신 후 1회 재시도
+                    log(`⚠ 권한 오류 - 토큰 갱신 후 재시도: ${item.file.name}`, 'log-info');
+                    if (auth.currentUser) await auth.currentUser.getIdToken(true);
+                    await new Promise(r => setTimeout(r, 500));
+                    await database.ref('photos').push(photoData);
+                } else {
+                    throw fbErr;
+                }
+            }
+            setBadge(i, '완료', 'status-done');
+            log(`✓ ${item.file.name}`, 'log-ok');
+            doneCount++;
+        } catch (e) {
+            // Cloudinary는 성공했으므로 URL 보존
+            setBadge(i, '실패(DB)', 'status-error');
+            log(`✗ [Firebase 실패] ${item.file.name}: ${e.message} | Cloudinary URL: ${cloudinaryResult.secure_url}`, 'log-err');
+            errCount++;
+            failedIndices.push(i);
+        }
+        updateStats();
+
+        await new Promise(r => setTimeout(r, 200));
+    }
+
+    document.getElementById('currentFile').textContent = '업로드 완료!';
+    log(`━━━ 완료: ${doneCount}개 성공 / ${errCount}개 실패 / ${skipCount}개 건너뜀`, 'log-info');
+    document.getElementById('stopBtn').disabled = true;
+    document.getElementById('doneBtn').style.display = 'inline-block';
+    document.getElementById('startBtn').disabled = false;
+    if (failedIndices.length > 0) {
+        document.getElementById('retryBtn').style.display = 'inline-block';
+    }
+}
+
+async function startUpload() {
+    const toUpload = [];
+    fileList.forEach((item, i) => {
+        const c = document.querySelector(`.rowChk[data-i="${i}"]`);
+        if (c && c.checked) toUpload.push({ item, i });
+    });
+    if (toUpload.length === 0) { alert('업로드할 항목을 선택하세요.'); return; }
+    await runUploadQueue(toUpload);
+}
+
+async function retryFailed() {
+    if (failedIndices.length === 0) { alert('재시도할 실패 항목이 없습니다.'); return; }
+    const toRetry = failedIndices.map(i => ({ item: fileList[i], i }));
+    log(`\n🔄 실패 항목 재시도: ${toRetry.length}개`, 'log-info');
+    // 실패 배지 초기화
+    toRetry.forEach(({ i }) => setBadge(i, '대기', 'status-pending'));
+    await runUploadQueue(toRetry);
+}
+
+function stopUpload() {
+    stopFlag = true;
+    log('⏹ 중단 요청됨... 현재 파일 완료 후 정지합니다.', 'log-info');
+}
+
+// ============================================================
+//  로그인
+// ============================================================
+async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pw    = document.getElementById('loginPassword').value;
+    if (email !== ALLOWED_EMAIL) {
+        document.getElementById('loginError').textContent = '허용되지 않은 계정입니다.';
+        return;
+    }
+    try {
+        await auth.signInWithEmailAndPassword(email, pw);
+    } catch (e) {
+        document.getElementById('loginError').textContent = e.message;
+    }
+}
+
+auth.onAuthStateChanged(user => {
+    if (user && user.email === ALLOWED_EMAIL) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('appContent').style.display   = 'block';
+        document.getElementById('manageSection').style.display = 'block';
+        loadManagePhotos();
+    } else {
+        document.getElementById('loginSection').style.display = 'block';
+        document.getElementById('appContent').style.display   = 'none';
+        document.getElementById('manageSection').style.display = 'none';
+    }
+});
+
+// ============================================================
+//  Cloudinary 삭제 (서명 기반)
+// ============================================================
+let cldApiKey = '';
+let cldApiSecret = '';
+
+function saveCldCreds() {
+    cldApiKey    = document.getElementById('cldApiKey').value.trim();
+    cldApiSecret = document.getElementById('cldApiSecret').value.trim();
+    if (cldApiKey && cldApiSecret) {
+        alert('저장됨. 이제 삭제 시 Cloudinary에서도 함께 제거됩니다.');
+    } else {
+        alert('API Key와 Secret를 모두 입력해주세요.');
+    }
+}
+
+async function deleteFromCloudinary(publicId) {
+    if (!cldApiKey || !cldApiSecret || !publicId) return false;
+    // Admin API: Basic Auth로 리소스 삭제
+    const basicAuth = btoa(`${cldApiKey}:${cldApiSecret}`);
+    const encodedId = encodeURIComponent(publicId);
+    try {
+        const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/resources/image/upload?public_ids[]=${encodedId}`,
+            {
+                method: 'DELETE',
+                headers: { 'Authorization': `Basic ${basicAuth}` }
+            }
+        );
+        const json = await res.json();
+        console.log('Cloudinary delete response:', json);
+        // deleted 객체에 해당 public_id가 있으면 성공
+        return json.deleted && json.deleted[publicId] === 'deleted';
+    } catch (e) {
+        console.error('Cloudinary delete error:', e);
+        return false;
+    }
+}
+
+// ============================================================
+//  업로드된 사진 관리 (조회 / 삭제)
+// ============================================================
+let allPhotos = []; // { key, src, title, category, year, date, filename, storagePath }
+let selectedKeys = new Set();
+let multiSelectOn = false;
+
+async function loadManagePhotos() {
+    const grid = document.getElementById('manageGrid');
+    grid.innerHTML = '<p style="color:#888; padding:10px;">로딩 중...</p>';
+    try {
+        const snap = await database.ref('photos').once('value');
+        const data = snap.val() || {};
+        allPhotos = Object.entries(data).map(([key, v]) => ({
+            key, src: v.src, title: v.title || v.filename || '사진',
+            category: v.category || '기타', year: String(v.year || '기타'),
+            date: v.date || '', filename: v.filename || '',
+            storagePath: v.storagePath || ''
+        }));
+        allPhotos.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+        // 연도 필터 옵션 구성
+        const years = [...new Set(allPhotos.map(p => p.year))].sort((a, b) => b - a);
+        const yearSel = document.getElementById('filterYear');
+        yearSel.innerHTML = '<option value="">전체</option>' +
+            years.map(y => `<option>${y}</option>`).join('');
+
+        applyFilter();
+    } catch (e) {
+        grid.innerHTML = `<p style="color:red;">로드 실패: ${e.message}</p>`;
+    }
+}
+
+function applyFilter() {
+    const cat  = document.getElementById('filterCat').value;
+    const year = document.getElementById('filterYear').value;
+    const txt  = document.getElementById('filterText').value.toLowerCase();
+
+    const filtered = allPhotos.filter(p => {
+        if (cat  && p.category !== cat)  return false;
+        if (year && p.year     !== year) return false;
+        if (txt  && !p.title.toLowerCase().includes(txt) &&
+                    !p.filename.toLowerCase().includes(txt)) return false;
+        return true;
+    });
+
+    document.getElementById('manageCount').textContent = `(${filtered.length}/${allPhotos.length}장)`;
+    renderManageGrid(filtered);
+}
+
+function renderManageGrid(photos) {
+    const grid = document.getElementById('manageGrid');
+    grid.innerHTML = '';
+    if (photos.length === 0) {
+        grid.innerHTML = '<p style="color:#888; padding:10px;">사진이 없습니다.</p>';
+        return;
+    }
+    photos.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'manage-card' + (selectedKeys.has(p.key) ? ' selected' : '');
+        div.dataset.key = p.key;
+        div.innerHTML = `
+            <img src="${p.src}" alt="${p.title}" loading="lazy"
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23eee%22 width=%22100%25%22 height=%22100%25%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>오류</text></svg>'">
+            <button class="del-btn" onclick="deleteSingle('${p.key}', event)" title="삭제">✕</button>
+            <div class="card-info">
+                <strong title="${p.title}">${p.title}</strong>
+                <span>${p.category} · ${p.year}년</span>
+            </div>
+        `;
+        if (multiSelectOn) {
+            div.style.cursor = 'pointer';
+            div.addEventListener('click', (e) => {
+                if (e.target.classList.contains('del-btn')) return;
+                toggleSelect(p.key, div);
+            });
+        }
+        grid.appendChild(div);
+    });
+}
+
+function toggleMultiSelect() {
+    multiSelectOn = document.getElementById('multiSelectMode').checked;
+    selectedKeys.clear();
+    document.getElementById('bulkDeleteBtn').style.display = multiSelectOn ? 'inline-block' : 'none';
+    applyFilter();
+}
+
+function toggleSelect(key, el) {
+    if (selectedKeys.has(key)) {
+        selectedKeys.delete(key);
+        el.classList.remove('selected');
+    } else {
+        selectedKeys.add(key);
+        el.classList.add('selected');
+    }
+    document.getElementById('bulkDeleteBtn').textContent = `선택 삭제 (${selectedKeys.size}개)`;
+}
+
+async function deleteSingle(key, e) {
+    e.stopPropagation();
+    const photo = allPhotos.find(p => p.key === key);
+    const hasCld = cldApiKey && cldApiSecret && photo?.storagePath;
+    const msg = hasCld
+        ? '이 사진을 Firebase와 Cloudinary에서 모두 삭제할까요?'
+        : '이 사진을 Firebase에서 삭제할까요?\n(Cloudinary API 미설정 — Cloudinary 원본 유지)';
+    if (!confirm(msg)) return;
+    try {
+        // Firebase 삭제
+        await database.ref(`photos/${key}`).remove();
+        // Cloudinary 삭제
+        if (hasCld) {
+            const ok = await deleteFromCloudinary(photo.storagePath);
+            if (!ok) alert('Firebase는 삭제됐으나 Cloudinary 삭제 실패.\npublic_id: ' + photo.storagePath + '\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+        }
+        allPhotos = allPhotos.filter(p => p.key !== key);
+        applyFilter();
+    } catch (err) {
+        alert('삭제 실패: ' + err.message);
+    }
+}
+
+async function bulkDelete() {
+    if (selectedKeys.size === 0) { alert('선택된 항목이 없습니다.'); return; }
+    const hasCld = cldApiKey && cldApiSecret;
+    const msg = hasCld
+        ? `선택된 ${selectedKeys.size}개를 Firebase와 Cloudinary에서 모두 삭제할까요?`
+        : `선택된 ${selectedKeys.size}개를 Firebase에서 삭제할까요?\n(Cloudinary API 미설정 — Cloudinary 원본 유지)`;
+    if (!confirm(msg)) return;
+
+    const toDelete = allPhotos.filter(p => selectedKeys.has(p.key));
+
+    // Firebase 일괄 삭제
+    const updates = {};
+    toDelete.forEach(p => { updates[`photos/${p.key}`] = null; });
+    await database.ref().update(updates);
+
+    // Cloudinary 순차 삭제
+    if (hasCld) {
+        let cldFail = 0;
+        for (const p of toDelete) {
+            if (p.storagePath) {
+                const ok = await deleteFromCloudinary(p.storagePath);
+                if (!ok) cldFail++;
+            }
+        }
+        if (cldFail > 0) alert(`Cloudinary 삭제 실패: ${cldFail}개 (Firebase는 모두 삭제됨)`);
+    }
+
+    allPhotos = allPhotos.filter(p => !selectedKeys.has(p.key));
+    selectedKeys.clear();
+    document.getElementById('bulkDeleteBtn').textContent = '선택 삭제';
+    applyFilter();
+}
+</script>
+</body>
+</html>
