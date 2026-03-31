@@ -84,6 +84,10 @@
                     <i class="fas fa-plus"></i>
                     수상내역 추가
                 </button>
+                <button class="admin-btn" id="addPhotoBtn">
+                    <i class="fas fa-camera"></i>
+                    사진 업로드
+                </button>
                 <button class="admin-btn edit" id="toggleEditMode">
                     <i class="fas fa-edit"></i>
                     수정 모드 토글
@@ -93,6 +97,54 @@
                     삭제 모드 토글
                 </button>
             </div>
+        </div>
+
+        <!-- 사진 업로드 폼 -->
+        <div class="add-patent-form" id="addPhotoForm" style="display:none;">
+            <h4><i class="fas fa-camera"></i> 사진 업로드</h4>
+            <form id="photoUploadForm">
+                <div class="form-group">
+                    <label for="photoFile">사진 파일 * (jpg, png, gif 등)</label>
+                    <input type="file" id="photoFile" name="photoFile" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="photoTitle">제목 (비워두면 파일명 사용)</label>
+                    <input type="text" id="photoTitle" name="photoTitle" placeholder="예: 2026 OB 회식">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="photoDate">날짜 *</label>
+                        <input type="date" id="photoDate" name="photoDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="photoCategory">카테고리 *</label>
+                        <select id="photoCategory" name="photoCategory" required style="padding:10px;border-radius:6px;border:1px solid #ddd;font-size:0.9rem;">
+                            <option value="연구실모임">연구실모임</option>
+                            <option value="워크숍">워크숍</option>
+                            <option value="학회">학회</option>
+                            <option value="수상">수상</option>
+                            <option value="행사">행사</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="photoDescription">설명 (선택사항)</label>
+                    <textarea id="photoDescription" name="photoDescription" placeholder="사진에 대한 간단한 설명을 입력하세요."></textarea>
+                </div>
+                <div id="photoUploadProgress" style="display:none; margin-bottom:10px;">
+                    <div style="background:#e9ecef;border-radius:4px;overflow:hidden;">
+                        <div id="photoUploadProgressBar" style="height:6px;background:#3b6cf7;width:0%;transition:width 0.3s;"></div>
+                    </div>
+                    <small id="photoUploadProgressText" style="color:#666;">업로드 중...</small>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="cancel-btn" id="cancelAddPhoto">취소</button>
+                    <button type="submit" class="submit-btn" id="photoUploadSubmit">
+                        <i class="fas fa-upload"></i> 업로드
+                    </button>
+                </div>
+            </form>
         </div>
 
         <!-- 특허 추가 폼 -->

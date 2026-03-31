@@ -13,10 +13,20 @@ const firebaseConfig = {
 
 // ==================== 전역 변수 선언 ====================
 let auth, database;
+const CLOUDINARY_CLOUD_NAME = 'dtgwtdf3q';
+const CLOUDINARY_UPLOAD_PRESET = 'jfwl9ton';
 let currentUser = null;
 let deleteMode = false;
 let editMode = false;
 let currentEditingItem = null;
+
+// Firebase에서 업로드된 사진 목록
+let FIREBASE_PHOTOS = [];
+
+// 전체 사진(로컬 + Firebase 업로드)
+function getAllPhotos() {
+    return [...PHOTO_DATA, ...FIREBASE_PHOTOS];
+}
 
 // ==================== 허용된 사용자 목록 ====================
 const ALLOWED_USERS = ['kinjecs0@gmail.com'];
@@ -24,10 +34,10 @@ const ALLOWED_USERS = ['kinjecs0@gmail.com'];
 // ==================== DOM 요소들 ====================
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
 let userInfo, userName, adminPanel;
-let addPatentBtn, addAwardBtn;
-let addPatentForm, addAwardForm;
-let patentForm, awardForm;
-let cancelAddPatent, cancelAddAward;
+let addPatentBtn, addAwardBtn, addPhotoBtn;
+let addPatentForm, addAwardForm, addPhotoForm;
+let patentForm, awardForm, photoUploadForm;
+let cancelAddPatent, cancelAddAward, cancelAddPhoto;
 let toggleDeleteMode, toggleEditMode;
 let editItemForm, itemEditForm, cancelEditItem;
 
@@ -179,6 +189,117 @@ function addAwardToDOM(award) {
 
     awardList.appendChild(li);
 }
+
+// ==================== 사진 업로드 (Firebase Storage + DB) ====================
+async function loadUploadedPhotosFromDB() {
+    if (!database) return;
+    try {
+        const ref = database.ref('photos');
+        const snapshot = await ref.once('value');
+        const data = snapshot.val() || {};
+
+        FIREBASE_PHOTOS = Object.entries(data)
+            .filter(([, v]) => v && v.src)
+            .map(([key, v]) => ({
+                src: v.src,
+                title: v.title || v.filename || '사진',
+                date: v.date || `${v.year}.--.--`,
+                year: String(v.year || '기타'),
+                category: v.category || '기타',
+                description: v.description || '',
+                filename: v.filename || '',
+                firebaseKey: key,
+                storagePath: v.storagePath || '',
+                fromFirebase: true
+            }));
+
+        // 갤러리 카드 재렌더
+        renderYearCards();
+        renderCategoryCards();
+    } catch (error) {
+        console.error('❌ 사진 로드 실패:', error);
+    }
+}
+
+async function uploadPhotoToCloudinary(file, metadata) {
+    if (!database) throw new Error('Firebase 초기화 필요');
+
+    const progressWrap = document.getElementById('photoUploadProgress');
+    const progressBar = document.getElementById('photoUploadProgressBar');
+    const progressText = document.getElementById('photoUploadProgressText');
+    if (progressWrap) progressWrap.style.display = 'block';
+
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                if (progressBar) progressBar.style.width = pct + '%';
+                if (progressText) progressText.textContent = `업로드 중... ${pct}%`;
+            }
+        };
+
+        xhr.onload = async () => {
+            if (progressWrap) progressWrap.style.display = 'none';
+            if (xhr.status === 200) {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    const dateStr = metadata.date ? metadata.date.replace(/-/g, '.') : `${metadata.year}.--.--`;
+                    const photoData = {
+                        src: result.secure_url,
+                        storagePath: result.public_id,
+                        title: metadata.title || prettyTitleFromFilename(file.name),
+                        date: dateStr,
+                        year: metadata.year,
+                        category: metadata.category,
+                        description: metadata.description || '',
+                        filename: file.name,
+                        createdAt: Date.now(),
+                        uploadedBy: currentUser ? currentUser.email : ''
+                    };
+                    await database.ref('photos').push(photoData);
+                    showAlert('사진이 업로드되었습니다!', 'success');
+                    await loadUploadedPhotosFromDB();
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+            } else {
+                reject(new Error('Cloudinary 업로드 실패: ' + xhr.responseText));
+            }
+        };
+
+        xhr.onerror = () => {
+            if (progressWrap) progressWrap.style.display = 'none';
+            reject(new Error('네트워크 오류'));
+        };
+
+        xhr.send(formData);
+    });
+}
+
+window.deleteFirebasePhoto = async function(firebaseKey, storagePath) {
+    if (!currentUser || !deleteMode) {
+        showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
+        return;
+    }
+    if (!confirm('정말로 이 사진을 삭제하시겠습니까?')) return;
+
+    try {
+        await database.ref(`photos/${firebaseKey}`).remove();
+        showAlert('사진이 삭제되었습니다.', 'success');
+        await loadUploadedPhotosFromDB();
+    } catch (error) {
+        console.error('❌ 사진 삭제 실패:', error);
+        showAlert('사진 삭제 실패: ' + error.message, 'error');
+    }
+};
 
 // ==================== 특허 추가/삭제/수정 ====================
 async function addPatentToDatabase(patentData) {
@@ -436,6 +557,7 @@ function updateAuthUI() {
         if (adminPanel) adminPanel.style.display = 'none';
         if (addPatentForm) addPatentForm.style.display = 'none';
         if (addAwardForm) addAwardForm.style.display = 'none';
+        if (addPhotoForm) addPhotoForm.style.display = 'none';
         if (editItemForm) editItemForm.style.display = 'none';
         deleteMode = false;
         editMode = false;
@@ -514,6 +636,54 @@ function setupEventListeners() {
         if (patentForm) patentForm.reset();
     });
 
+    // 사진 업로드 관리
+    if (addPhotoBtn) {
+        addPhotoBtn.addEventListener('click', () => {
+            if (editItemForm && editItemForm.style.display === 'block') {
+                editItemForm.style.display = 'none';
+                currentEditingItem = null;
+            }
+            if (addPatentForm && addPatentForm.style.display === 'block') addPatentForm.style.display = 'none';
+            if (addAwardForm && addAwardForm.style.display === 'block') addAwardForm.style.display = 'none';
+            if (addPhotoForm) addPhotoForm.style.display = (addPhotoForm.style.display === 'block') ? 'none' : 'block';
+        });
+    }
+
+    if (cancelAddPhoto) cancelAddPhoto.addEventListener('click', () => {
+        if (addPhotoForm) addPhotoForm.style.display = 'none';
+        if (photoUploadForm) photoUploadForm.reset();
+    });
+
+    if (photoUploadForm) photoUploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(photoUploadForm);
+        const file = fd.get('photoFile');
+        if (!file || !file.size) {
+            showAlert('사진 파일을 선택해주세요.', 'error');
+            return;
+        }
+        const dateVal = fd.get('photoDate');
+        const year = dateVal ? dateVal.substring(0, 4) : String(new Date().getFullYear());
+        const submitBtn = document.getElementById('photoUploadSubmit');
+        if (submitBtn) submitBtn.disabled = true;
+        try {
+            await uploadPhotoToCloudinary(file, {
+                title: fd.get('photoTitle') || '',
+                date: dateVal,
+                year,
+                category: fd.get('photoCategory'),
+                description: fd.get('photoDescription') || ''
+            });
+            if (addPhotoForm) addPhotoForm.style.display = 'none';
+            if (photoUploadForm) photoUploadForm.reset();
+        } catch (error) {
+            console.error('❌ 업로드 실패:', error);
+            showAlert('업로드 실패: ' + error.message, 'error');
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
+
     // 수상내역 관리
     if (addAwardBtn) {
         addAwardBtn.addEventListener('click', () => {
@@ -554,6 +724,9 @@ function setupEventListeners() {
         deleteMode = !deleteMode;
         updateButtonsVisibility();
         showAlert(deleteMode ? '삭제 모드 활성화' : '삭제 모드 비활성화', 'success');
+        // Firebase 사진 삭제 버튼 표시/숨김을 위해 갤러리 재렌더
+        const board = document.getElementById('photoBoard');
+        if (board && board.children.length > 0) applyFilterAndRender();
     });
 
     // 수정 취소/완료
@@ -1183,7 +1356,7 @@ function renderCategoryCards() {
     if (!container) return;
     container.innerHTML = "";
 
-    const grouped = groupByCategory(PHOTO_DATA);
+    const grouped = groupByCategory(getAllPhotos());
     const categories = Array.from(grouped.keys());
 
     const preferredOrder = ["연구실모임", "행사", "워크숍", "학회", "수상", "기타"];
@@ -1225,7 +1398,7 @@ function renderYearCards() {
     if (!container) return;
     container.innerHTML = "";
 
-    const grouped = groupByYear(PHOTO_DATA);
+    const grouped = groupByYear(getAllPhotos());
     const years = sortYearsDesc(Array.from(grouped.keys()));
 
     years.forEach(y => {
@@ -1267,6 +1440,14 @@ function createPhotoItemElement(photo) {
     div.dataset.date = photo.date;
     div.dataset.category = photo.category;
     div.dataset.year = photo.year;
+    if (photo.firebaseKey) div.dataset.firebaseKey = photo.firebaseKey;
+    if (photo.storagePath) div.dataset.storagePath = photo.storagePath;
+
+    const deleteBtn = (photo.fromFirebase && currentUser && deleteMode)
+        ? `<button class="photo-delete-btn" onclick="event.stopPropagation(); deleteFirebasePhoto('${photo.firebaseKey}','${photo.storagePath}')">
+               <i class="fas fa-trash"></i>
+           </button>`
+        : '';
 
     div.innerHTML = `
         <div class="photo-card">
@@ -1278,6 +1459,7 @@ function createPhotoItemElement(photo) {
                     <span class="category">${photo.category}</span>
                 </div>
             </div>
+            ${deleteBtn}
         </div>
     `;
     return div;
@@ -1399,7 +1581,7 @@ function applyFilterAndRender() {
     const searchInput = document.getElementById("photoSearchInput");
     const q = (searchInput?.value || "").trim().toLowerCase();
 
-    let filtered = PHOTO_DATA.slice();
+    let filtered = getAllPhotos().slice();
 
     if (activeCategory) filtered = filtered.filter(p => p.category === activeCategory);
     if (activeYear) filtered = filtered.filter(p => String(p.year) === String(activeYear));
@@ -1534,12 +1716,16 @@ document.addEventListener("DOMContentLoaded", function() {
     adminPanel = document.getElementById('adminPanel');
     addPatentBtn = document.getElementById('addPatentBtn');
     addAwardBtn = document.getElementById('addAwardBtn');
+    addPhotoBtn = document.getElementById('addPhotoBtn');
     addPatentForm = document.getElementById('addPatentForm');
     addAwardForm = document.getElementById('addAwardForm');
+    addPhotoForm = document.getElementById('addPhotoForm');
     patentForm = document.getElementById('patentForm');
     awardForm = document.getElementById('awardForm');
+    photoUploadForm = document.getElementById('photoUploadForm');
     cancelAddPatent = document.getElementById('cancelAddPatent');
     cancelAddAward = document.getElementById('cancelAddAward');
+    cancelAddPhoto = document.getElementById('cancelAddPhoto');
     toggleDeleteMode = document.getElementById('toggleDeleteMode');
     toggleEditMode = document.getElementById('toggleEditMode');
     editItemForm = document.getElementById('editItemForm');
@@ -1550,12 +1736,12 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         database = firebase.database();
-
         auth.onAuthStateChanged((user) => {
             currentUser = user;
             updateAuthUI();
             loadPatentsFromDatabase();
             loadAwardsFromDatabase();
+            loadUploadedPhotosFromDB();
         });
     } catch (error) {
         console.error('❌ Firebase 초기화 실패:', error);
@@ -1594,5 +1780,14 @@ style.textContent = `
     .edit-item-btn:hover { background: #e0a800; }
     .delete-item-btn { background: #dc3545; color: white; }
     .delete-item-btn:hover { background: #c82333; }
+    .photo-card { position: relative; }
+    .photo-delete-btn {
+        position: absolute; top: 8px; right: 8px; z-index: 10;
+        background: rgba(220,53,69,0.85); color: white;
+        border: none; border-radius: 6px; padding: 6px 10px;
+        cursor: pointer; font-size: 0.85em; display: flex; align-items: center; gap: 4px;
+        transition: background 0.2s;
+    }
+    .photo-delete-btn:hover { background: #c82333; }
 `;
 document.head.appendChild(style);
