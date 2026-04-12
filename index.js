@@ -246,6 +246,72 @@ async function addSlideSubmit(e) {
     btn.disabled = false;
 }
 
+// ==================== 슬라이드 순서 변경 ====================
+let reorderDragSrcIndex = null;
+
+function openSlideReorderModal() {
+    const list = document.getElementById('slideReorderList');
+    list.innerHTML = '';
+    allSlidesData.forEach((slide, i) => {
+        const li = document.createElement('li');
+        li.draggable = true;
+        li.dataset.index = i;
+        li.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:8px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:grab;user-select:none;transition:background 0.15s;';
+        li.innerHTML = `
+            <i class="fas fa-grip-vertical" style="color:#aaa;font-size:16px;"></i>
+            <img src="${slide.url}" alt="${slide.alt || ''}" style="width:80px;height:52px;object-fit:cover;border-radius:4px;flex-shrink:0;">
+            <span style="font-size:0.9rem;color:#333;flex:1;">${slide.alt || '(설명 없음)'}</span>
+            <span style="font-size:0.8rem;color:#aaa;">#${i + 1}</span>
+        `;
+
+        li.addEventListener('dragstart', e => {
+            reorderDragSrcIndex = +li.dataset.index;
+            e.dataTransfer.effectAllowed = 'move';
+            li.style.opacity = '0.5';
+        });
+        li.addEventListener('dragend', () => { li.style.opacity = '1'; });
+        li.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            li.style.background = '#f0f4ff';
+        });
+        li.addEventListener('dragleave', () => { li.style.background = '#fff'; });
+        li.addEventListener('drop', e => {
+            e.preventDefault();
+            li.style.background = '#fff';
+            const targetIndex = +li.dataset.index;
+            if (reorderDragSrcIndex === null || reorderDragSrcIndex === targetIndex) return;
+
+            const moved = allSlidesData.splice(reorderDragSrcIndex, 1)[0];
+            allSlidesData.splice(targetIndex, 0, moved);
+            openSlideReorderModal(); // 목록 재렌더링
+        });
+
+        list.appendChild(li);
+    });
+    document.getElementById('slideReorderModal').style.display = 'flex';
+}
+
+async function saveSlideOrder() {
+    const btn = document.getElementById('slideReorderSaveBtn');
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+    try {
+        const updates = {};
+        allSlidesData.forEach((slide, i) => {
+            updates[`home/slides/${slide.key}/order`] = i;
+            slide.order = i;
+        });
+        await database.ref().update(updates);
+        renderSlider();
+        document.getElementById('slideReorderModal').style.display = 'none';
+    } catch (err) {
+        alert('저장 실패: ' + err.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i> 저장';
+}
+
 // ==================== 연구분야 카드 ====================
 function showGridLoading() {
     const grid = document.getElementById('research-grid');
@@ -496,6 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('slideAddModal').style.display = 'flex';
     });
     document.getElementById('addCardBtn').addEventListener('click', () => openCardModal('add'));
+    document.getElementById('reorderSlideBtn').addEventListener('click', openSlideReorderModal);
 
     document.getElementById('homeEditModeBtn').addEventListener('click', () => {
         isEditMode = !isEditMode;
@@ -533,6 +600,19 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('slideAddModal').style.display = 'none';
     });
     document.getElementById('slideAddForm').addEventListener('submit', addSlideSubmit);
+
+    // 슬라이드 순서 변경 모달
+    document.getElementById('slideReorderClose').addEventListener('click', () => {
+        document.getElementById('slideReorderModal').style.display = 'none';
+        loadAndRenderSlides(); // 변경 취소 시 원래 순서 복원
+    });
+    document.getElementById('slideReorderModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('slideReorderModal')) {
+            document.getElementById('slideReorderModal').style.display = 'none';
+            loadAndRenderSlides();
+        }
+    });
+    document.getElementById('slideReorderSaveBtn').addEventListener('click', saveSlideOrder);
 
     // 카드 모달
     document.getElementById('cardModalClose').addEventListener('click', () => {
