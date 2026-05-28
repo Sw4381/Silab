@@ -172,18 +172,21 @@
 
 /* 연구분야 섹션 */
 .research-section {
-    margin: 2rem 0;
-    padding: 2rem 1rem;
-    background-color: #f8f9fa;
+    margin: 1.5rem 0;
+    padding: 2rem 1.5rem;
+    background: #ffffff;
     border-radius: 12px;
+    box-shadow: var(--card-shadow);
 }
 
 .section-title {
     text-align: center;
     font-size: 1.5em;
-    color: #005792;
+    font-weight: 800;
+    color: #0f2044;
     margin-bottom: 2rem;
     position: relative;
+    letter-spacing: -0.01em;
 }
 
 .section-title::after {
@@ -192,9 +195,9 @@
     bottom: -10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60px;
-    height: 2px;
-    background: linear-gradient(135deg, #005792 0%, #0077be 100%);
+    width: 36px;
+    height: 3px;
+    background: #4facfe;
     border-radius: 2px;
 }
 
@@ -208,22 +211,14 @@
 .research-card {
     background: var(--bg-white, white);
     border-radius: var(--card-radius, 12px);
-    padding: 1.2rem;
-    box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08));
-    transition: var(--card-transition, all 0.3s ease);
+    padding: 0;
+    box-shadow: var(--card-shadow);
+    transition: var(--card-transition, all 0.25s ease);
     position: relative;
     overflow: hidden;
 }
 
-.research-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(135deg, var(--color-primary, #005792) 0%, #0077be 100%);
-}
+.research-card::before { display: none; }
 
 .research-card:hover {
     transform: translateY(-5px);
@@ -243,30 +238,33 @@
 }
 
 .card-header {
+    background: linear-gradient(135deg, #005792, #0077be);
+    padding: 1.1rem 1.2rem 0.9rem;
     text-align: center;
-    margin-bottom: 1rem;
+}
+
+.card-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.92;
 }
 
 .card-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #ffffff;
-    padding: 0.3rem 0;
-    margin-bottom: 0.3rem;
-}
-
-.research-card:nth-child(2) .card-title {
-    color: #ffffff;
-}
-
-.research-card:nth-child(3) .card-title {
-    color: #ffffff;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
 }
 
 .card-subtitle {
-    font-size: 1rem;
-    color: #6c757d;
-    font-style: italic;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-style: normal;
+}
+
+.research-card .research-list {
+    padding: 0.8rem 1.2rem 1rem;
 }
 
 .research-list {
@@ -274,11 +272,12 @@
 }
 
 .research-list li {
-    padding: 0.5rem 0;
+    padding: 0.45rem 0 0.45rem 1.5rem;
     border-bottom: 1px solid #e9ecef;
     position: relative;
-    padding-left: 1.6rem;
-    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    color: #444;
+    transition: all 0.25s ease;
 }
 
 .research-list li:last-child {
@@ -326,23 +325,13 @@
    동적 렌더링 카드 색상 (data-color 속성)
    ========================================== */
 
-/* 카드 배경 색조 */
-.research-card:nth-child(1),
-.research-card[data-color="blue"]  { background: linear-gradient(160deg, #eef6ff 0%, #ffffff 60%); }
-.research-card:nth-child(2),
-.research-card[data-color="red"]   { background: linear-gradient(160deg, #fff3f3 0%, #ffffff 60%); }
-.research-card:nth-child(3),
-.research-card[data-color="green"] { background: linear-gradient(160deg, #f0fff6 0%, #ffffff 60%); }
-
-/* 상단 그라디언트 바 (::before) */
-.research-card[data-color="blue"]::before  { background: linear-gradient(135deg, #005792 0%, #0077be 100%); }
-.research-card[data-color="red"]::before   { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
-.research-card[data-color="green"]::before { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); }
-
-/* 카드 타이틀 색상 */
-.research-card[data-color="blue"]  .card-title { color: #ffffff; }
-.research-card[data-color="red"]   .card-title { color: #ffffff; }
-.research-card[data-color="green"] .card-title { color: #ffffff; }
+/* 색상 테마별 카드 헤더 */
+.research-card[data-color="blue"]  .card-header,
+.research-card:nth-child(1)        .card-header { background: linear-gradient(135deg, #005792, #0077be); }
+.research-card[data-color="red"]   .card-header,
+.research-card:nth-child(2)        .card-header { background: linear-gradient(135deg, #b91c1c, #dc2626); }
+.research-card[data-color="green"] .card-header,
+.research-card:nth-child(3)        .card-header { background: linear-gradient(135deg, #166534, #16a34a); }
 
 /* 리스트 항목 이모지 */
 .research-card[data-color="blue"]  .research-list li::before { content: '🔬'; }

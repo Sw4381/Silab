@@ -29,25 +29,22 @@
 .student-list { min-height: 100px; }
 .graduates-text { min-height: 60px; }
 
-/* 섹션 제목 스타일 - 확대 버전 */
+/* 섹션 제목 스타일 */
 .section-title {
-    color: #005792;
-    font-size: 1.3em;
+    color: #0f2044;
+    font-size: 1.1em;
+    font-weight: 700;
     margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #c8e4ff;
-    position: relative;
+    padding: 5px 12px 5px 14px;
+    border-left: 3px solid #4facfe;
+    background: linear-gradient(90deg, rgba(79, 172, 254, 0.07), transparent);
+    border-radius: 0 5px 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.section-title::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 50px;
-    height: 2px;
-    background-color: #005792;
-}
+.section-title::after { display: none; }
 
 /* 교수님 섹션 스타일 */
 .professor-content {

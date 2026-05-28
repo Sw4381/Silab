@@ -644,18 +644,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
-    position: relative;
+    margin-bottom: 16px;
+    border-bottom: none;
 }
 
 .section-header h2 {
-    color: #005792;
-    font-size: 1.5em;
+    color: #0f2044;
+    font-size: 1.1em;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 5px 12px 5px 14px;
+    border-left: 3px solid #4facfe;
+    background: linear-gradient(90deg, rgba(79, 172, 254, 0.07), transparent);
+    border-radius: 0 5px 5px 0;
 }
 
 .section-header i {
