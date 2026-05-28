@@ -244,7 +244,7 @@ async function saveProfessor(e) {
 async function loadAndRenderMembers() {
     if (!database) return;
     // 로딩 스켈레톤 표시
-    ['phd-list', 'ms-list', 'bs-list'].forEach(id => {
+    ['phd-list', 'ms-list', 'bs-list', 'parttime-list'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.innerHTML = [1,2].map(() => `
@@ -273,6 +273,7 @@ function renderAllSections(data) {
     renderStudentSection('phd', data.phd || {});
     renderStudentSection('ms', data.ms || {});
     renderStudentSection('bs', data.bs || {});
+    renderStudentSection('parttime', data.parttime || {});
     renderAlumniSection(data.alumni || {});
 }
 
@@ -285,7 +286,7 @@ function renderStudentSection(section, members) {
         .sort(([, a], [, b]) => (a.order || 0) - (b.order || 0));
 
     if (sorted.length === 0) {
-        const sectionLabels = { phd: '박사과정', ms: '석사과정', bs: '학부생' };
+        const sectionLabels = { phd: '박사과정', ms: '석사과정', bs: '학부생', parttime: '파트타임' };
         container.innerHTML = `
             <div class="empty-state" style="grid-column:1/-1;">
                 <i class="fas fa-user-graduate"></i>
@@ -563,7 +564,18 @@ async function saveMember(e) {
 
         // order 계산
         let order = 1;
+        const sectionChanged = editingKey && editingSection && editingSection !== section;
+
         if (!editingKey) {
+            // 신규 추가: 대상 섹션의 마지막 order
+            const snap = await database.ref(`members/${section}`).once('value');
+            const existing = snap.val();
+            if (existing) {
+                const maxOrder = Math.max(...Object.values(existing).map(m => m.order || 0));
+                order = maxOrder + 1;
+            }
+        } else if (sectionChanged) {
+            // 섹션 이동: 이동할 섹션의 마지막 order
             const snap = await database.ref(`members/${section}`).once('value');
             const existing = snap.val();
             if (existing) {
@@ -571,6 +583,7 @@ async function saveMember(e) {
                 order = maxOrder + 1;
             }
         } else {
+            // 같은 섹션 내 수정: 기존 order 유지
             const snap = await database.ref(`members/${editingSection}/${editingKey}`).once('value');
             const existing = snap.val();
             order = existing ? existing.order || 1 : 1;
@@ -579,8 +592,15 @@ async function saveMember(e) {
         const data = { name, role, email, research, degree, photo: photoUrl, order };
 
         if (editingKey && editingSection) {
-            await database.ref(`members/${editingSection}/${editingKey}`).update(data);
-            showAlert('멤버 정보가 수정되었습니다.', 'success');
+            if (sectionChanged) {
+                // 기존 섹션에서 삭제 후 새 섹션에 추가
+                await database.ref(`members/${editingSection}/${editingKey}`).remove();
+                await database.ref(`members/${section}`).push(data);
+                showAlert(`섹션이 이동되었습니다. (${editingSection} → ${section})`, 'success');
+            } else {
+                await database.ref(`members/${editingSection}/${editingKey}`).update(data);
+                showAlert('멤버 정보가 수정되었습니다.', 'success');
+            }
         } else {
             await database.ref(`members/${section}`).push(data);
             showAlert('멤버가 추가되었습니다.', 'success');
