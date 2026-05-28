@@ -497,16 +497,12 @@ async function loadPublicationsFromRealtimeDB() {
         return;
     }
 
-    const skeletonItem = `
-        <li class="skeleton-card" style="padding:12px 16px;border-radius:8px;margin-bottom:8px;list-style:none;" data-skeleton="true">
-            <div class="skeleton skeleton-line short" style="margin-bottom:8px;"></div>
-            <div class="skeleton skeleton-line full"></div>
-            <div class="skeleton skeleton-line medium"></div>
-        </li>`;
-    ['sci-list','kci-list','other-list'].forEach(cls => {
-        const el = document.querySelector(`.${cls}`);
-        if (el) el.innerHTML = [1,2,3].map(() => skeletonItem).join('');
-    });
+    const loadingBar = document.createElement('div');
+    loadingBar.id = 'pub-loading';
+    loadingBar.style.cssText = 'text-align:center;padding:40px 0;color:#888;';
+    loadingBar.innerHTML = '<div class="spinner" style="margin:0 auto 12px;"></div><p>논문 목록 로드 중...</p>';
+    const contentArea = document.querySelector('.publications-content') || document.querySelector('.content-section');
+    if (contentArea) contentArea.prepend(loadingBar);
 
     try {
         console.log('🔄 Realtime Database에서 논문 로드 중...');
@@ -556,10 +552,13 @@ async function loadPublicationsFromRealtimeDB() {
         
         console.log('✅ 논문 로드 완료');
         updateButtonsVisibility();
-        
+
     } catch (error) {
         console.error('❌ 논문 로드 실패:', error);
         showAlert('논문 로드에 실패했습니다.', 'error');
+    } finally {
+        const bar = document.getElementById('pub-loading');
+        if (bar) bar.remove();
     }
 }
 
