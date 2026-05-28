@@ -192,8 +192,8 @@
     bottom: -10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 100px;
-    height: 4px;
+    width: 60px;
+    height: 2px;
     background: linear-gradient(135deg, #005792 0%, #0077be 100%);
     border-radius: 2px;
 }
@@ -201,14 +201,14 @@
 .research-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-top: 2rem;
+    gap: 1rem;
+    margin-top: 1.5rem;
 }
 
 .research-card {
     background: var(--bg-white, white);
     border-radius: var(--card-radius, 12px);
-    padding: 1.5rem;
+    padding: 1.2rem;
     box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08));
     transition: var(--card-transition, all 0.3s ease);
     position: relative;
@@ -221,7 +221,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 5px;
+    height: 3px;
     background: linear-gradient(135deg, var(--color-primary, #005792) 0%, #0077be 100%);
 }
 
@@ -244,25 +244,23 @@
 
 .card-header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .card-title {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: white;
-    background: linear-gradient(135deg, #005792 0%, #0077be 100%);
-    padding: 0.8rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
+    color: #005792;
+    padding: 0.3rem 0;
+    margin-bottom: 0.3rem;
 }
 
 .research-card:nth-child(2) .card-title {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: #c0392b;
 }
 
 .research-card:nth-child(3) .card-title {
-    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: #27ae60;
 }
 
 .card-subtitle {
@@ -276,10 +274,10 @@
 }
 
 .research-list li {
-    padding: 0.8rem 0;
+    padding: 0.5rem 0;
     border-bottom: 1px solid #e9ecef;
     position: relative;
-    padding-left: 2rem;
+    padding-left: 1.6rem;
     transition: all 0.3s ease;
 }
 
@@ -291,7 +289,7 @@
     content: '🔬';
     position: absolute;
     left: 0;
-    top: 0.8rem;
+    top: 0.5rem;
 }
 
 .research-card:nth-child(2) .research-list li::before {
@@ -304,7 +302,7 @@
 
 .research-list li:hover {
     background: #f8f9fa;
-    padding-left: 2.5rem;
+    padding-left: 2rem;
     border-radius: 5px;
 }
 
@@ -333,9 +331,10 @@
 .research-card[data-color="red"]::before   { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
 .research-card[data-color="green"]::before { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); }
 
-/* 카드 타이틀 배경 */
-.research-card[data-color="red"]   .card-title { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
-.research-card[data-color="green"] .card-title { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); }
+/* 카드 타이틀 색상 */
+.research-card[data-color="blue"]  .card-title { color: #005792; }
+.research-card[data-color="red"]   .card-title { color: #c0392b; }
+.research-card[data-color="green"] .card-title { color: #27ae60; }
 
 /* 리스트 항목 이모지 */
 .research-card[data-color="blue"]  .research-list li::before { content: '🔬'; }

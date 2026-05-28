@@ -36,11 +36,11 @@
 
 /* ==================== 프로젝트 섹션 스타일 ==================== */
 .project-section {
-    margin-bottom: 35px;
-    padding: 20px;
+    margin-bottom: 20px;
+    padding: 16px;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
 }
 
 .section-title {
@@ -63,19 +63,19 @@
 .project-list {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
 }
 
 .project-item {
     display: flex;
-    padding: 15px;
+    padding: 12px 14px;
     background-color: #f8f9fa;
     border-radius: var(--card-radius, 8px);
     transition: var(--card-transition, all 0.3s ease);
     box-shadow: 0 1px 4px rgba(0,0,0,0.03);
     position: relative;
     overflow: hidden;
-    border-left: 3px solid var(--color-accent, #4facfe);
+    border-left: 2px solid var(--color-accent, #4facfe);
 }
 
 .project-item:hover {
