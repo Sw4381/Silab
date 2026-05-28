@@ -497,13 +497,6 @@ async function loadPublicationsFromRealtimeDB() {
         return;
     }
 
-    const loadingBar = document.createElement('div');
-    loadingBar.id = 'pub-loading';
-    loadingBar.style.cssText = 'text-align:center;padding:40px 0;color:#888;';
-    loadingBar.innerHTML = '<div class="spinner" style="margin:0 auto 12px;"></div><p>논문 목록 로드 중...</p>';
-    const contentArea = document.querySelector('.publications-content') || document.querySelector('.content-section');
-    if (contentArea) contentArea.prepend(loadingBar);
-
     try {
         console.log('🔄 Realtime Database에서 논문 로드 중...');
 
@@ -556,9 +549,6 @@ async function loadPublicationsFromRealtimeDB() {
     } catch (error) {
         console.error('❌ 논문 로드 실패:', error);
         showAlert('논문 로드에 실패했습니다.', 'error');
-    } finally {
-        const bar = document.getElementById('pub-loading');
-        if (bar) bar.remove();
     }
 }
 
