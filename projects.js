@@ -206,15 +206,6 @@ async function loadProjectsFromRealtimeDB() {
         return;
     }
 
-    const skeletonHTML = [1,2].map(() => `
-        <div class="skeleton-card" style="padding:16px;border-radius:10px;margin-bottom:12px;" data-skeleton="true">
-            <div class="skeleton skeleton-line short" style="margin-bottom:10px;"></div>
-            <div class="skeleton skeleton-line full"></div>
-            <div class="skeleton skeleton-line medium"></div>
-        </div>
-    `).join('');
-    document.querySelectorAll('.project-list').forEach(el => { el.innerHTML = skeletonHTML; });
-
     try {
         console.log('🔄 Realtime Database에서 프로젝트 로드 중...');
 
