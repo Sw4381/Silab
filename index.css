@@ -326,6 +326,14 @@
    동적 렌더링 카드 색상 (data-color 속성)
    ========================================== */
 
+/* 카드 배경 색조 */
+.research-card:nth-child(1),
+.research-card[data-color="blue"]  { background: linear-gradient(160deg, #eef6ff 0%, #ffffff 60%); }
+.research-card:nth-child(2),
+.research-card[data-color="red"]   { background: linear-gradient(160deg, #fff3f3 0%, #ffffff 60%); }
+.research-card:nth-child(3),
+.research-card[data-color="green"] { background: linear-gradient(160deg, #f0fff6 0%, #ffffff 60%); }
+
 /* 상단 그라디언트 바 (::before) */
 .research-card[data-color="blue"]::before  { background: linear-gradient(135deg, #005792 0%, #0077be 100%); }
 .research-card[data-color="red"]::before   { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
@@ -340,3 +348,6 @@
 .research-card[data-color="blue"]  .research-list li::before { content: '🔬'; }
 .research-card[data-color="red"]   .research-list li::before { content: '🛡️'; }
 .research-card[data-color="green"] .research-list li::before { content: '📋'; }
+
+/* CLS 방지 */
+.research-grid { min-height: 200px; }

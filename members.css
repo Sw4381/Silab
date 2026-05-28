@@ -8,7 +8,7 @@
     margin: 0 auto;
 }
 
-/* 공통 섹션 스타일 - 확대 버전 */
+/* 공통 섹션 스타일 */
 .section-base {
     margin-bottom: 28px;
     padding: 20px;
@@ -17,6 +17,17 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     border-left: 3px solid #4facfe;
 }
+
+/* 교수님 섹션 강조 */
+.professor-section.section-base {
+    border-left: 3px solid #005792;
+    background: linear-gradient(135deg, #eef5fc 0%, #f8fbff 60%, #ffffff 100%);
+    box-shadow: 0 3px 12px rgba(0, 87, 146, 0.08);
+}
+
+/* CLS 방지 */
+.student-list { min-height: 100px; }
+.graduates-text { min-height: 60px; }
 
 /* 섹션 제목 스타일 - 확대 버전 */
 .section-title {

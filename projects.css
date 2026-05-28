@@ -41,7 +41,21 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow: hidden;
 }
+
+.project-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4facfe, #00c6ff);
+    border-radius: 8px 8px 0 0;
+}
+
+/* CLS 방지 */
+.project-list { min-height: 80px; }
 
 .section-title {
     color: #005792;

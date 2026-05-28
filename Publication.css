@@ -672,18 +672,27 @@
     border: 1px solid #e0f0ff;
 }
 
-/* 각 섹션별 왼쪽 보더 색상 차별화 */
-.sci-section {
-    border-left: 2px solid #4facfe;
+/* 각 섹션별 왼쪽 보더 + 상단 색상 바 */
+.publication-section { position: relative; overflow: hidden; }
+.publication-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 8px 8px 0 0;
 }
 
-.kci-section {
-    border-left: 2px solid #28a745;
-}
+.sci-section { border-left: 2px solid #4facfe; }
+.sci-section::before { background: linear-gradient(90deg, #4facfe, #00c6ff); }
 
-.other-section {
-    border-left: 2px solid #6c757d;
-}
+.kci-section { border-left: 2px solid #28a745; }
+.kci-section::before { background: linear-gradient(90deg, #28a745, #48c774); }
+
+.other-section { border-left: 2px solid #6c757d; }
+.other-section::before { background: linear-gradient(90deg, #6c757d, #adb5bd); }
+
+/* CLS 방지 */
+.publication-list { min-height: 80px; }
 
 /* 논문 목록 스타일 */
 .publication-list {
