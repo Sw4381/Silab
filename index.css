@@ -250,17 +250,17 @@
 .card-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #005792;
+    color: #ffffff;
     padding: 0.3rem 0;
     margin-bottom: 0.3rem;
 }
 
 .research-card:nth-child(2) .card-title {
-    color: #c0392b;
+    color: #ffffff;
 }
 
 .research-card:nth-child(3) .card-title {
-    color: #27ae60;
+    color: #ffffff;
 }
 
 .card-subtitle {
@@ -332,9 +332,9 @@
 .research-card[data-color="green"]::before { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); }
 
 /* 카드 타이틀 색상 */
-.research-card[data-color="blue"]  .card-title { color: #005792; }
-.research-card[data-color="red"]   .card-title { color: #c0392b; }
-.research-card[data-color="green"] .card-title { color: #27ae60; }
+.research-card[data-color="blue"]  .card-title { color: #ffffff; }
+.research-card[data-color="red"]   .card-title { color: #ffffff; }
+.research-card[data-color="green"] .card-title { color: #ffffff; }
 
 /* 리스트 항목 이모지 */
 .research-card[data-color="blue"]  .research-list li::before { content: '🔬'; }
