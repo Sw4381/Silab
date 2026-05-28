@@ -1,15 +1,5 @@
 // publications.js - 논문 번호 자동 제안 기능이 포함된 완전한 논문 관리 JavaScript 파일
-
-const firebaseConfig = {
-    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
-    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
-    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
-    projectId: "security-lab-projects-4d1cb",
-    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
-    messagingSenderId: "1075416037204",
-    appId: "1:1075416037204:web:89db47137971d40485bac1",
-    measurementId: "G-JH2LH2CS3K"
-};
+// 설정값은 config.js 참조
 
 // ==================== 전역 변수 선언 ====================
 let auth, database;
@@ -19,7 +9,7 @@ let editMode = false;
 let currentEditingPublication = null;
 
 // ==================== 허용된 사용자 목록 ====================
-const ALLOWED_USERS = ['kinjecs0@gmail.com'];
+var ALLOWED_USERS = [ALLOWED_EMAIL];
 
 // ==================== DOM 요소들 ====================
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
@@ -506,10 +496,21 @@ async function loadPublicationsFromRealtimeDB() {
         console.error('❌ Realtime Database가 초기화되지 않았습니다.');
         return;
     }
-    
+
+    const skeletonItem = `
+        <li class="skeleton-card" style="padding:12px 16px;border-radius:8px;margin-bottom:8px;list-style:none;" data-skeleton="true">
+            <div class="skeleton skeleton-line short" style="margin-bottom:8px;"></div>
+            <div class="skeleton skeleton-line full"></div>
+            <div class="skeleton skeleton-line medium"></div>
+        </li>`;
+    ['sci-list','kci-list','other-list'].forEach(cls => {
+        const el = document.querySelector(`.${cls}`);
+        if (el) el.innerHTML = [1,2,3].map(() => skeletonItem).join('');
+    });
+
     try {
         console.log('🔄 Realtime Database에서 논문 로드 중...');
-        
+
         // 기존 Firebase 논문 제거
         const lists = ['sci-list', 'kci-list', 'other-list'];
         lists.forEach(listClass => {

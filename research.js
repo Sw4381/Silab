@@ -1,22 +1,5 @@
 // research.js - Firebase Realtime Database 기반 연구 관리
-
-// ==================== Firebase 설정 ====================
-const firebaseConfig = {
-    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
-    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
-    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
-    projectId: "security-lab-projects-4d1cb",
-    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
-    messagingSenderId: "1075416037204",
-    appId: "1:1075416037204:web:89db47137971d40485bac1"
-};
-
-// ==================== Cloudinary 설정 ====================
-const CLOUDINARY_CLOUD_NAME = 'dtgwtdf3q';
-const CLOUDINARY_UPLOAD_PRESET = 'jfwl9ton';
-
-// ==================== 허용된 사용자 ====================
-const ALLOWED_EMAIL = 'kinjecs0@gmail.com';
+// 설정값은 config.js 참조
 
 // ==================== 전역 변수 ====================
 let auth, database;
@@ -179,6 +162,17 @@ function updateAuthUI() {
 // ==================== 데이터 로드 및 렌더링 ====================
 async function loadAndRenderResearch() {
     if (!database) return;
+    const container = document.querySelector('.research-container');
+    if (container) {
+        container.innerHTML = [1,2,3].map(() => `
+            <div class="skeleton-card" style="padding:20px;border-radius:12px;min-width:260px;flex:1;">
+                <div class="skeleton skeleton-image"></div>
+                <div class="skeleton skeleton-line short"></div>
+                <div class="skeleton skeleton-line medium"></div>
+                <div class="skeleton skeleton-line full"></div>
+            </div>
+        `).join('');
+    }
     try {
         const snapshot = await database.ref('research').once('value');
         const data = snapshot.val();

@@ -1,19 +1,5 @@
 // index.js - Firebase 기반 홈페이지 관리
-
-// ==================== Firebase 설정 ====================
-const firebaseConfig = {
-    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
-    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
-    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
-    projectId: "security-lab-projects-4d1cb",
-    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
-    messagingSenderId: "1075416037204",
-    appId: "1:1075416037204:web:89db47137971d40485bac1"
-};
-
-const CLOUDINARY_CLOUD_NAME = 'dtgwtdf3q';
-const CLOUDINARY_UPLOAD_PRESET = 'jfwl9ton';
-const ALLOWED_EMAIL = 'kinjecs0@gmail.com';
+// 설정값은 config.js 참조
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();

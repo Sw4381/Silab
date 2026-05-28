@@ -1,15 +1,5 @@
 // projects.js - 프로젝트 관리 시스템
-
-const firebaseConfig = {
-    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
-    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
-    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
-    projectId: "security-lab-projects-4d1cb",
-    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
-    messagingSenderId: "1075416037204",
-    appId: "1:1075416037204:web:89db47137971d40485bac1",
-    measurementId: "G-JH2LH2CS3K"
-};
+// 설정값은 config.js 참조
 
 // ==================== 전역 변수 선언 ====================
 let auth, database;
@@ -18,7 +8,7 @@ let deleteMode = false;
 let editMode = false;
 
 // ==================== 허용된 사용자 목록 ====================
-const ALLOWED_USERS = ['kinjecs0@gmail.com'];
+var ALLOWED_USERS = [ALLOWED_EMAIL];
 
 // ==================== DOM 요소들 ====================
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
@@ -215,10 +205,19 @@ async function loadProjectsFromRealtimeDB() {
         console.error('❌ Realtime Database가 초기화되지 않았습니다.');
         return;
     }
-    
+
+    const skeletonHTML = [1,2].map(() => `
+        <div class="skeleton-card" style="padding:16px;border-radius:10px;margin-bottom:12px;" data-skeleton="true">
+            <div class="skeleton skeleton-line short" style="margin-bottom:10px;"></div>
+            <div class="skeleton skeleton-line full"></div>
+            <div class="skeleton skeleton-line medium"></div>
+        </div>
+    `).join('');
+    document.querySelectorAll('.project-list').forEach(el => { el.innerHTML = skeletonHTML; });
+
     try {
         console.log('🔄 Realtime Database에서 프로젝트 로드 중...');
-        
+
         // 기존 Firebase 프로젝트 제거
         const dynamicProjects = document.querySelectorAll('[data-firebase="true"]');
         dynamicProjects.forEach(item => item.remove());

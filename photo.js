@@ -1,20 +1,9 @@
 // photo.js - Patents와 Awards를 Firebase로 관리 + Photo Gallery(카테고리/년도 카드 → 상세) 구현
 
-const firebaseConfig = {
-    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
-    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
-    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
-    projectId: "security-lab-projects-4d1cb",
-    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
-    messagingSenderId: "1075416037204",
-    appId: "1:1075416037204:web:89db47137971d40485bac1",
-    measurementId: "G-JH2LH2CS3K"
-};
+// 설정값은 config.js 참조
 
 // ==================== 전역 변수 선언 ====================
 let auth, database;
-const CLOUDINARY_CLOUD_NAME = 'dtgwtdf3q';
-const CLOUDINARY_UPLOAD_PRESET = 'jfwl9ton';
 let currentUser = null;
 let deleteMode = false;
 let editMode = false;
@@ -73,6 +62,16 @@ async function loadPatentsFromDatabase() {
         const patentList = document.querySelector('.patent-list');
         if (!patentList) return;
 
+        patentList.querySelectorAll('[data-skeleton="true"]').forEach(el => el.remove());
+        if (!patentList.querySelector('[data-firebase="true"]')) {
+            const skeletonHTML = [1,2].map(() => `
+                <div class="skeleton-card" style="padding:12px 16px;border-radius:8px;margin-bottom:8px;" data-skeleton="true">
+                    <div class="skeleton skeleton-line short" style="margin-bottom:6px;"></div>
+                    <div class="skeleton skeleton-line full"></div>
+                </div>`).join('');
+            patentList.insertAdjacentHTML('afterbegin', skeletonHTML);
+        }
+
         const dynamicItems = patentList.querySelectorAll('[data-firebase="true"]');
         dynamicItems.forEach(item => item.remove());
 
@@ -107,6 +106,16 @@ async function loadAwardsFromDatabase() {
     try {
         const awardList = document.querySelector('.award-list');
         if (!awardList) return;
+
+        awardList.querySelectorAll('[data-skeleton="true"]').forEach(el => el.remove());
+        if (!awardList.querySelector('[data-firebase="true"]')) {
+            const skeletonHTML = [1,2].map(() => `
+                <div class="skeleton-card" style="padding:12px 16px;border-radius:8px;margin-bottom:8px;" data-skeleton="true">
+                    <div class="skeleton skeleton-line short" style="margin-bottom:6px;"></div>
+                    <div class="skeleton skeleton-line full"></div>
+                </div>`).join('');
+            awardList.insertAdjacentHTML('afterbegin', skeletonHTML);
+        }
 
         const dynamicItems = awardList.querySelectorAll('[data-firebase="true"]');
         dynamicItems.forEach(item => item.remove());
@@ -959,7 +968,7 @@ function createThumbImgs(list, count = CATEGORY_THUMB_COUNT, altPrefix = "") {
     const imgs = [];
     for (let i = 0; i < count; i++) {
         const t = thumbs[i] || thumbs[0];
-        if (t) imgs.push(`<img src="${t.src}" alt="${altPrefix} 대표사진">`);
+        if (t) imgs.push(`<img src="${t.src}" alt="${altPrefix} 대표사진" loading="lazy">`);
     }
     return imgs.join("");
 }
@@ -1065,7 +1074,7 @@ function createPhotoItemElement(photo) {
 
     div.innerHTML = `
         <div class="photo-card">
-            <img src="${photo.src}" alt="${photo.title}">
+            <img src="${photo.src}" alt="${photo.title}" loading="lazy">
             <div class="photo-overlay">
                 <div class="photo-info">
                     <h4>${photo.title}</h4>
