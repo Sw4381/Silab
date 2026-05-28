@@ -62,16 +62,6 @@ async function loadPatentsFromDatabase() {
         const patentList = document.querySelector('.patent-list');
         if (!patentList) return;
 
-        patentList.querySelectorAll('[data-skeleton="true"]').forEach(el => el.remove());
-        if (!patentList.querySelector('[data-firebase="true"]')) {
-            const skeletonHTML = [1,2].map(() => `
-                <div class="skeleton-card" style="padding:12px 16px;border-radius:8px;margin-bottom:8px;" data-skeleton="true">
-                    <div class="skeleton skeleton-line short" style="margin-bottom:6px;"></div>
-                    <div class="skeleton skeleton-line full"></div>
-                </div>`).join('');
-            patentList.insertAdjacentHTML('afterbegin', skeletonHTML);
-        }
-
         const dynamicItems = patentList.querySelectorAll('[data-firebase="true"]');
         dynamicItems.forEach(item => item.remove());
 
@@ -106,16 +96,6 @@ async function loadAwardsFromDatabase() {
     try {
         const awardList = document.querySelector('.award-list');
         if (!awardList) return;
-
-        awardList.querySelectorAll('[data-skeleton="true"]').forEach(el => el.remove());
-        if (!awardList.querySelector('[data-firebase="true"]')) {
-            const skeletonHTML = [1,2].map(() => `
-                <div class="skeleton-card" style="padding:12px 16px;border-radius:8px;margin-bottom:8px;" data-skeleton="true">
-                    <div class="skeleton skeleton-line short" style="margin-bottom:6px;"></div>
-                    <div class="skeleton skeleton-line full"></div>
-                </div>`).join('');
-            awardList.insertAdjacentHTML('afterbegin', skeletonHTML);
-        }
 
         const dynamicItems = awardList.querySelectorAll('[data-firebase="true"]');
         dynamicItems.forEach(item => item.remove());

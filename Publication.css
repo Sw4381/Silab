@@ -633,11 +633,11 @@
 
 /* 논문 섹션 스타일 */
 .publication-section {
-    margin-bottom: 35px;
-    padding: 20px;
+    margin-bottom: 20px;
+    padding: 16px;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
 }
 
 .section-header {
@@ -674,15 +674,15 @@
 
 /* 각 섹션별 왼쪽 보더 색상 차별화 */
 .sci-section {
-    border-left: 3px solid #4facfe;
+    border-left: 2px solid #4facfe;
 }
 
 .kci-section {
-    border-left: 3px solid #28a745;
+    border-left: 2px solid #28a745;
 }
 
 .other-section {
-    border-left: 3px solid #6c757d;
+    border-left: 2px solid #6c757d;
 }
 
 /* 논문 목록 스타일 */
@@ -694,8 +694,8 @@
 
 .publication-item {
     display: flex;
-    padding: 15px;
-    margin-bottom: 12px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
     background-color: #f8f9fa;
     border-radius: var(--card-radius, 8px);
     transition: var(--card-transition, all 0.3s ease);

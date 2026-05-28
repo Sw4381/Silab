@@ -414,11 +414,11 @@
 
 /* 섹션 공통 */
 .section {
-    margin-bottom: 35px;
-    padding: 20px;
+    margin-bottom: 20px;
+    padding: 16px;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
     position: relative;
     overflow: hidden;
 }
@@ -437,10 +437,10 @@
 
 .section h2 {
     color: #005792;
-    font-size: 1.5em;
-    margin-bottom: 18px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #4facfe;
+    font-size: 1.25em;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #c8e4ff;
     position: relative;
     display: flex;
     align-items: center;
@@ -495,14 +495,14 @@
 .patent-list, .award-list { list-style: none; padding: 0; }
 
 .patent-list li, .award-list li {
-    margin-bottom: 10px;
-    padding: 14px 16px;
+    margin-bottom: 7px;
+    padding: 10px 14px;
     background: #f8f9fa;
     border-radius: 8px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
     transition: all 0.3s ease;
     position: relative;
-    font-size: 0.95em;
+    font-size: 0.92em;
 }
 
 .patent-list li:hover, .award-list li:hover {
