@@ -54,10 +54,10 @@
 }
 
 .login-btn, .logout-btn {
-    background: #4facfe;
+    background: rgba(255, 255, 255, 0.12);
     color: white;
-    border: none;
-    padding: 8px 16px;
+    border: 1.5px solid rgba(255, 255, 255, 0.65);
+    padding: 7px 16px;
     border-radius: 20px;
     cursor: pointer;
     font-size: 0.9em;
@@ -68,7 +68,8 @@
 }
 
 .login-btn:hover, .logout-btn:hover {
-    background: #005792;
+    background: rgba(255, 255, 255, 0.25);
+    border-color: white;
     transform: translateY(-2px);
 }
 
@@ -607,24 +608,32 @@
 }
 
 .nav-button {
-    background: linear-gradient(90deg, #8bb6ff, #88b4ff);
-    color: white;
-    border: none;
+    background: white;
+    color: #162d55;
+    border: 1.5px solid #24488c;
     padding: 8px 18px;
     border-radius: 20px;
     font-size: 0.95em;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(79, 172, 254, 0.2);
+    box-shadow: 0 2px 6px rgba(22, 45, 85, 0.1);
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
 .nav-button:hover {
+    background: #eef2f8;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(79, 172, 254, 0.3);
+    box-shadow: 0 4px 10px rgba(22, 45, 85, 0.15);
+}
+
+.nav-button.active {
+    background: linear-gradient(90deg, #162d55, #24488c);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(22, 45, 85, 0.3);
 }
 
 .nav-button i {

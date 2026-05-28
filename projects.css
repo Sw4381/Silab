@@ -198,8 +198,8 @@
 
 .show-more-button button {
     background-color: transparent;
-    color: #005792;
-    border: 1px solid #4facfe;
+    color: #162d55;
+    border: 1.5px solid #24488c;
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.9em;
@@ -212,7 +212,7 @@
 }
 
 .show-more-button button:hover {
-    background-color: #f0f7ff;
+    background-color: #eef2f8;
 }
 
 .show-more-button button i {
@@ -262,10 +262,10 @@
 }
 
 .login-btn, .logout-btn {
-    background: #4facfe;
+    background: rgba(255, 255, 255, 0.12);
     color: white;
-    border: none;
-    padding: 8px 16px;
+    border: 1.5px solid rgba(255, 255, 255, 0.65);
+    padding: 7px 16px;
     border-radius: 20px;
     cursor: pointer;
     font-size: 0.9em;
@@ -276,7 +276,8 @@
 }
 
 .login-btn:hover, .logout-btn:hover {
-    background: #005792;
+    background: rgba(255, 255, 255, 0.25);
+    border-color: white;
     transform: translateY(-2px);
 }
 
