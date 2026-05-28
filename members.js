@@ -1,22 +1,5 @@
 // members.js - Firebase Realtime Database 기반 멤버 관리
-
-// ==================== Firebase 설정 ====================
-const firebaseConfig = {
-    apiKey: "AIzaSyC1HQOuTGQ5IaLQiSRitcM2NsaYxtAmDQk",
-    authDomain: "security-lab-projects-4d1cb.firebaseapp.com",
-    databaseURL: "https://security-lab-projects-4d1cb-default-rtdb.firebaseio.com",
-    projectId: "security-lab-projects-4d1cb",
-    storageBucket: "security-lab-projects-4d1cb.firebasestorage.app",
-    messagingSenderId: "1075416037204",
-    appId: "1:1075416037204:web:89db47137971d40485bac1"
-};
-
-// ==================== Cloudinary 설정 ====================
-const CLOUDINARY_CLOUD_NAME = 'dtgwtdf3q';
-const CLOUDINARY_UPLOAD_PRESET = 'jfwl9ton';
-
-// ==================== 허용된 사용자 ====================
-const ALLOWED_EMAIL = 'kinjecs0@gmail.com';
+// 설정값은 config.js 참조
 
 // ==================== 전역 변수 ====================
 let auth, database;
@@ -155,11 +138,11 @@ function renderProfessorSection(p) {
         <div class="professor-content">
             <div class="professor-card">
                 <img src="${p.photo || './members_img/tjlee.jpg'}" alt="Professor Photo" onerror="this.src='./members_img/tjlee.jpg'">
-                <h3>${p.name || ''}</h3>
-                <p><strong>${p.title || ''}</strong></p>
-                <p><strong>${p.department || ''}</strong></p>
-                <p><strong>${p.university || ''}</strong></p>
-                <p class="email"><i class="fas fa-envelope"></i> ${p.email || ''}</p>
+                <h3>${escHtml(p.name)}</h3>
+                <p><strong>${escHtml(p.title)}</strong></p>
+                <p><strong>${escHtml(p.department)}</strong></p>
+                <p><strong>${escHtml(p.university)}</strong></p>
+                <p class="email"><i class="fas fa-envelope"></i> ${escHtml(p.email)}</p>
             </div>
             <div class="professor-history">
                 <h3><i class="fas fa-graduation-cap"></i> Academic Background & Experience</h3>
@@ -317,13 +300,13 @@ function createStudentCard(section, key, member) {
     const showDelete = currentUser && deleteMode;
 
     div.innerHTML = `
-        <img src="${photoSrc}" class="student-photo" alt="${member.name}" onerror="this.src='./members_img/f4.png'">
+        <img src="${escHtml(photoSrc)}" class="student-photo" alt="${escHtml(member.name)}" loading="lazy" onerror="this.src='./members_img/f4.png'">
         <div class="student-info">
-            <div class="student-name">${member.name || ''}</div>
+            <div class="student-name">${escHtml(member.name)}</div>
             <div class="student-details">
                 <div class="detail-row">
                     <span class="detail-label"><i class="fas fa-id-badge"></i> 직책</span>
-                    <span class="detail-value">${member.role || ''}</span>
+                    <span class="detail-value">${escHtml(member.role)}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label"><i class="fas fa-envelope"></i> 이메일</span>
@@ -331,11 +314,11 @@ function createStudentCard(section, key, member) {
                 </div>
                 <div class="detail-row">
                     <span class="detail-label"><i class="fas fa-flask"></i> 연구분야</span>
-                    <span class="detail-value Re">${member.research || ''}</span>
+                    <span class="detail-value Re">${escHtml(member.research)}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label"><i class="fas fa-graduation-cap"></i> 학위</span>
-                    <span class="detail-value degree">${member.degree || ''}</span>
+                    <span class="detail-value degree">${escHtml(member.degree)}</span>
                 </div>
             </div>
             <div class="member-actions" style="display:${showActions ? 'flex' : 'none'}; gap:8px; margin-top:12px; flex-wrap:wrap;">
@@ -378,9 +361,9 @@ function renderAlumniSection(alumni) {
             : '';
 
         p.innerHTML = `
-            <span class="alumni-name">${alum.name || ''}</span>
-            <span class="alumni-year">${alum.period || ''}</span>
-            <span class="alumni-info">, ${alum.info || ''}</span>
+            <span class="alumni-name">${escHtml(alum.name)}</span>
+            <span class="alumni-year">${escHtml(alum.period)}</span>
+            <span class="alumni-info">, ${escHtml(alum.info)}</span>
             ${editBtn}${deleteBtn}
         `;
         container.appendChild(p);
