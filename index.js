@@ -16,9 +16,9 @@ let researchCardsData = [];
 let editingCardKey = null;
 
 const COLOR_MAP = {
-    blue:  { gradient: 'linear-gradient(135deg, #005792 0%, #0077be 100%)', emoji: '🔬' },
-    red:   { gradient: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', emoji: '🛡️' },
-    green: { gradient: 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)', emoji: '📋' }
+    blue:  { gradient: 'linear-gradient(135deg, #005792 0%, #0077be 100%)', emoji: '🔬', icon: 'fa-microscope' },
+    red:   { gradient: 'linear-gradient(135deg, #b91c1c 0%, #dc2626 100%)', emoji: '🛡️', icon: 'fa-shield-alt' },
+    green: { gradient: 'linear-gradient(135deg, #166534 0%, #16a34a 100%)', emoji: '📋', icon: 'fa-chart-line' }
 };
 
 // ==================== 인증 ====================
@@ -359,7 +359,8 @@ function renderResearchCardsUI() {
         div.dataset.color = col;
         div.innerHTML = `
             <div class="card-header">
-                <div class="card-title" style="background:${colors.gradient}">${card.title}</div>
+                <div class="card-icon"><i class="fas ${colors.icon}"></i></div>
+                <div class="card-title">${card.title}</div>
                 <div class="card-subtitle">${card.subtitle}</div>
             </div>
             <ul class="research-list">${itemsHTML}</ul>
