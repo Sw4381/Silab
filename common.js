@@ -12,6 +12,13 @@ function escHtml(str) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // 현재 페이지 자동 활성화
+    var currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.menu a').forEach(function (link) {
+        var href = link.getAttribute('href').replace('./', '');
+        link.classList.toggle('active', href === currentPage);
+    });
+
     var hamburger = document.getElementById('hamburger');
     var menu = document.querySelector('.menu');
     if (!hamburger || !menu) return;
