@@ -405,57 +405,53 @@ function deleteResearchCard(key) {
 
 // ==================== STATS BAR ====================
 function loadStats() {
-    const counts = { members: 0, publications: 0, projects: 0, patents: 0 };
+    const counts = { fulltime: 0, parttime: 0, alumni: 0, sci: 0, kci: 0, conf: 0 };
     let loaded = 0;
+    const TOTAL = 3;
 
     function tryAnimate() {
         loaded++;
-        if (loaded < 4) return;
+        if (loaded < TOTAL) return;
         const bar = document.getElementById('statsBar');
         if (!bar) return;
         const observer = new IntersectionObserver(entries => {
             if (entries[0].isIntersecting && !statsAnimated) {
                 statsAnimated = true;
-                animateCount('statMembers',      counts.members);
-                animateCount('statPublications', counts.publications);
-                animateCount('statProjects',     counts.projects);
-                animateCount('statPatents',      counts.patents);
+                animateCount('statFulltime', counts.fulltime);
+                animateCount('statParttime', counts.parttime);
+                animateCount('statAlumni',   counts.alumni);
+                animateCount('statSci',      counts.sci);
+                animateCount('statKci',      counts.kci);
+                animateCount('statConf',     counts.conf);
                 observer.disconnect();
             }
         }, { threshold: 0.3 });
         observer.observe(bar);
     }
 
+    // 멤버: fulltime(phd+ms+bs+professor), parttime, alumni
     database.ref('members').once('value').then(snap => {
         const d = snap.val() || {};
-        let n = 0;
-        ['phd', 'ms', 'bs', 'parttime'].forEach(g => { if (d[g]) n += Object.keys(d[g]).length; });
-        counts.members = n;
+        let ft = 0;
+        ['phd', 'ms', 'bs'].forEach(g => { if (d[g]) ft += Object.keys(d[g]).length; });
+        if (d.professor) ft += 1;
+        counts.fulltime = ft;
+        counts.parttime = d.parttime ? Object.keys(d.parttime).length : 0;
+        counts.alumni   = d.alumni   ? Object.keys(d.alumni).length   : 0;
         tryAnimate();
     }).catch(() => tryAnimate());
 
+    // 논문: sci, kci, conference(other)
     database.ref('publications').once('value').then(snap => {
         const d = snap.val() || {};
-        let n = 0;
-        ['sci', 'kci', 'other'].forEach(g => { if (d[g]) n += Object.keys(d[g]).length; });
-        counts.publications = n;
+        counts.sci  = d.sci   ? Object.keys(d.sci).length   : 0;
+        counts.kci  = d.kci   ? Object.keys(d.kci).length   : 0;
+        counts.conf = d.other ? Object.keys(d.other).length : 0;
         tryAnimate();
     }).catch(() => tryAnimate());
 
-    Promise.all([
-        database.ref('current projects').once('value'),
-        database.ref('past projects').once('value')
-    ]).then(([cur, past]) => {
-        let n = 0;
-        if (cur.val())  n += Object.keys(cur.val()).length;
-        if (past.val()) n += Object.keys(past.val()).length;
-        counts.projects = n;
-        tryAnimate();
-    }).catch(() => tryAnimate());
-
-    database.ref('patents').once('value').then(snap => {
-        const d = snap.val() || {};
-        counts.patents = Object.keys(d).length;
+    // 프로젝트 (stats용 카운트 - 애니메이션 트리거에만 사용)
+    database.ref('current projects').once('value').then(() => {
         tryAnimate();
     }).catch(() => tryAnimate());
 }
