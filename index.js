@@ -403,72 +403,63 @@ function deleteResearchCard(key) {
         .catch(err => alert('삭제 실패: ' + err.message));
 }
 
-// ==================== STATS BAR ====================
-function loadStats() {
-    const counts = { fulltime: 0, parttime: 0, alumni: 0, sci: 0, kci: 0, conf: 0, projects: 0, patents: 0 };
-    let loaded = 0;
-    const TOTAL = 5;
-
-    function tryAnimate() {
-        loaded++;
-        if (loaded < TOTAL) return;
-        if (statsAnimated) return;
-        statsAnimated = true;
-        animateCount('statFulltime', counts.fulltime);
-        animateCount('statParttime', counts.parttime);
-        animateCount('statAlumni',   counts.alumni);
-        animateCount('statSci',      counts.sci);
-        animateCount('statKci',      counts.kci);
-        animateCount('statConf',     counts.conf);
-        animateCount('statProjects', counts.projects);
-        animateCount('statPatents',  counts.patents);
-    }
-
-    // 멤버: fulltime(phd+ms+bs+professor), parttime, alumni
-    database.ref('members').once('value').then(snap => {
-        const d = snap.val() || {};
-        let ft = 0;
-        ['phd', 'ms', 'bs'].forEach(g => { if (d[g]) ft += Object.keys(d[g]).length; });
-        if (d.professor) ft += 1;
-        counts.fulltime = ft;
-        counts.parttime = d.parttime ? Object.keys(d.parttime).length : 0;
-        counts.alumni   = d.alumni   ? Object.keys(d.alumni).length   : 0;
-        tryAnimate();
-    }).catch(() => tryAnimate());
-
-    // 논문: sci, kci, conference(other)
-    database.ref('publications').once('value').then(snap => {
-        const d = snap.val() || {};
-        counts.sci  = d.sci   ? Object.keys(d.sci).length   : 0;
-        counts.kci  = d.kci   ? Object.keys(d.kci).length   : 0;
-        counts.conf = d.other ? Object.keys(d.other).length : 0;
-        tryAnimate();
-    }).catch(() => tryAnimate());
-
-    // 프로젝트 (current + past)
+// ==================== 동적 콘텐츠 통합 로드 (Firebase 중복 읽기 제거) ====================
+function loadDynamicContent() {
     Promise.all([
+        database.ref('members').once('value'),
+        database.ref('publications').once('value'),
         database.ref('current projects').once('value'),
-        database.ref('past projects').once('value')
-    ]).then(([cur, past]) => {
-        let n = 0;
-        if (cur.val())  n += Object.keys(cur.val()).length;
-        if (past.val()) n += Object.keys(past.val()).length;
-        counts.projects = n;
-        tryAnimate();
-    }).catch(() => tryAnimate());
+        database.ref('past projects').once('value'),
+        database.ref('patents').once('value')
+    ]).then(([membersSnap, pubsSnap, curSnap, pastSnap, patentsSnap]) => {
+        const members  = membersSnap.val()  || {};
+        const pubs     = pubsSnap.val()     || {};
+        const curProj  = curSnap.val()      || null;
+        const pastProj = pastSnap.val()     || {};
+        const patents  = patentsSnap.val()  || {};
 
-    // 특허
-    database.ref('patents').once('value').then(snap => {
-        const d = snap.val() || {};
-        counts.patents = Object.keys(d).length;
-        tryAnimate();
-    }).catch(() => tryAnimate());
+        renderStats(members, pubs, curProj, pastProj, patents);
+        renderRecentPubs(pubs);
+        renderRecentProjects(curProj);
+    }).catch(err => {
+        console.error('동적 콘텐츠 로드 실패:', err);
+    });
+}
+
+function renderStats(members, pubs, curProj, pastProj, patents) {
+    if (statsAnimated) return;
+    statsAnimated = true;
+
+    let ft = 0;
+    ['phd', 'ms', 'bs'].forEach(g => { if (members[g]) ft += Object.keys(members[g]).length; });
+    if (members.professor) ft += 1;
+
+    const counts = {
+        fulltime: ft,
+        parttime: members.parttime ? Object.keys(members.parttime).length : 0,
+        alumni:   members.alumni   ? Object.keys(members.alumni).length   : 0,
+        sci:      pubs.sci         ? Object.keys(pubs.sci).length         : 0,
+        kci:      pubs.kci         ? Object.keys(pubs.kci).length         : 0,
+        conf:     pubs.other       ? Object.keys(pubs.other).length       : 0,
+        projects: (curProj  ? Object.keys(curProj).length  : 0)
+                + (pastProj ? Object.keys(pastProj).length : 0),
+        patents:  Object.keys(patents).length
+    };
+
+    animateCount('statFulltime', counts.fulltime);
+    animateCount('statParttime', counts.parttime);
+    animateCount('statAlumni',   counts.alumni);
+    animateCount('statSci',      counts.sci);
+    animateCount('statKci',      counts.kci);
+    animateCount('statConf',     counts.conf);
+    animateCount('statProjects', counts.projects);
+    animateCount('statPatents',  counts.patents);
 }
 
 function animateCount(elId, target) {
     const el = document.getElementById(elId);
     if (!el) return;
-    const duration = 1200;
+    const duration = 1000;
     const start    = performance.now();
     function step(now) {
         const t    = Math.min((now - start) / duration, 1);
@@ -480,85 +471,76 @@ function animateCount(elId, target) {
     requestAnimationFrame(step);
 }
 
-// ==================== 최근 논문 ====================
-function loadRecentPublications() {
+function renderRecentPubs(pubs) {
     const container = document.getElementById('recentPubs');
     if (!container) return;
 
-    database.ref('publications').once('value').then(snap => {
-        const data  = snap.val() || {};
-        const items = [];
-        ['sci', 'kci', 'other'].forEach(type => {
-            if (!data[type]) return;
-            Object.values(data[type]).forEach(pub => items.push({ ...pub, _type: type }));
-        });
+    const items = [];
+    ['sci', 'kci', 'other'].forEach(type => {
+        if (!pubs[type]) return;
+        Object.values(pubs[type]).forEach(pub => items.push({ ...pub, _type: type }));
+    });
 
-        items.sort((a, b) => (b.year || 0) - (a.year || 0));
-        const recent = items.slice(0, 3);
+    items.sort((a, b) => (b.year || 0) - (a.year || 0));
+    const recent = items.slice(0, 3);
 
-        container.innerHTML = '';
-        if (recent.length === 0) {
-            container.innerHTML = '<div class="feed-empty"><i class="fas fa-file-alt"></i><p style="margin-top:8px;">등록된 논문이 없습니다</p></div>';
-            return;
-        }
+    container.innerHTML = '';
+    if (recent.length === 0) {
+        container.innerHTML = '<div class="feed-empty"><i class="fas fa-file-alt"></i><p style="margin-top:8px;">등록된 논문이 없습니다</p></div>';
+        return;
+    }
 
-        recent.forEach(pub => {
-            const badgeClass = pub._type === 'sci' ? 'sci' : pub._type === 'kci' ? 'kci' : 'other';
-            const badgeLabel = pub._type === 'sci' ? 'SCI' : pub._type === 'kci' ? 'KCI' : 'Conf';
-            const card = document.createElement('div');
-            card.className = 'pub-card';
-            card.innerHTML = `
-                <span class="pub-badge ${badgeClass}">${badgeLabel}</span>
-                <div class="pub-title">${pub.title || '(제목 없음)'}</div>
-                <div class="pub-meta">
-                    <span>${pub.authors || ''}</span>
-                    ${pub.year        ? `<span>${pub.year}</span>` : ''}
-                    ${pub.journal || pub.conference ? `<span>${pub.journal || pub.conference}</span>` : ''}
-                </div>
-            `;
-            container.appendChild(card);
-        });
+    recent.forEach(pub => {
+        const badgeClass = pub._type === 'sci' ? 'sci' : pub._type === 'kci' ? 'kci' : 'other';
+        const badgeLabel = pub._type === 'sci' ? 'SCI' : pub._type === 'kci' ? 'KCI' : 'Conf';
+        const card = document.createElement('div');
+        card.className = 'pub-card';
+        card.innerHTML = `
+            <span class="pub-badge ${badgeClass}">${badgeLabel}</span>
+            <div class="pub-title">${pub.title || '(제목 없음)'}</div>
+            <div class="pub-meta">
+                <span>${pub.authors || ''}</span>
+                ${pub.year ? `<span>${pub.year}</span>` : ''}
+                ${pub.journal || pub.conference ? `<span>${pub.journal || pub.conference}</span>` : ''}
+            </div>
+        `;
+        container.appendChild(card);
     });
 }
 
-// ==================== 진행 중인 프로젝트 ====================
-function loadRecentProjects() {
+function renderRecentProjects(curProj) {
     const container = document.getElementById('recentProjects');
     if (!container) return;
 
-    database.ref('current projects').once('value').then(snap => {
-        const data = snap.val();
-        container.innerHTML = '';
+    container.innerHTML = '';
+    if (!curProj) {
+        container.innerHTML = '<div class="feed-empty"><i class="fas fa-project-diagram"></i><p style="margin-top:8px;">진행 중인 프로젝트가 없습니다</p></div>';
+        return;
+    }
 
-        if (!data) {
-            container.innerHTML = '<div class="feed-empty"><i class="fas fa-project-diagram"></i><p style="margin-top:8px;">진행 중인 프로젝트가 없습니다</p></div>';
-            return;
-        }
+    const items = Object.values(curProj)
+        .filter(p => p && p.name)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
-        const items = Object.values(data)
-            .filter(p => p && p.name)
-            .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    if (items.length === 0) {
+        container.innerHTML = '<div class="feed-empty"><i class="fas fa-project-diagram"></i><p style="margin-top:8px;">진행 중인 프로젝트가 없습니다</p></div>';
+        return;
+    }
 
-        if (items.length === 0) {
-            container.innerHTML = '<div class="feed-empty"><i class="fas fa-project-diagram"></i><p style="margin-top:8px;">진행 중인 프로젝트가 없습니다</p></div>';
-            return;
-        }
-
-        items.forEach(proj => {
-            const item = document.createElement('div');
-            item.className = 'project-feed-item';
-            item.innerHTML = `
-                <div class="project-feed-icon"><i class="fas fa-flask"></i></div>
-                <div class="project-feed-body">
-                    <div class="project-feed-name">${proj.name || '(제목 없음)'}</div>
-                    <div class="project-feed-meta">
-                        ${proj.period ? `<span><i class="fas fa-calendar"></i>${proj.period}</span>` : ''}
-                    </div>
+    items.forEach(proj => {
+        const item = document.createElement('div');
+        item.className = 'project-feed-item';
+        item.innerHTML = `
+            <div class="project-feed-icon"><i class="fas fa-flask"></i></div>
+            <div class="project-feed-body">
+                <div class="project-feed-name">${proj.name || '(제목 없음)'}</div>
+                <div class="project-feed-meta">
+                    ${proj.period ? `<span><i class="fas fa-calendar"></i>${proj.period}</span>` : ''}
                 </div>
-                <span class="project-status">진행 중</span>
-            `;
-            container.appendChild(item);
-        });
+            </div>
+            <span class="project-status">진행 중</span>
+        `;
+        container.appendChild(item);
     });
 }
 
@@ -625,9 +607,7 @@ async function uploadToCloudinary(file, onProgress) {
 document.addEventListener('DOMContentLoaded', () => {
     loadAndRenderSlides();
     loadAndRenderResearchCards();
-    loadStats();
-    loadRecentPublications();
-    loadRecentProjects();
+    loadDynamicContent();
 
     // 로그인/로그아웃
     document.getElementById('loginBtn').addEventListener('click', () => {
