@@ -1,4 +1,4 @@
-/* index.css - 홈 페이지 스타일 */
+/* index_preview.css - 홈 개편 프리뷰 전용 스타일 */
 
 /* ===================== HERO ===================== */
 .hero-section {
@@ -11,7 +11,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 60px;
+    margin-top: 60px; /* navbar 높이 */
 }
 
 .hero-slider {
@@ -404,7 +404,12 @@
     flex-wrap: wrap;
 }
 
-.pub-meta span::before { content: '·'; margin-right: 6px; opacity: 0.5; }
+.pub-meta span::before {
+    content: '·';
+    margin-right: 6px;
+    opacity: 0.5;
+}
+
 .pub-meta span:first-child::before { content: ''; margin: 0; }
 
 /* ===================== RECENT PROJECTS ===================== */
@@ -468,7 +473,10 @@
     flex-wrap: wrap;
 }
 
-.project-feed-meta i { margin-right: 4px; opacity: 0.65; }
+.project-feed-meta i {
+    margin-right: 4px;
+    opacity: 0.65;
+}
 
 .project-status {
     flex-shrink: 0;
@@ -508,7 +516,7 @@
     transform: translateY(-1px);
 }
 
-/* ===================== LOADING / EMPTY ===================== */
+/* ===================== FEED LOADING ===================== */
 .feed-loading {
     padding: 30px;
     text-align: center;
@@ -555,23 +563,30 @@
 
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1024px) {
-    .pub-grid { grid-template-columns: repeat(2, 1fr); }
+    .pub-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
-    .hero-section  { height: 72vh; }
-    .stat-num      { font-size: 1.7rem; }
-    .stat-label    { font-size: 0.7rem; }
-    .stat-divider  { height: 36px; }
+    .hero-section { height: 72vh; }
+
+    .stats-inner { gap: 0; }
+    .stat-num    { font-size: 1.7rem; }
+    .stat-label  { font-size: 0.7rem; }
+    .stat-divider { height: 36px; }
+
     .research-grid { grid-template-columns: 1fr !important; }
     .pub-grid      { grid-template-columns: 1fr; }
+
     .section-heading h2 { font-size: 1.35rem; }
-    .hero-sub      { display: none; }
+    .hero-sub { display: none; }
 }
 
 @media (max-width: 480px) {
     .hero-title  { font-size: 1.8rem; }
     .hero-cta    { flex-direction: column; align-items: center; }
+    .stats-inner { gap: 0; }
     .stat-item   { padding: 0 8px; }
     .stat-divider { display: none; }
 }
