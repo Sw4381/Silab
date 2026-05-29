@@ -168,7 +168,7 @@
 
 /* ===================== STATS BAR ===================== */
 .stats-bar {
-    background: linear-gradient(135deg, #162d55 0%, #24488c 100%);
+    background: var(--navbar-gradient);
     padding: 28px 20px;
 }
 
