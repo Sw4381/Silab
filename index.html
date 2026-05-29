@@ -7,6 +7,7 @@
     <link rel="icon" href="./image.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="photo.css">
     <link rel="stylesheet" href="index.css">
 
     <!-- Firebase SDK -->
@@ -162,28 +163,42 @@
     <!-- ===================== STATS BAR ===================== -->
     <section class="stats-bar" id="statsBar">
         <div class="stats-inner">
+            <div class="stat-group-label">Members</div>
             <div class="stat-item">
-                <i class="fas fa-users"></i>
-                <span class="stat-num" id="statMembers">0</span>
-                <span class="stat-label">Members</span>
+                <i class="fas fa-id-badge"></i>
+                <span class="stat-num" id="statFulltime">0</span>
+                <span class="stat-label">Full-time</span>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
-                <i class="fas fa-file-alt"></i>
-                <span class="stat-num" id="statPublications">0</span>
-                <span class="stat-label">Publications</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <i class="fas fa-project-diagram"></i>
-                <span class="stat-num" id="statProjects">0</span>
-                <span class="stat-label">Projects</span>
+                <i class="fas fa-user-clock"></i>
+                <span class="stat-num" id="statParttime">0</span>
+                <span class="stat-label">Part-time</span>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
                 <i class="fas fa-award"></i>
-                <span class="stat-num" id="statPatents">0</span>
-                <span class="stat-label">Patents</span>
+                <span class="stat-num" id="statAlumni">0</span>
+                <span class="stat-label">Alumni</span>
+            </div>
+            <div class="stat-separator"></div>
+            <div class="stat-group-label">Publications</div>
+            <div class="stat-item">
+                <i class="fas fa-star"></i>
+                <span class="stat-num" id="statSci">0</span>
+                <span class="stat-label">SCI</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <i class="fas fa-book"></i>
+                <span class="stat-num" id="statKci">0</span>
+                <span class="stat-label">KCI</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <i class="fas fa-file-alt"></i>
+                <span class="stat-num" id="statConf">0</span>
+                <span class="stat-label">Conference</span>
             </div>
         </div>
     </section>
