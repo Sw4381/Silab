@@ -412,23 +412,16 @@ function loadStats() {
     function tryAnimate() {
         loaded++;
         if (loaded < TOTAL) return;
-        const bar = document.getElementById('statsBar');
-        if (!bar) return;
-        const observer = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting && !statsAnimated) {
-                statsAnimated = true;
-                animateCount('statFulltime', counts.fulltime);
-                animateCount('statParttime', counts.parttime);
-                animateCount('statAlumni',   counts.alumni);
-                animateCount('statSci',      counts.sci);
-                animateCount('statKci',      counts.kci);
-                animateCount('statConf',     counts.conf);
-                animateCount('statProjects', counts.projects);
-                animateCount('statPatents',  counts.patents);
-                observer.disconnect();
-            }
-        }, { threshold: 0.3 });
-        observer.observe(bar);
+        if (statsAnimated) return;
+        statsAnimated = true;
+        animateCount('statFulltime', counts.fulltime);
+        animateCount('statParttime', counts.parttime);
+        animateCount('statAlumni',   counts.alumni);
+        animateCount('statSci',      counts.sci);
+        animateCount('statKci',      counts.kci);
+        animateCount('statConf',     counts.conf);
+        animateCount('statProjects', counts.projects);
+        animateCount('statPatents',  counts.patents);
     }
 
     // 멤버: fulltime(phd+ms+bs+professor), parttime, alumni
