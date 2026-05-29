@@ -442,10 +442,13 @@ function loadStats() {
         tryAnimate();
     }).catch(() => tryAnimate());
 
-    database.ref('projects').once('value').then(snap => {
-        const d = snap.val() || {};
+    Promise.all([
+        database.ref('current projects').once('value'),
+        database.ref('past projects').once('value')
+    ]).then(([cur, past]) => {
         let n = 0;
-        ['current', 'past'].forEach(g => { if (d[g]) n += Object.keys(d[g]).length; });
+        if (cur.val())  n += Object.keys(cur.val()).length;
+        if (past.val()) n += Object.keys(past.val()).length;
         counts.projects = n;
         tryAnimate();
     }).catch(() => tryAnimate());
@@ -496,7 +499,7 @@ function loadRecentPublications() {
 
         recent.forEach(pub => {
             const badgeClass = pub._type === 'sci' ? 'sci' : pub._type === 'kci' ? 'kci' : 'other';
-            const badgeLabel = pub._type === 'sci' ? 'SCI' : pub._type === 'kci' ? 'KCI' : 'Other';
+            const badgeLabel = pub._type === 'sci' ? 'SCI' : pub._type === 'kci' ? 'KCI' : 'Conf';
             const card = document.createElement('div');
             card.className = 'pub-card';
             card.innerHTML = `
@@ -518,7 +521,7 @@ function loadRecentProjects() {
     const container = document.getElementById('recentProjects');
     if (!container) return;
 
-    database.ref('projects/current').once('value').then(snap => {
+    database.ref('current projects').once('value').then(snap => {
         const data = snap.val();
         container.innerHTML = '';
 
@@ -528,20 +531,24 @@ function loadRecentProjects() {
         }
 
         const items = Object.values(data)
-            .sort((a, b) => (b.start_year || 0) - (a.start_year || 0))
+            .filter(p => p && p.name)
+            .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
             .slice(0, 3);
 
+        if (items.length === 0) {
+            container.innerHTML = '<div class="feed-empty"><i class="fas fa-project-diagram"></i><p style="margin-top:8px;">진행 중인 프로젝트가 없습니다</p></div>';
+            return;
+        }
+
         items.forEach(proj => {
-            const period = [proj.start_year, proj.end_year].filter(Boolean).join(' – ');
-            const item   = document.createElement('div');
+            const item = document.createElement('div');
             item.className = 'project-feed-item';
             item.innerHTML = `
                 <div class="project-feed-icon"><i class="fas fa-flask"></i></div>
                 <div class="project-feed-body">
-                    <div class="project-feed-name">${proj.title || proj.name || '(제목 없음)'}</div>
+                    <div class="project-feed-name">${proj.name || '(제목 없음)'}</div>
                     <div class="project-feed-meta">
-                        ${period                             ? `<span><i class="fas fa-calendar"></i>${period}</span>` : ''}
-                        ${proj.agency || proj.organization   ? `<span><i class="fas fa-building"></i>${proj.agency || proj.organization}</span>` : ''}
+                        ${proj.period ? `<span><i class="fas fa-calendar"></i>${proj.period}</span>` : ''}
                     </div>
                 </div>
                 <span class="project-status">진행 중</span>

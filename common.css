@@ -117,6 +117,44 @@ body {
     height: auto;
 }
 
+/* ==================== 로그인/로그아웃 버튼 (공통) ==================== */
+.auth-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-right: 20px;
+}
+
+.login-btn, .logout-btn {
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    border: 1.5px solid rgba(255, 255, 255, 0.65);
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-kr);
+}
+
+.login-btn:hover, .logout-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: white;
+    transform: translateY(-2px);
+}
+
+.user-info {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+    font-size: 0.85em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 /* ==================== 컨테이너 스타일 ==================== */
 .container {
     width: 100%;
