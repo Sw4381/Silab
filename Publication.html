@@ -125,7 +125,7 @@
                         <select id="publicationType" name="publicationType" required>
                             <option value="sci">SCI/SCIE</option>
                             <option value="kci">KCI</option>
-                            <option value="other">기타 발표</option>
+                            <option value="other">Conference</option>
                         </select>
                     </div>
                 </div>
@@ -198,7 +198,7 @@
                         <select id="editPublicationType" name="editPublicationType" required>
                             <option value="sci">SCI/SCIE</option>
                             <option value="kci">KCI</option>
-                            <option value="other">기타 발표</option>
+                            <option value="other">Conference</option>
                         </select>
                     </div>
                 </div>
@@ -249,7 +249,7 @@
                 <i class="fas fa-book"></i>Domestic Journals
             </button>
             <button class="nav-button" onclick="scrollToElement('other')">
-                <i class="fas fa-file-alt"></i>Conferences
+                <i class="fas fa-file-alt"></i>Conference
             </button>
         </div>
 
@@ -280,7 +280,7 @@
         <!-- 기타 발표 논문 섹션 -->
         <section id="other" class="publication-section other-section hidden">
             <div class="section-header">
-                <h2><i class="fas fa-file-alt"></i>Conferences</h2>
+                <h2><i class="fas fa-file-alt"></i>Conference</h2>
                 <span class="count other-count">0편</span>
             </div>
             
@@ -291,16 +291,25 @@
 
         <!-- 푸터 -->
         <footer>
-            <div class="contact-info">
-                <div class="contact-item">
-                    <i class="fas fa-envelope"></i>
-                    <a href="mailto:kinjecs0@gmail.com">kinjecs0@gmail.com</a>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="./image.png" alt="SILAB" class="footer-logo">
+                    <div>
+                        <span class="footer-lab-name">SILAB</span>
+                        <span class="footer-lab-sub">보안 지능 연구실</span>
+                    </div>
                 </div>
-                <div class="divider"></div>
-                <div class="contact-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>가천대학교 스마트보안학과</span>
+                <div class="footer-info">
+                    <div class="footer-info-item">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:kinjecs0@gmail.com">kinjecs0@gmail.com</a>
+                    </div>
+                    <div class="footer-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>가천대학교 AI소프트웨어학부 스마트보안학과</span>
+                    </div>
                 </div>
+                <div class="footer-copy">© 2025 SILAB · Gachon University</div>
             </div>
         </footer>
     </div>
