@@ -405,9 +405,9 @@ function deleteResearchCard(key) {
 
 // ==================== STATS BAR ====================
 function loadStats() {
-    const counts = { fulltime: 0, parttime: 0, alumni: 0, sci: 0, kci: 0, conf: 0 };
+    const counts = { fulltime: 0, parttime: 0, alumni: 0, sci: 0, kci: 0, conf: 0, projects: 0, patents: 0 };
     let loaded = 0;
-    const TOTAL = 3;
+    const TOTAL = 5;
 
     function tryAnimate() {
         loaded++;
@@ -423,6 +423,8 @@ function loadStats() {
                 animateCount('statSci',      counts.sci);
                 animateCount('statKci',      counts.kci);
                 animateCount('statConf',     counts.conf);
+                animateCount('statProjects', counts.projects);
+                animateCount('statPatents',  counts.patents);
                 observer.disconnect();
             }
         }, { threshold: 0.3 });
@@ -450,8 +452,22 @@ function loadStats() {
         tryAnimate();
     }).catch(() => tryAnimate());
 
-    // 프로젝트 (stats용 카운트 - 애니메이션 트리거에만 사용)
-    database.ref('current projects').once('value').then(() => {
+    // 프로젝트 (current + past)
+    Promise.all([
+        database.ref('current projects').once('value'),
+        database.ref('past projects').once('value')
+    ]).then(([cur, past]) => {
+        let n = 0;
+        if (cur.val())  n += Object.keys(cur.val()).length;
+        if (past.val()) n += Object.keys(past.val()).length;
+        counts.projects = n;
+        tryAnimate();
+    }).catch(() => tryAnimate());
+
+    // 특허
+    database.ref('patents').once('value').then(snap => {
+        const d = snap.val() || {};
+        counts.patents = Object.keys(d).length;
         tryAnimate();
     }).catch(() => tryAnimate());
 }
@@ -528,8 +544,7 @@ function loadRecentProjects() {
 
         const items = Object.values(data)
             .filter(p => p && p.name)
-            .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
-            .slice(0, 3);
+            .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
         if (items.length === 0) {
             container.innerHTML = '<div class="feed-empty"><i class="fas fa-project-diagram"></i><p style="margin-top:8px;">진행 중인 프로젝트가 없습니다</p></div>';
