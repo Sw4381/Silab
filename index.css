@@ -610,51 +610,58 @@
     .stat-num    { font-size: 1.4rem; }
 }
 
-/* ===================== 학생 모집 CTA ===================== */
-.join-cta {
+/* ===================== 학생 모집 (슬림 바) ===================== */
+.join-strip {
     background: linear-gradient(135deg, #162d55, #24488c);
-    padding: 56px 20px;
-    text-align: center;
 }
 
-.join-cta-inner {
-    max-width: 640px;
+.join-strip-inner {
+    max-width: 1100px;
     margin: 0 auto;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    flex-wrap: wrap;
 }
 
-.join-cta-inner h2 {
+.join-strip-text {
     color: #fff;
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 12px;
+    font-size: 0.96rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
-.join-cta-inner p {
-    color: rgba(255, 255, 255, 0.82);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    margin-bottom: 26px;
+.join-strip-text i {
+    margin-right: 8px;
+    color: #a9c4ff;
 }
 
-.join-cta-btn {
+.join-strip-btn {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
+    gap: 8px;
     background: #fff;
     color: #162d55;
-    font-size: 1rem;
+    font-size: 0.92rem;
     font-weight: 700;
     border: none;
-    padding: 13px 32px;
-    border-radius: 26px;
+    padding: 9px 22px;
+    border-radius: 22px;
     cursor: pointer;
+    white-space: nowrap;
     transition: all 0.22s ease;
 }
 
-.join-cta-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+.join-strip-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 600px) {
+    .join-strip-inner { gap: 12px; }
+    .join-strip-text  { font-size: 0.88rem; text-align: center; }
 }
 
 /* ===================== 연락(문의) 모달 ===================== */
