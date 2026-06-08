@@ -50,6 +50,7 @@ function updateAuthUI() {
         userInfo.style.display   = 'flex';
         userName.textContent     = currentUser.email;
         adminPanel.style.display = 'block';
+        updateInquiryBadge();
     } else {
         loginBtn.style.display   = 'inline-flex';
         logoutBtn.style.display  = 'none';
@@ -603,6 +604,131 @@ async function uploadToCloudinary(file, onProgress) {
     });
 }
 
+// ==================== 학생 문의 (연락하기) ====================
+function escapeHtml(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function formatInquiryDate(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function submitContact(e) {
+    e.preventDefault();
+    const btn = document.getElementById('contactSubmitBtn');
+    const data = {
+        name:    document.getElementById('contactName').value.trim(),
+        email:   document.getElementById('contactEmail').value.trim(),
+        phone:   document.getElementById('contactPhone').value.trim(),
+        message: document.getElementById('contactMessage').value.trim(),
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        read: false
+    };
+    if (!data.name || !data.email || !data.message) {
+        alert('이름, 이메일, 문의 내용을 입력해 주세요.');
+        return;
+    }
+
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 전송 중...';
+
+    database.ref('inquiries').push(data)
+        .then(() => {
+            alert('문의가 전송되었습니다. 확인 후 연락드리겠습니다. 감사합니다!');
+            document.getElementById('contactForm').reset();
+            document.getElementById('contactModal').style.display = 'none';
+        })
+        .catch(err => alert('전송 실패: ' + err.message))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        });
+}
+
+function updateInquiryBadge() {
+    if (!currentUser) return;
+    const badge = document.getElementById('inquiryBadge');
+    if (!badge) return;
+    database.ref('inquiries').once('value').then(snap => {
+        const data = snap.val() || {};
+        const unread = Object.values(data).filter(i => i && !i.read).length;
+        if (unread > 0) {
+            badge.textContent = unread;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }).catch(() => {});
+}
+
+function openInquiryModal() {
+    document.getElementById('inquiryModal').style.display = 'block';
+    const list = document.getElementById('inquiryList');
+    list.innerHTML = '<div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> 로딩 중...</div>';
+
+    database.ref('inquiries').once('value').then(snap => {
+        const data = snap.val() || {};
+        const items = Object.entries(data)
+            .map(([key, val]) => ({ key, ...val }))
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        renderInquiryList(items);
+
+        // 열람 시 읽음 처리
+        const updates = {};
+        items.forEach(i => { if (!i.read) updates[`inquiries/${i.key}/read`] = true; });
+        if (Object.keys(updates).length) {
+            database.ref().update(updates).then(updateInquiryBadge);
+        }
+    }).catch(err => {
+        list.innerHTML = `<div class="feed-empty">불러오기 실패: ${escapeHtml(err.message)}</div>`;
+    });
+}
+
+function renderInquiryList(items) {
+    const list = document.getElementById('inquiryList');
+    if (!items.length) {
+        list.innerHTML = '<div class="feed-empty"><i class="fas fa-inbox"></i><p style="margin-top:8px;">받은 문의가 없습니다</p></div>';
+        return;
+    }
+    list.innerHTML = items.map(i => `
+        <div class="inquiry-item${i.read ? '' : ' unread'}">
+            <div class="inquiry-head">
+                <span class="inquiry-name">${escapeHtml(i.name)}${i.read ? '' : '<span class="inquiry-new">NEW</span>'}</span>
+                <span class="inquiry-date">${formatInquiryDate(i.createdAt)}</span>
+            </div>
+            <div class="inquiry-contact">
+                <i class="fas fa-envelope"></i> <a href="mailto:${escapeHtml(i.email)}">${escapeHtml(i.email)}</a>
+                ${i.phone ? ` &nbsp;·&nbsp; <i class="fas fa-phone"></i> ${escapeHtml(i.phone)}` : ''}
+            </div>
+            <div class="inquiry-message">${escapeHtml(i.message)}</div>
+            <div class="inquiry-actions">
+                <button class="inquiry-del-btn" data-key="${escapeHtml(i.key)}"><i class="fas fa-trash"></i> 삭제</button>
+            </div>
+        </div>
+    `).join('');
+
+    list.querySelectorAll('.inquiry-del-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteInquiry(btn.dataset.key));
+    });
+}
+
+function deleteInquiry(key) {
+    if (!confirm('이 문의를 삭제하시겠습니까?')) return;
+    database.ref('inquiries/' + key).remove()
+        .then(() => { openInquiryModal(); updateInquiryBadge(); })
+        .catch(err => alert('삭제 실패: ' + err.message));
+}
+
 // ==================== DOMContentLoaded ====================
 document.addEventListener('DOMContentLoaded', () => {
     loadAndRenderSlides();
@@ -688,6 +814,29 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('cardModal').style.display = 'none';
     });
     document.getElementById('cardForm').addEventListener('submit', saveResearchCard);
+
+    // 연락(문의) 모달
+    document.getElementById('openContactBtn').addEventListener('click', () => {
+        document.getElementById('contactModal').style.display = 'flex';
+    });
+    document.getElementById('contactClose').addEventListener('click', () => {
+        document.getElementById('contactModal').style.display = 'none';
+    });
+    document.getElementById('contactModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('contactModal'))
+            document.getElementById('contactModal').style.display = 'none';
+    });
+    document.getElementById('contactForm').addEventListener('submit', submitContact);
+
+    // 문의 게시판 모달 (관리자)
+    document.getElementById('viewInquiryBtn').addEventListener('click', openInquiryModal);
+    document.getElementById('inquiryClose').addEventListener('click', () => {
+        document.getElementById('inquiryModal').style.display = 'none';
+    });
+    document.getElementById('inquiryModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('inquiryModal'))
+            document.getElementById('inquiryModal').style.display = 'none';
+    });
 
     // 키보드 슬라이더
     document.addEventListener('keydown', e => {

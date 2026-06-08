@@ -166,6 +166,7 @@
                 <button class="admin-btn" id="addSlideBtn"><i class="fas fa-image"></i> 슬라이드 추가</button>
                 <button class="admin-btn" id="reorderSlideBtn"><i class="fas fa-sort"></i> 슬라이드 순서</button>
                 <button class="admin-btn" id="addCardBtn"><i class="fas fa-plus"></i> 연구카드 추가</button>
+                <button class="admin-btn" id="viewInquiryBtn"><i class="fas fa-inbox"></i> 받은 문의 <span id="inquiryBadge" class="inquiry-badge" style="display:none;">0</span></button>
                 <button class="admin-btn edit" id="homeEditModeBtn"><i class="fas fa-edit"></i> 수정 모드 토글</button>
                 <button class="admin-btn delete" id="homeDeleteModeBtn"><i class="fas fa-trash"></i> 삭제 모드 토글</button>
             </div>
@@ -215,6 +216,59 @@
             </div>
         </section>
 
+    </div>
+
+    <!-- ===================== 학생 모집 CTA ===================== -->
+    <section class="join-cta">
+        <div class="join-cta-inner">
+            <h2>연구실에 관심 있는 학생을 찾습니다</h2>
+            <p>보안과 인공지능 연구에 관심 있는 학생이라면 언제든 편하게 연락 주세요. 함께 연구할 동료를 기다리고 있습니다.</p>
+            <button type="button" class="join-cta-btn" id="openContactBtn">
+                <i class="fas fa-paper-plane"></i> 연락하기
+            </button>
+        </div>
+    </section>
+
+    <!-- 연락(문의) 모달 -->
+    <div id="contactModal" class="contact-modal" style="display:none;">
+        <div class="contact-modal-content">
+            <span class="contact-close" id="contactClose">&times;</span>
+            <form id="contactForm">
+                <h2><i class="fas fa-paper-plane"></i> 연구실 문의하기</h2>
+                <p class="contact-intro">아래 내용을 남겨주시면 교수님께서 확인 후 연락드립니다.</p>
+                <div class="form-group">
+                    <label for="contactName">이름 *</label>
+                    <input type="text" id="contactName" required placeholder="홍길동">
+                </div>
+                <div class="form-group">
+                    <label for="contactEmail">이메일 *</label>
+                    <input type="email" id="contactEmail" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="contactPhone">연락처 (선택)</label>
+                    <input type="text" id="contactPhone" placeholder="010-0000-0000">
+                </div>
+                <div class="form-group">
+                    <label for="contactMessage">문의 내용 *</label>
+                    <textarea id="contactMessage" rows="5" required placeholder="관심 있는 연구 분야나 궁금한 점을 자유롭게 작성해 주세요."></textarea>
+                </div>
+                <button type="submit" class="contact-submit" id="contactSubmitBtn">
+                    <i class="fas fa-paper-plane"></i> 보내기
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 문의 게시판 모달 (관리자 전용) -->
+    <div id="inquiryModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; overflow-y:auto;">
+        <div style="background:white; max-width:680px; width:92%; margin:40px auto; padding:28px; border-radius:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <h3 style="margin:0;"><i class="fas fa-inbox"></i> 받은 문의</h3>
+                <span class="contact-close" id="inquiryClose" style="position:static; line-height:1;">&times;</span>
+            </div>
+            <p style="font-size:0.85rem;color:#666;margin-bottom:16px;">학생들이 남긴 문의 목록입니다. 최신순으로 표시됩니다.</p>
+            <div id="inquiryList"><div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> 로딩 중...</div></div>
+        </div>
     </div>
 
     <!-- 푸터 -->
