@@ -8,6 +8,7 @@ let currentUser = null;
 let deleteMode = false;
 let editMode = false;
 let currentEditingItem = null;
+let isMutatingPhoto = false; // 추가/업로드/수정/삭제 동시 실행·더블 클릭 방지 가드
 
 // Firebase에서 업로드된 사진 목록
 let FIREBASE_PHOTOS = [];
@@ -243,22 +244,40 @@ async function compressImage(file) {
 }
 
 async function uploadPhotoToCloudinary(file, metadata) {
-    if (!database) throw new Error('Firebase 초기화 필요');
-
-    const progressWrap = document.getElementById('photoUploadProgress');
-    const progressBar = document.getElementById('photoUploadProgressBar');
-    const progressText = document.getElementById('photoUploadProgressText');
-    if (progressWrap) progressWrap.style.display = 'block';
-
-    // 10MB 초과 시 자동 압축
-    const MAX_SIZE = 10 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-        if (progressText) progressText.textContent = `압축 중... (${(file.size/1024/1024).toFixed(1)}MB)`;
-        file = await compressImage(file);
-        if (progressText) progressText.textContent = `압축 완료 (${(file.size/1024/1024).toFixed(1)}MB), 업로드 중...`;
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭/중복 업로드를 확실히 차단) ---
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!currentUser) {
+        showAlert('로그인이 필요합니다.', 'warning');
+        return;
+    }
+    if (!file || !file.size) {
+        showAlert('사진 파일을 선택해주세요.', 'error');
+        return;
+    }
+    if (isMutatingPhoto) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
     }
 
-    return new Promise((resolve, reject) => {
+    isMutatingPhoto = true;
+    try {
+        const progressWrap = document.getElementById('photoUploadProgress');
+        const progressBar = document.getElementById('photoUploadProgressBar');
+        const progressText = document.getElementById('photoUploadProgressText');
+        if (progressWrap) progressWrap.style.display = 'block';
+
+        // 10MB 초과 시 자동 압축
+        const MAX_SIZE = 10 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            if (progressText) progressText.textContent = `압축 중... (${(file.size/1024/1024).toFixed(1)}MB)`;
+            file = await compressImage(file);
+            if (progressText) progressText.textContent = `압축 완료 (${(file.size/1024/1024).toFixed(1)}MB), 업로드 중...`;
+        }
+
+        await new Promise((resolve, reject) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
@@ -309,8 +328,11 @@ async function uploadPhotoToCloudinary(file, metadata) {
             reject(new Error('네트워크 오류'));
         };
 
-        xhr.send(formData);
-    });
+            xhr.send(formData);
+        });
+    } finally {
+        isMutatingPhoto = false;
+    }
 }
 
 window.deleteFirebasePhoto = async function(firebaseKey, storagePath) {
@@ -318,8 +340,21 @@ window.deleteFirebasePhoto = async function(firebaseKey, storagePath) {
         showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
         return;
     }
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!firebaseKey) {
+        showAlert('삭제할 사진 식별자가 없습니다.', 'error');
+        return;
+    }
+    if (isMutatingPhoto) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
     if (!confirm('정말로 이 사진을 삭제하시겠습니까?')) return;
 
+    isMutatingPhoto = true;
     try {
         await database.ref(`photos/${firebaseKey}`).remove();
         showAlert('사진이 삭제되었습니다.', 'success');
@@ -327,15 +362,43 @@ window.deleteFirebasePhoto = async function(firebaseKey, storagePath) {
     } catch (error) {
         console.error('❌ 사진 삭제 실패:', error);
         showAlert('사진 삭제 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPhoto = false;
     }
 };
 
 // ==================== 특허 추가/삭제/수정 ====================
 async function addPatentToDatabase(patentData) {
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭을 차단) ---
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!currentUser) {
+        showAlert('로그인이 필요합니다.', 'warning');
+        return;
+    }
+
+    const patentNumber = (patentData.patentNumber || '').trim();
+    const content = (patentData.content || '').trim();
+    if (!patentNumber) {
+        showAlert('특허번호를 입력해주세요.', 'warning');
+        return;
+    }
+    if (!content) {
+        showAlert('특허 내용을 입력해주세요.', 'warning');
+        return;
+    }
+    if (isMutatingPhoto) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+
+    isMutatingPhoto = true;
     try {
         const newPatent = {
-            patentNumber: patentData.patentNumber,
-            content: patentData.content,
+            patentNumber: patentNumber,
+            content: content,
             createdAt: Date.now()
         };
 
@@ -347,6 +410,8 @@ async function addPatentToDatabase(patentData) {
     } catch (error) {
         console.error('❌ 특허 추가 실패:', error);
         showAlert('특허 추가 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPhoto = false;
     }
 }
 
@@ -355,8 +420,21 @@ window.deletePatent = async function(patentKey) {
         showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
         return;
     }
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!patentKey) {
+        showAlert('삭제할 특허 식별자가 없습니다.', 'error');
+        return;
+    }
+    if (isMutatingPhoto) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
     if (!confirm('정말로 이 특허를 삭제하시겠습니까?')) return;
 
+    isMutatingPhoto = true;
     try {
         await database.ref(`patents/${patentKey}`).remove();
         showAlert('특허가 삭제되었습니다.', 'success');
@@ -368,6 +446,8 @@ window.deletePatent = async function(patentKey) {
     } catch (error) {
         console.error('❌ 특허 삭제 실패:', error);
         showAlert('특허 삭제 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPhoto = false;
     }
 };
 
@@ -417,11 +497,38 @@ window.editPatent = function(patentId) {
 
 // ==================== 수상내역 추가/삭제/수정 ====================
 async function addAwardToDatabase(awardData) {
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭을 차단) ---
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!currentUser) {
+        showAlert('로그인이 필요합니다.', 'warning');
+        return;
+    }
+
+    const content = (awardData.content || '').trim();
+    const highlight = (awardData.highlight || '').trim();
+    const date = (awardData.date || '').trim();
+    if (!content) {
+        showAlert('수상내역 내용을 입력해주세요.', 'warning');
+        return;
+    }
+    if (!date) {
+        showAlert('수상 날짜를 입력해주세요.', 'warning');
+        return;
+    }
+    if (isMutatingPhoto) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+
+    isMutatingPhoto = true;
     try {
         const newAward = {
-            content: awardData.content,
-            highlight: awardData.highlight || '',
-            date: awardData.date,
+            content: content,
+            highlight: highlight,
+            date: date,
             createdAt: Date.now()
         };
 
@@ -433,6 +540,8 @@ async function addAwardToDatabase(awardData) {
     } catch (error) {
         console.error('❌ 수상내역 추가 실패:', error);
         showAlert('수상내역 추가 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPhoto = false;
     }
 }
 
@@ -441,8 +550,21 @@ window.deleteAward = async function(awardKey) {
         showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
         return;
     }
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!awardKey) {
+        showAlert('삭제할 수상내역 식별자가 없습니다.', 'error');
+        return;
+    }
+    if (isMutatingPhoto) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
     if (!confirm('정말로 이 수상내역을 삭제하시겠습니까?')) return;
 
+    isMutatingPhoto = true;
     try {
         await database.ref(`awards/${awardKey}`).remove();
         showAlert('수상내역이 삭제되었습니다.', 'success');
@@ -454,6 +576,8 @@ window.deleteAward = async function(awardKey) {
     } catch (error) {
         console.error('❌ 수상내역 삭제 실패:', error);
         showAlert('수상내역 삭제 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPhoto = false;
     }
 };
 
@@ -502,33 +626,70 @@ window.editAward = function(awardId) {
 };
 
 async function updateItem() {
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭을 차단) ---
     if (!currentEditingItem) {
         showAlert('수정할 항목이 선택되지 않았습니다.', 'error');
         return;
     }
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!currentUser) {
+        showAlert('로그인이 필요합니다.', 'warning');
+        return;
+    }
 
+    const formData = new FormData(itemEditForm);
+    const itemType = formData.get('editItemType');
+    const firebaseKey = formData.get('editItemKey');
+
+    if (!firebaseKey) {
+        showAlert('수정 대상 식별자를 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.', 'error');
+        return;
+    }
+
+    let updatedPatent = null;
+    let updatedAward = null;
+
+    if (itemType === 'patent') {
+        const patentNumber = (formData.get('editPatentNumber') || '').trim();
+        const content = (formData.get('editItemContent') || '').trim();
+        if (!patentNumber) {
+            showAlert('특허번호를 입력해주세요.', 'warning');
+            return;
+        }
+        if (!content) {
+            showAlert('특허 내용을 입력해주세요.', 'warning');
+            return;
+        }
+        updatedPatent = { patentNumber: patentNumber, content: content };
+    } else if (itemType === 'award') {
+        const content = (formData.get('editItemContent') || '').trim();
+        if (!content) {
+            showAlert('수상내역 내용을 입력해주세요.', 'warning');
+            return;
+        }
+        updatedAward = {
+            content: content,
+            highlight: (formData.get('editItemHighlight') || '').trim(),
+            date: (formData.get('editAwardDate') || '').trim() || new Date().toISOString().split('T')[0]
+        };
+    }
+
+    if (isMutatingPhoto) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+
+    isMutatingPhoto = true;
     try {
-        const formData = new FormData(itemEditForm);
-        const itemType = formData.get('editItemType');
-        const firebaseKey = formData.get('editItemKey');
-
         if (itemType === 'patent') {
-            const updatedPatent = {
-                patentNumber: formData.get('editPatentNumber'),
-                content: formData.get('editItemContent')
-            };
-
             await database.ref(`patents/${firebaseKey}`).update(updatedPatent);
             showAlert('특허가 성공적으로 수정되었습니다!', 'success');
             setTimeout(() => loadPatentsFromDatabase(), 700);
 
         } else if (itemType === 'award') {
-            const updatedAward = {
-                content: formData.get('editItemContent'),
-                highlight: formData.get('editItemHighlight') || '',
-                date: formData.get('editAwardDate') || new Date().toISOString().split('T')[0]
-            };
-
             await database.ref(`awards/${firebaseKey}`).update(updatedAward);
             showAlert('수상내역이 성공적으로 수정되었습니다!', 'success');
             setTimeout(() => loadAwardsFromDatabase(), 700);
@@ -541,6 +702,8 @@ async function updateItem() {
     } catch (error) {
         console.error('❌ 수정 실패:', error);
         showAlert('수정 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPhoto = false;
     }
 }
 

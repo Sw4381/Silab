@@ -15,6 +15,9 @@ let allSlidesData      = [];
 let researchCardsData  = [];
 let editingCardKey     = null;
 let statsAnimated      = false;
+let isMutatingSlide    = false; // 슬라이드 추가/삭제/순서변경 동시 실행·더블 클릭 방지 가드
+let isMutatingCard     = false; // 연구카드 추가/수정/삭제 동시 실행·더블 클릭 방지 가드
+let isMutatingInquiry  = false; // 문의 전송/삭제 동시 실행·더블 클릭 방지 가드
 
 const COLOR_MAP = {
     blue:  { gradient: 'linear-gradient(135deg, #005792 0%, #0077be 100%)', icon: 'fa-microscope' },
@@ -148,13 +151,19 @@ function updateSliderDeleteOverlay() {
 
 window.deleteCurrentSlide = function () {
     if (!allSlidesData[currentSlideIndex]) return;
-    if (!confirm('현재 슬라이드를 삭제하시겠습니까?')) return;
+    if (!database) { alert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); return; }
+    if (!currentUser) { alert('로그인이 필요합니다.'); return; }
     const key = allSlidesData[currentSlideIndex].key;
+    if (!key) { alert('삭제할 슬라이드를 찾을 수 없습니다.'); return; }
+    if (isMutatingSlide) { alert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.'); return; }
+    if (!confirm('현재 슬라이드를 삭제하시겠습니까?')) return;
+    isMutatingSlide = true;
     database.ref('home/slides/' + key).remove().then(() => {
         allSlidesData.splice(currentSlideIndex, 1);
         currentSlideIndex = Math.max(0, currentSlideIndex - 1);
         renderSlider();
-    }).catch(err => alert('삭제 실패: ' + err.message));
+    }).catch(err => alert('삭제 실패: ' + err.message))
+      .finally(() => { isMutatingSlide = false; });
 };
 
 // ==================== 슬라이드 순서 변경 ====================
@@ -201,9 +210,14 @@ function openSlideReorderModal() {
 }
 
 async function saveSlideOrder() {
+    if (!database) { alert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); return; }
+    if (!currentUser) { alert('로그인이 필요합니다.'); return; }
+    if (isMutatingSlide) { alert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.'); return; }
+
     const btn = document.getElementById('slideReorderSaveBtn');
     btn.disabled    = true;
     btn.textContent = '저장 중...';
+    isMutatingSlide = true;
     try {
         const updates = {};
         allSlidesData.forEach((slide, i) => {
@@ -215,6 +229,8 @@ async function saveSlideOrder() {
         document.getElementById('slideReorderModal').style.display = 'none';
     } catch (err) {
         alert('저장 실패: ' + err.message);
+    } finally {
+        isMutatingSlide = false;
     }
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-save"></i> 저장';
@@ -225,33 +241,44 @@ async function addSlideSubmit(e) {
     e.preventDefault();
     const file = document.getElementById('slideFile').files[0];
     const alt  = document.getElementById('slideAlt').value.trim();
+    if (!database) { alert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); return; }
+    if (!currentUser) { alert('로그인이 필요합니다.'); return; }
     if (!file) { alert('이미지를 선택해주세요.'); return; }
+    if (isMutatingSlide) { alert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.'); return; }
 
     const btn         = document.getElementById('slideAddBtn');
     const progressDiv = document.getElementById('slideUploadProgress');
     const progressBar = document.getElementById('slideProgressBar');
     btn.disabled               = true;
     progressDiv.style.display  = 'block';
+    isMutatingSlide = true;
+    try {
+        const url = await uploadToCloudinary(file, p => { progressBar.style.width = p + '%'; });
+        if (!url) {
+            alert('업로드 실패');
+            btn.disabled              = false;
+            progressDiv.style.display = 'none';
+            return;
+        }
 
-    const url = await uploadToCloudinary(file, p => { progressBar.style.width = p + '%'; });
-    if (!url) {
-        alert('업로드 실패');
+        const order  = allSlidesData.length;
+        const newRef = database.ref('home/slides').push();
+        await newRef.set({ url, alt, order, isLocal: false });
+        allSlidesData.push({ key: newRef.key, url, alt, order, isLocal: false });
+        renderSlider();
+
+        document.getElementById('slideAddModal').style.display = 'none';
+        document.getElementById('slideAddForm').reset();
+        progressDiv.style.display = 'none';
+        progressBar.style.width   = '0%';
+        btn.disabled = false;
+    } catch (err) {
+        alert('저장 실패: ' + err.message);
         btn.disabled              = false;
         progressDiv.style.display = 'none';
-        return;
+    } finally {
+        isMutatingSlide = false;
     }
-
-    const order  = allSlidesData.length;
-    const newRef = database.ref('home/slides').push();
-    await newRef.set({ url, alt, order, isLocal: false });
-    allSlidesData.push({ key: newRef.key, url, alt, order, isLocal: false });
-    renderSlider();
-
-    document.getElementById('slideAddModal').style.display = 'none';
-    document.getElementById('slideAddForm').reset();
-    progressDiv.style.display = 'none';
-    progressBar.style.width   = '0%';
-    btn.disabled = false;
 }
 
 // ==================== 연구분야 카드 ====================
@@ -359,14 +386,23 @@ function openCardModal(mode, key) {
 
 function saveResearchCard(e) {
     e.preventDefault();
-    const btn = document.getElementById('cardSaveBtn');
-    btn.disabled = true;
+    if (!database) { alert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); return; }
+    if (!currentUser) { alert('로그인이 필요합니다.'); return; }
+
     const data = {
         title:       document.getElementById('cardTitle').value.trim(),
         subtitle:    document.getElementById('cardSubtitle').value.trim(),
         colorScheme: document.getElementById('cardColor').value,
-        items:       document.getElementById('cardItems').value.split('\n').filter(Boolean)
+        items:       document.getElementById('cardItems').value.split('\n').map(s => s.trim()).filter(Boolean)
     };
+
+    if (!data.title) { alert('카드 제목을 입력해주세요.'); return; }
+    if (!data.subtitle) { alert('카드 부제목을 입력해주세요.'); return; }
+    if (isMutatingCard) { alert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.'); return; }
+
+    const btn = document.getElementById('cardSaveBtn');
+    btn.disabled = true;
+    isMutatingCard = true;
 
     if (editingCardKey) {
         const existing = researchCardsData.find(c => c.key === editingCardKey);
@@ -379,7 +415,8 @@ function saveResearchCard(e) {
                 document.getElementById('cardModal').style.display = 'none';
                 btn.disabled = false;
             })
-            .catch(err => { alert('저장 실패: ' + err.message); btn.disabled = false; });
+            .catch(err => { alert('저장 실패: ' + err.message); btn.disabled = false; })
+            .finally(() => { isMutatingCard = false; });
     } else {
         data.order = researchCardsData.length + 1;
         const newRef = database.ref('home/researchCards').push();
@@ -390,18 +427,25 @@ function saveResearchCard(e) {
                 document.getElementById('cardModal').style.display = 'none';
                 btn.disabled = false;
             })
-            .catch(err => { alert('저장 실패: ' + err.message); btn.disabled = false; });
+            .catch(err => { alert('저장 실패: ' + err.message); btn.disabled = false; })
+            .finally(() => { isMutatingCard = false; });
     }
 }
 
 function deleteResearchCard(key) {
+    if (!database) { alert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); return; }
+    if (!currentUser) { alert('로그인이 필요합니다.'); return; }
+    if (!key) { alert('삭제할 연구카드를 찾을 수 없습니다.'); return; }
+    if (isMutatingCard) { alert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.'); return; }
     if (!confirm('이 연구카드를 삭제하시겠습니까?')) return;
+    isMutatingCard = true;
     database.ref('home/researchCards/' + key).remove()
         .then(() => {
             researchCardsData = researchCardsData.filter(c => c.key !== key);
             renderResearchCardsUI();
         })
-        .catch(err => alert('삭제 실패: ' + err.message));
+        .catch(err => alert('삭제 실패: ' + err.message))
+        .finally(() => { isMutatingCard = false; });
 }
 
 // ==================== 동적 콘텐츠 통합 로드 (Firebase 중복 읽기 제거) ====================
@@ -623,6 +667,8 @@ function formatInquiryDate(ts) {
 
 function submitContact(e) {
     e.preventDefault();
+    if (!database) { alert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); return; }
+
     const btn = document.getElementById('contactSubmitBtn');
     const data = {
         name:    document.getElementById('contactName').value.trim(),
@@ -636,10 +682,12 @@ function submitContact(e) {
         alert('이름, 이메일, 문의 내용을 입력해 주세요.');
         return;
     }
+    if (isMutatingInquiry) { alert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.'); return; }
 
     btn.disabled = true;
     const originalHtml = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 전송 중...';
+    isMutatingInquiry = true;
 
     database.ref('inquiries').push(data)
         .then(() => {
@@ -651,6 +699,7 @@ function submitContact(e) {
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = originalHtml;
+            isMutatingInquiry = false;
         });
 }
 
@@ -723,10 +772,16 @@ function renderInquiryList(items) {
 }
 
 function deleteInquiry(key) {
+    if (!database) { alert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); return; }
+    if (!currentUser) { alert('로그인이 필요합니다.'); return; }
+    if (!key) { alert('삭제할 문의를 찾을 수 없습니다.'); return; }
+    if (isMutatingInquiry) { alert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.'); return; }
     if (!confirm('이 문의를 삭제하시겠습니까?')) return;
+    isMutatingInquiry = true;
     database.ref('inquiries/' + key).remove()
         .then(() => { openInquiryModal(); updateInquiryBadge(); })
-        .catch(err => alert('삭제 실패: ' + err.message));
+        .catch(err => alert('삭제 실패: ' + err.message))
+        .finally(() => { isMutatingInquiry = false; });
 }
 
 // ==================== DOMContentLoaded ====================
