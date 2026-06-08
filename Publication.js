@@ -7,6 +7,7 @@ let currentUser = null;
 let deleteMode = false;
 let editMode = false;
 let currentEditingPublication = null;
+let isMutatingPublication = false;
 
 // ==================== 허용된 사용자 목록 ====================
 var ALLOWED_USERS = [ALLOWED_EMAIL];
@@ -696,11 +697,54 @@ function updatePublicationCounts(counts) {
 }
 
 // ==================== 논문 추가 함수 (개선됨) ====================
+function validateAndCleanPublication(publicationData) {
+    const publicationId = (publicationData.publicationId || '').trim();
+    const title = (publicationData.title || '').trim();
+    const authors = (publicationData.authors || '').trim();
+    const journal = (publicationData.journal || '').trim();
+    const type = (publicationData.type || '').trim();
+
+    if (!publicationId || !title || !authors || !journal || !type) {
+        showAlert('논문 번호, 제목, 저자, 저널, 타입은 필수 입력 항목입니다.', 'error');
+        return null;
+    }
+
+    return {
+        ...publicationData,
+        publicationId: publicationId,
+        title: title,
+        authors: authors,
+        journal: journal,
+        url: (publicationData.url || '').trim(),
+        award: (publicationData.award || '').trim(),
+        type: type
+    };
+}
+
 async function addPublicationToRealtimeDB(publicationData) {
+    if (!database) {
+        showAlert('데이터베이스가 초기화되지 않았습니다.', 'error');
+        return;
+    }
+    if (!currentUser) {
+        showAlert('로그인이 필요합니다.', 'warning');
+        return;
+    }
+
+    const cleaned = validateAndCleanPublication(publicationData);
+    if (!cleaned) return;
+    publicationData = cleaned;
+
+    if (isMutatingPublication) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+    isMutatingPublication = true;
+
     try {
         console.log('💾 논문 추가 시작:', publicationData.title);
         console.log('📍 삽입 모드:', publicationData.insertPosition);
-        
+
         const insertPosition = publicationData.insertPosition;
         const specificPosition = publicationData.specificPosition;
         
@@ -755,6 +799,8 @@ async function addPublicationToRealtimeDB(publicationData) {
     } catch (error) {
         console.error('❌ 논문 추가 실패:', error);
         showAlert('논문 추가 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPublication = false;
     }
 }
 
@@ -764,33 +810,51 @@ window.deleteFirebasePublication = async function(publicationId, publicationType
         showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
         return;
     }
-    
+
+    if (!database) {
+        showAlert('데이터베이스가 초기화되지 않았습니다.', 'error');
+        return;
+    }
+
+    if (!publicationId || !publicationType) {
+        showAlert('삭제할 논문 정보가 올바르지 않습니다.', 'error');
+        return;
+    }
+
     if (!confirm('정말로 이 논문을 삭제하시겠습니까?')) return;
-    
+
+    if (isMutatingPublication) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+    isMutatingPublication = true;
+
     try {
         console.log('🗑️ 논문 삭제 시도:', publicationId, publicationType);
-        
+
         const refPath = `publications/${publicationType}/${publicationId}`;
-        
+
         // 데이터베이스에서 논문 삭제
         await database.ref(refPath).remove();
-        
+
         showAlert('논문이 삭제되었습니다.', 'success');
-        
+
         // DOM에서도 제거
-        const publicationElement = document.querySelector(`[data-publication-id*="${publicationId}"]`);
+        const publicationElement = document.querySelector(`[data-firebase-key="${publicationId}"]`);
         if (publicationElement) {
             publicationElement.remove();
         }
-        
+
         // 데이터 다시 로드
         setTimeout(() => {
             loadPublicationsFromRealtimeDB();
         }, 500);
-        
+
     } catch (error) {
         console.error('❌ 논문 삭제 실패:', error);
         showAlert('논문 삭제 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPublication = false;
     }
 };
 
@@ -870,31 +934,58 @@ async function updatePublication() {
         showAlert('수정할 논문이 선택되지 않았습니다.', 'error');
         return;
     }
-    
+
+    if (!database) {
+        showAlert('데이터베이스가 초기화되지 않았습니다.', 'error');
+        return;
+    }
+    if (!currentUser) {
+        showAlert('로그인이 필요합니다.', 'warning');
+        return;
+    }
+
+    const formData = new FormData(publicationEditForm);
+    const newPublicationData = {
+        publicationId: (formData.get('editPublicationId') || '').trim(),
+        title: (formData.get('editPublicationTitle') || '').trim(),
+        authors: (formData.get('editPublicationAuthors') || '').trim(),
+        journal: (formData.get('editPublicationJournal') || '').trim(),
+        url: (formData.get('editPublicationUrl') || '').trim(),
+        award: (formData.get('editPublicationAward') || '').trim(),
+        type: (formData.get('editPublicationType') || '').trim()
+    };
+
+    const oldType = (formData.get('editPublicationCurrentType') || '').trim();
+    const newType = newPublicationData.type;
+    const firebaseKey = (formData.get('editPublicationKey') || '').trim();
+
+    if (!firebaseKey) {
+        showAlert('수정할 논문의 식별자를 찾을 수 없습니다.', 'error');
+        return;
+    }
+
+    // 필수 항목 검증 (빈/공백 저장 방지)
+    if (!newPublicationData.publicationId || !newPublicationData.title ||
+        !newPublicationData.authors || !newPublicationData.journal || !newType) {
+        showAlert('논문 번호, 제목, 저자, 저널, 타입은 필수 입력 항목입니다.', 'error');
+        return;
+    }
+
+    // 논문 번호 형식 검증
+    if (!/^P\d+$/i.test(newPublicationData.publicationId)) {
+        showAlert('논문 번호는 P + 숫자 형식이어야 합니다 (예: P179)', 'error');
+        return;
+    }
+
+    if (isMutatingPublication) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+    isMutatingPublication = true;
+
     try {
         console.log('💾 논문 수정 시작');
-        
-        const formData = new FormData(publicationEditForm);
-        const newPublicationData = {
-            publicationId: formData.get('editPublicationId'),
-            title: formData.get('editPublicationTitle'),
-            authors: formData.get('editPublicationAuthors'),
-            journal: formData.get('editPublicationJournal'),
-            url: formData.get('editPublicationUrl') || '',
-            award: formData.get('editPublicationAward') || '',
-            type: formData.get('editPublicationType')
-        };
-        
-        const oldType = formData.get('editPublicationCurrentType');
-        const newType = newPublicationData.type;
-        const firebaseKey = formData.get('editPublicationKey');
-        
-        // 논문 번호 형식 검증
-        if (!/^P\d+$/i.test(newPublicationData.publicationId)) {
-            showAlert('논문 번호는 P + 숫자 형식이어야 합니다 (예: P179)', 'error');
-            return;
-        }
-        
+
         // 중복 체크 (자기 자신 제외)
         const duplicateCheck = await checkDuplicatePublicationId(newPublicationData.publicationId);
         if (duplicateCheck.isDuplicate) {
@@ -916,21 +1007,29 @@ async function updatePublication() {
         
         // 논문 업데이트
         if (oldType !== newType) {
-            // 타입이 변경된 경우: 기존 위치에서 삭제하고 새 위치에 추가
+            // 타입이 변경된 경우: 새 위치에 먼저 생성한 뒤 기존 위치에서 삭제 (데이터 손실 방지)
             const oldRefPath = `publications/${oldType}/${firebaseKey}`;
-            
+
             const oldSnapshot = await database.ref(oldRefPath).once('value');
             const oldData = oldSnapshot.val();
-            const oldDisplayOrder = oldData ? oldData.displayOrder : Date.now();
-            
-            await database.ref(oldRefPath).remove();
-            
+
+            // 기존 논문이 더 이상 존재하지 않으면 중단
+            if (!oldData) {
+                showAlert('수정할 논문을 찾을 수 없습니다. 이미 삭제되었을 수 있습니다.', 'error');
+                return;
+            }
+
+            const oldDisplayOrder = oldData.displayOrder !== undefined ? oldData.displayOrder : Date.now();
+
             const newRefPath = `publications/${newType}`;
             await database.ref(newRefPath).push({
                 ...newPublicationData,
                 displayOrder: oldDisplayOrder,
-                createdAt: oldData ? oldData.createdAt : Date.now()
+                createdAt: oldData.createdAt || Date.now()
             });
+
+            // 새 위치 생성이 성공한 뒤에만 기존 논문 삭제
+            await database.ref(oldRefPath).remove();
         } else {
             // 같은 타입 내에서 수정
             const refPath = `publications/${newType}/${firebaseKey}`;
@@ -956,6 +1055,8 @@ async function updatePublication() {
     } catch (error) {
         console.error('❌ 논문 수정 실패:', error);
         showAlert('논문 수정 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingPublication = false;
     }
 }
 

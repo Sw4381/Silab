@@ -6,6 +6,8 @@ let auth, database;
 let currentUser = null;
 let deleteMode = false;
 let editMode = false;
+let isLoadingProjects = false; // 동시 로드로 인한 중복 렌더링 방지 가드
+let isMutatingProject = false; // 추가/수정/삭제 동시 실행·더블 클릭 방지 가드
 
 // ==================== 허용된 사용자 목록 ====================
 var ALLOWED_USERS = [ALLOWED_EMAIL];
@@ -68,6 +70,26 @@ function showAlert(message, type) {
 }
 
 
+// ==================== 입력값 검증 ====================
+// 프로젝트 입력값을 정제(trim)하고 필수값을 검증한다.
+// 반환: { ok: true, data } 또는 { ok: false, message }
+function validateAndCleanProjectData(raw) {
+    const data = {
+        name: (raw.name || '').trim(),
+        period: (raw.period || '').trim(),
+        funding: (raw.funding || '').trim(),
+        description: (raw.description || '').trim(),
+        type: raw.type === 'past' ? 'past' : 'current'
+    };
+
+    if (!data.name) return { ok: false, message: '프로젝트명을 입력해주세요.' };
+    if (!data.period) return { ok: false, message: '연구기간을 입력해주세요.' };
+    if (!data.funding) return { ok: false, message: 'Funding 정보를 입력해주세요.' };
+    if (data.name.length > 300) return { ok: false, message: '프로젝트명이 너무 깁니다. (최대 300자)' };
+
+    return { ok: true, data };
+}
+
 // ==================== 새로운 위치 삽입 시스템 ====================
 
 // 모든 프로젝트를 정렬된 배열로 가져오기
@@ -111,9 +133,12 @@ async function insertProjectAtPosition(projectData, targetPosition) {
         console.log('📊 기존 프로젝트 수:', existingProjects.length);
         
         const maxPosition = existingProjects.length + 1;
-        const actualPosition = Math.max(1, Math.min(parseInt(targetPosition), maxPosition));
-        
-        if (actualPosition !== parseInt(targetPosition)) {
+        // 비정상 입력(NaN/음수/소수/범위 초과) 방어: 유효하지 않으면 맨 뒤로 배치
+        const requested = parseInt(targetPosition, 10);
+        const safeRequested = Number.isInteger(requested) && requested >= 1 ? requested : maxPosition;
+        const actualPosition = Math.max(1, Math.min(safeRequested, maxPosition));
+
+        if (actualPosition !== safeRequested) {
             console.log(`⚠️ 위치 조정: ${targetPosition} → ${actualPosition}`);
         }
         
@@ -206,54 +231,88 @@ async function loadProjectsFromRealtimeDB() {
         return;
     }
 
+    // 이미 로드가 진행 중이면 중단 (onAuthStateChanged 중복 발화 등으로 인한 목록 중복 방지)
+    if (isLoadingProjects) {
+        console.log('⏳ 이미 프로젝트 로드 중 - 중복 호출 무시');
+        return;
+    }
+    isLoadingProjects = true;
+
     try {
         console.log('🔄 Realtime Database에서 프로젝트 로드 중...');
 
         // 기존 Firebase 프로젝트 제거
         const dynamicProjects = document.querySelectorAll('[data-firebase="true"]');
         dynamicProjects.forEach(item => item.remove());
-        
+
         // current projects 로드
         const currentProjects = await getAllProjectsSorted('current');
-        
+
         // past projects 로드 및 프로젝트 번호로 정렬
         const pastProjects = await getAllProjectsSorted('past');
-        
+
         // 과거 프로젝트를 프로젝트 번호로 정렬
         pastProjects.sort((a, b) => {
             const numA = extractProjectNumber(a.name);
             const numB = extractProjectNumber(b.name);
             return numB - numA; // 큰 번호부터 정렬 (내림차순)
         });
-        
+
         console.log('📊 현재 프로젝트:', currentProjects.length, '개');
         console.log('📊 과거 프로젝트:', pastProjects.length, '개');
-        
+
+        // 동일 프로젝트 중복 렌더링 방지
+        // (같은 프로젝트가 current·past 양쪽 노드에 들어있거나 DB에 중복 저장된 경우 대비)
+        const seenProjects = new Set();
+        const makeProjectKey = (p) =>
+            `${(p.name || '').trim().toLowerCase()}|${(p.period || '').trim().toLowerCase()}`;
+        let skippedDuplicates = 0;
+
         // 현재 프로젝트 처리
         currentProjects.forEach((project, index) => {
+            const key = makeProjectKey(project);
+            if (seenProjects.has(key)) {
+                skippedDuplicates++;
+                console.warn('⚠️ 중복 프로젝트 건너뜀 (current):', project.name, '/ key:', project.key);
+                return;
+            }
+            seenProjects.add(key);
             project.id = `current_${index}`;
             project.firebaseKey = project.key;
             project.type = 'current';
             addProjectToDOM(project);
         });
-        
+
         // 과거 프로젝트 처리
         pastProjects.forEach((project, index) => {
+            const key = makeProjectKey(project);
+            if (seenProjects.has(key)) {
+                skippedDuplicates++;
+                console.warn('⚠️ 중복 프로젝트 건너뜀 (past):', project.name, '/ key:', project.key);
+                return;
+            }
+            seenProjects.add(key);
             project.id = `past_${index}`;
             project.firebaseKey = project.key;
             project.type = 'past';
             addProjectToDOM(project);
         });
-        
+
+        if (skippedDuplicates > 0) {
+            console.warn(`⚠️ 중복으로 표시되지 않은 프로젝트 ${skippedDuplicates}건 - DB 정리를 권장합니다.`);
+        }
+
         console.log('✅ 프로젝트 로드 완료');
         updateButtonsVisibility();
-        
+
         // 페이지 요소 표시 애니메이션
         animatePageElements();
-        
+
     } catch (error) {
         console.error('❌ 프로젝트 로드 실패:', error);
         showAlert('프로젝트 로드에 실패했습니다.', 'error');
+    } finally {
+        isLoadingProjects = false;
     }
 }
 // 페이지 애니메이션 함수 추가
@@ -295,25 +354,31 @@ function createProjectElement(project) {
     projectDiv.setAttribute('data-project-id', project.id);
     projectDiv.setAttribute('data-firebase', 'true');
     projectDiv.setAttribute('data-firebase-key', project.firebaseKey || project.id);
-    
+    // 수정 시 렌더된 텍스트를 다시 파싱하지 않도록 원본 값을 보관 (setAttribute는 자동 이스케이프됨)
+    projectDiv.setAttribute('data-name', project.name || '');
+    projectDiv.setAttribute('data-period', project.period || '');
+    projectDiv.setAttribute('data-funding', project.funding || '');
+    projectDiv.setAttribute('data-description', project.description || '');
+
     const deleteId = project.firebaseKey || project.id;
-    
+    const esc = (typeof escHtml === 'function') ? escHtml : (s) => (s == null ? '' : String(s));
+
     projectDiv.innerHTML = `
         <div class="project-content">
             <div class="project-header">
                 <div class="project-info">
                     <h3 class="project-name">
-                        ${project.name}
+                        ${esc(project.name)}
                     </h3>
                     <p class="project-period">
-                        <i class="far fa-calendar-alt"></i> 연구기간: ${project.period}
+                        <i class="far fa-calendar-alt"></i> 연구기간: ${esc(project.period)}
                     </p>
                     <p class="project-funding">
-                        <strong>Funding:</strong> ${project.funding}
+                        <strong>Funding:</strong> ${esc(project.funding)}
                     </p>
                     ${project.description ? `
                         <p class="project-desc">
-                            <strong>주요내용:</strong> ${project.description}
+                            <strong>주요내용:</strong> ${esc(project.description)}
                         </p>
                     ` : ''}
                 </div>
@@ -335,10 +400,43 @@ function createProjectElement(project) {
 
 // ==================== 프로젝트 추가 함수 (개선됨) ====================
 async function addProjectToRealtimeDB(projectData) {
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭을 확실히 차단) ---
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!currentUser) {
+        showAlert('로그인이 필요합니다.', 'warning');
+        return;
+    }
+    if (isMutatingProject) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+
+    const validation = validateAndCleanProjectData(projectData);
+    if (!validation.ok) {
+        showAlert(validation.message, 'warning');
+        return;
+    }
+    // 정제된 값으로 교체하되 위치 관련 필드는 유지
+    projectData = { ...projectData, ...validation.data };
+
+    // 특정 위치 삽입 시 위치값 검증
+    if (projectData.insertPosition === 'specific') {
+        const pos = parseInt(projectData.specificPosition, 10);
+        if (!Number.isInteger(pos) || pos < 1) {
+            showAlert('삽입 위치는 1 이상의 숫자로 입력해주세요.', 'warning');
+            return;
+        }
+        projectData.specificPosition = pos;
+    }
+
+    isMutatingProject = true;
     try {
         console.log('💾 프로젝트 추가 시작:', projectData.name);
         console.log('📍 삽입 모드:', projectData.insertPosition);
-        
+
         const insertPosition = projectData.insertPosition;
         const specificPosition = projectData.specificPosition;
         
@@ -391,6 +489,8 @@ async function addProjectToRealtimeDB(projectData) {
     } catch (error) {
         console.error('❌ 프로젝트 추가 실패:', error);
         showAlert('프로젝트 추가 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingProject = false;
     }
 }
 
@@ -400,30 +500,46 @@ window.deleteFirebaseProject = async function(projectId, projectType) {
         showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
         return;
     }
-    
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!projectId) {
+        showAlert('삭제할 프로젝트 식별자가 없습니다.', 'error');
+        return;
+    }
+    if (isMutatingProject) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+
     if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) return;
-    
+
+    isMutatingProject = true;
     try {
         console.log('🗑️ 프로젝트 삭제 시도:', projectId, projectType);
-        
+
         const refPath = `${projectType === 'current' ? 'current projects' : 'past projects'}/${projectId}`;
-        
+
         await database.ref(refPath).remove();
-        
+
         showAlert('프로젝트가 삭제되었습니다.', 'success');
-        
-        const projectElement = document.querySelector(`[data-project-id*="${projectId}"]`);
+
+        // firebaseKey 기준으로 정확히 매칭하여 즉시 제거 (data-project-id가 아니라 data-firebase-key 사용)
+        const projectElement = document.querySelector(`[data-firebase-key="${projectId}"]`);
         if (projectElement) {
             projectElement.remove();
         }
-        
+
         setTimeout(() => {
             loadProjectsFromRealtimeDB();
         }, 500);
-        
+
     } catch (error) {
         console.error('❌ 프로젝트 삭제 실패:', error);
         showAlert('프로젝트 삭제 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingProject = false;
     }
 };
 
@@ -447,13 +563,12 @@ window.editProject = function(projectId, projectType) {
         return;
     }
     
-    const projectNameElement = projectElement.querySelector('.project-name');
-    const projectName = projectNameElement.textContent.replace('세부사항', '').trim();
-    const projectPeriod = projectElement.querySelector('.project-period').textContent.replace('연구기간: ', '').replace(/.*📅\s*/, '');
-    const projectFunding = projectElement.querySelector('.project-funding').textContent.replace('Funding: ', '');
-    const projectDescElement = projectElement.querySelector('.project-desc');
-    const projectDesc = projectDescElement ? projectDescElement.textContent.replace('주요내용: ', '') : '';
-    
+    // 렌더된 텍스트를 파싱하지 않고 보관해 둔 원본 값을 사용 (공백/아이콘으로 인한 깨짐 방지)
+    const projectName = projectElement.getAttribute('data-name') || '';
+    const projectPeriod = projectElement.getAttribute('data-period') || '';
+    const projectFunding = projectElement.getAttribute('data-funding') || '';
+    const projectDesc = projectElement.getAttribute('data-description') || '';
+
     const firebaseKey = projectElement.getAttribute('data-firebase-key') || projectId;
     
     document.getElementById('editProjectId').value = projectId;
@@ -483,55 +598,87 @@ window.editProject = function(projectId, projectType) {
 };
 
 async function updateProject() {
+    // --- 사전 검증 (await 이전 동기 처리로 더블 클릭 차단) ---
     if (!currentEditingProject) {
         showAlert('수정할 프로젝트가 선택되지 않았습니다.', 'error');
         return;
     }
-    
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!currentUser) {
+        showAlert('로그인이 필요합니다.', 'warning');
+        return;
+    }
+    if (isMutatingProject) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+
+    const formData = new FormData(projectEditForm);
+    const validation = validateAndCleanProjectData({
+        name: formData.get('editProjectName'),
+        period: formData.get('editProjectPeriod'),
+        funding: formData.get('editProjectFunding'),
+        description: formData.get('editProjectDesc'),
+        type: formData.get('editProjectType')
+    });
+    if (!validation.ok) {
+        showAlert(validation.message, 'warning');
+        return;
+    }
+    const newProjectData = validation.data;
+
+    const oldType = formData.get('editProjectCurrentType');
+    const newType = newProjectData.type;
+    const firebaseKey = formData.get('editProjectFirebaseKey');
+
+    if (!firebaseKey) {
+        showAlert('수정 대상 식별자를 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.', 'error');
+        return;
+    }
+
+    isMutatingProject = true;
     try {
-        const formData = new FormData(projectEditForm);
-        const newProjectData = {
-            name: formData.get('editProjectName'),
-            period: formData.get('editProjectPeriod'),
-            funding: formData.get('editProjectFunding'),
-            description: formData.get('editProjectDesc'),
-            type: formData.get('editProjectType')
-        };
-        
-        const oldType = formData.get('editProjectCurrentType');
-        const newType = newProjectData.type;
-        const firebaseKey = formData.get('editProjectFirebaseKey');
-        
         if (oldType !== newType) {
             // 기존 프로젝트의 정보 가져오기
             const oldRefPath = `${oldType === 'current' ? 'current projects' : 'past projects'}/${firebaseKey}`;
             const oldSnapshot = await database.ref(oldRefPath).once('value');
             const oldData = oldSnapshot.val();
-            
+
+            // 이미 삭제된 항목이면 중단 (유령 항목 생성 방지)
+            if (!oldData) {
+                throw new Error('기존 프로젝트를 찾을 수 없습니다. 이미 삭제되었을 수 있습니다.');
+            }
+
             // 과거 프로젝트로 변경 시 최상단에 위치하도록 displayOrder 설정
             const displayOrder = newType === 'past' ? -100 : Date.now();
-            
-            // 기존 프로젝트 삭제
-            await database.ref(oldRefPath).remove();
-            
             const newRefPath = `${newType === 'current' ? 'current projects' : 'past projects'}`;
-            const newProjectRef = await database.ref(newRefPath).push({
+
+            // 데이터 유실 방지: 새 위치에 먼저 생성한 뒤 기존 항목을 삭제
+            await database.ref(newRefPath).push({
                 ...newProjectData,
                 displayOrder: displayOrder,
-                createdAt: oldData ? oldData.createdAt : Date.now()
+                createdAt: oldData.createdAt || Date.now()
             });
-            
+            await database.ref(oldRefPath).remove();
+
             // 다른 프로젝트들의 displayOrder 재조정
             await reorderProjectsByType(newType);
-            
+
         } else {
-            // 타입 변경 없는 경우 기존 로직 유지
+            // 타입 변경 없는 경우: 존재 확인 후 업데이트
             const refPath = `${newType === 'current' ? 'current projects' : 'past projects'}/${firebaseKey}`;
+            const snap = await database.ref(refPath).once('value');
+            if (!snap.exists()) {
+                throw new Error('수정할 프로젝트를 찾을 수 없습니다. 이미 삭제되었을 수 있습니다.');
+            }
             await database.ref(refPath).update(newProjectData);
         }
-        
+
         showAlert('프로젝트가 성공적으로 수정되었습니다!', 'success');
-        
+
         if (editProjectForm) {
             editProjectForm.style.display = 'none';
         }
@@ -539,14 +686,16 @@ async function updateProject() {
             projectEditForm.reset();
         }
         currentEditingProject = null;
-        
+
         setTimeout(() => {
             loadProjectsFromRealtimeDB();
         }, 1000);
-        
+
     } catch (error) {
         console.error('❌ 프로젝트 수정 실패:', error);
         showAlert('프로젝트 수정 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingProject = false;
     }
 }
 

@@ -8,6 +8,7 @@ let editMode = false;
 let deleteMode = false;
 let editingResearchKey = null;
 let currentImageUrl = '';
+let isMutatingResearch = false; // 추가/수정/삭제 동시 실행·더블 클릭 방지 가드
 
 // ==================== DOM 요소 ====================
 let loginBtn, logoutBtn, loginModal, loginClose;
@@ -361,28 +362,47 @@ function openResearchEditModal(mode, key) {
 
 async function saveResearch(e) {
     e.preventDefault();
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭을 확실히 차단) ---
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
     if (!currentUser) {
         showAlert('로그인이 필요합니다.', 'error');
+        return;
+    }
+    if (isMutatingResearch) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
+
+    const title = document.getElementById('researchTitle').value.trim();
+    const subtitle = document.getElementById('researchSubtitle').value.trim();
+    const goals = document.getElementById('researchGoals').value
+        .split('\n').filter(line => line.trim()).map(l => l.trim());
+    const summaryItems = document.getElementById('researchSummary').value
+        .split('\n').filter(line => line.trim()).map(l => l.trim());
+    const asIs = document.getElementById('researchAsIs').value
+        .split('\n').filter(line => line.trim()).map(l => l.trim());
+    const toBe = document.getElementById('researchToBe').value
+        .split('\n').filter(line => line.trim()).map(l => l.trim());
+    const methodItems = document.getElementById('researchMethod').value
+        .split('\n').filter(line => line.trim()).map(l => l.trim());
+
+    if (!title) {
+        showAlert('연구 제목을 입력해주세요.', 'warning');
+        return;
+    }
+    if (!subtitle) {
+        showAlert('연구 부제목을 입력해주세요.', 'warning');
         return;
     }
 
     const saveBtn = document.getElementById('researchSaveBtn');
     if (saveBtn) saveBtn.disabled = true;
 
+    isMutatingResearch = true;
     try {
-        const title = document.getElementById('researchTitle').value.trim();
-        const subtitle = document.getElementById('researchSubtitle').value.trim();
-        const goals = document.getElementById('researchGoals').value
-            .split('\n').filter(line => line.trim()).map(l => l.trim());
-        const summaryItems = document.getElementById('researchSummary').value
-            .split('\n').filter(line => line.trim()).map(l => l.trim());
-        const asIs = document.getElementById('researchAsIs').value
-            .split('\n').filter(line => line.trim()).map(l => l.trim());
-        const toBe = document.getElementById('researchToBe').value
-            .split('\n').filter(line => line.trim()).map(l => l.trim());
-        const methodItems = document.getElementById('researchMethod').value
-            .split('\n').filter(line => line.trim()).map(l => l.trim());
-
         // 이미지 업로드
         const imageFile = document.getElementById('researchImage').files[0];
         let imageUrl = currentImageUrl;
@@ -431,6 +451,7 @@ async function saveResearch(e) {
         showAlert('저장 실패: ' + error.message, 'error');
     } finally {
         if (saveBtn) saveBtn.disabled = false;
+        isMutatingResearch = false;
     }
 }
 
@@ -439,13 +460,34 @@ window.deleteResearch = async function(key) {
         showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
         return;
     }
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!key) {
+        showAlert('삭제할 연구 식별자가 없습니다.', 'error');
+        return;
+    }
+    if (isMutatingResearch) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
     if (!confirm('이 연구를 삭제하시겠습니까?')) return;
+
+    isMutatingResearch = true;
     try {
         await database.ref(`research/${key}`).remove();
         showAlert('연구가 삭제되었습니다.', 'success');
+
+        // data-key 기준으로 즉시 제거 (카드 생성 시 사용한 속성과 일치)
+        const cardElement = document.querySelector(`[data-key="${key}"]`);
+        if (cardElement) cardElement.remove();
+
         await loadAndRenderResearch();
     } catch (error) {
         showAlert('삭제 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingResearch = false;
     }
 };
 

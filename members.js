@@ -9,6 +9,7 @@ let deleteMode = false;
 let editingKey = null;
 let editingSection = null;
 let editingAlumniKey = null;
+let isMutatingMember = false; // 추가/수정/삭제 동시 실행·더블 클릭 방지 가드
 
 // ==================== DOM 요소 ====================
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
@@ -180,11 +181,18 @@ function openProfessorModal() {
 
 async function saveProfessor(e) {
     e.preventDefault();
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭을 확실히 차단) ---
+    if (!database) { showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error'); return; }
     if (!currentUser) { showAlert('로그인이 필요합니다.', 'error'); return; }
+    if (isMutatingMember) { showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning'); return; }
+
+    const profName = document.getElementById('profName').value.trim();
+    if (!profName) { showAlert('교수님 성함을 입력해주세요.', 'warning'); return; }
 
     const saveBtn = document.getElementById('profSaveBtn');
     if (saveBtn) saveBtn.disabled = true;
 
+    isMutatingMember = true;
     try {
         const photoFile = document.getElementById('profPhoto').files[0];
         const snap = await database.ref('members/professor').once('value');
@@ -202,7 +210,7 @@ async function saveProfessor(e) {
         }
 
         const data = {
-            name: document.getElementById('profName').value.trim(),
+            name: profName,
             title: document.getElementById('profTitle').value.trim(),
             email: document.getElementById('profEmail').value.trim(),
             department: document.getElementById('profDept').value.trim(),
@@ -220,6 +228,7 @@ async function saveProfessor(e) {
         showAlert('저장 실패: ' + error.message, 'error');
     } finally {
         if (saveBtn) saveBtn.disabled = false;
+        isMutatingMember = false;
     }
 }
 
@@ -506,8 +515,17 @@ window.openEditAlumniModal = function(key) {
 // ==================== CRUD ====================
 async function saveMember(e) {
     e.preventDefault();
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭을 확실히 차단) ---
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
     if (!currentUser) {
         showAlert('로그인이 필요합니다.', 'error');
+        return;
+    }
+    if (isMutatingMember) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
         return;
     }
 
@@ -519,9 +537,15 @@ async function saveMember(e) {
     const degree = document.getElementById('memberDegree').value.trim();
     const photoFile = document.getElementById('memberPhoto').files[0];
 
+    if (!name) {
+        showAlert('이름을 입력해주세요.', 'warning');
+        return;
+    }
+
     const saveBtn = document.getElementById('memberSaveBtn');
     if (saveBtn) saveBtn.disabled = true;
 
+    isMutatingMember = true;
     try {
         let photoUrl = '';
 
@@ -576,9 +600,14 @@ async function saveMember(e) {
 
         if (editingKey && editingSection) {
             if (sectionChanged) {
-                // 기존 섹션에서 삭제 후 새 섹션에 추가
-                await database.ref(`members/${editingSection}/${editingKey}`).remove();
+                // 이동 전 기존 항목 존재 확인 (이미 삭제된 경우 유령 항목 생성 방지)
+                const oldSnap = await database.ref(`members/${editingSection}/${editingKey}`).once('value');
+                if (!oldSnap.exists()) {
+                    throw new Error('기존 멤버를 찾을 수 없습니다. 이미 삭제되었을 수 있습니다.');
+                }
+                // 데이터 유실 방지: 새 섹션에 먼저 추가한 뒤 기존 섹션에서 삭제
                 await database.ref(`members/${section}`).push(data);
+                await database.ref(`members/${editingSection}/${editingKey}`).remove();
                 showAlert(`섹션이 이동되었습니다. (${editingSection} → ${section})`, 'success');
             } else {
                 await database.ref(`members/${editingSection}/${editingKey}`).update(data);
@@ -596,6 +625,7 @@ async function saveMember(e) {
         showAlert('저장 실패: ' + error.message, 'error');
     } finally {
         if (saveBtn) saveBtn.disabled = false;
+        isMutatingMember = false;
     }
 }
 
@@ -604,20 +634,44 @@ window.deleteMember = async function(section, key) {
         showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
         return;
     }
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!section || !key) {
+        showAlert('삭제할 멤버 식별자가 없습니다.', 'error');
+        return;
+    }
+    if (isMutatingMember) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
     if (!confirm('이 멤버를 삭제하시겠습니까?')) return;
+    isMutatingMember = true;
     try {
         await database.ref(`members/${section}/${key}`).remove();
         showAlert('멤버가 삭제되었습니다.', 'success');
         await loadAndRenderMembers();
     } catch (error) {
         showAlert('삭제 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingMember = false;
     }
 };
 
 async function saveAlumni(e) {
     e.preventDefault();
+    // --- 사전 검증 (await 이전에 동기적으로 처리하여 더블 클릭을 확실히 차단) ---
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
     if (!currentUser) {
         showAlert('로그인이 필요합니다.', 'error');
+        return;
+    }
+    if (isMutatingMember) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
         return;
     }
 
@@ -625,8 +679,14 @@ async function saveAlumni(e) {
     const period = document.getElementById('alumniPeriod').value.trim();
     const info = document.getElementById('alumniInfo').value.trim();
 
+    if (!name) {
+        showAlert('졸업생 이름을 입력해주세요.', 'warning');
+        return;
+    }
+
     const data = { name, period, info };
 
+    isMutatingMember = true;
     try {
         if (editingAlumniKey) {
             await database.ref(`members/alumni/${editingAlumniKey}`).update(data);
@@ -639,6 +699,8 @@ async function saveAlumni(e) {
         await loadAndRenderMembers();
     } catch (error) {
         showAlert('저장 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingMember = false;
     }
 }
 
@@ -647,13 +709,28 @@ window.deleteAlumni = async function(key) {
         showAlert('삭제 모드가 활성화되지 않았거나 로그인이 필요합니다.', 'warning');
         return;
     }
+    if (!database) {
+        showAlert('데이터베이스가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
+        return;
+    }
+    if (!key) {
+        showAlert('삭제할 졸업생 식별자가 없습니다.', 'error');
+        return;
+    }
+    if (isMutatingMember) {
+        showAlert('이전 작업을 처리 중입니다. 잠시만 기다려주세요.', 'warning');
+        return;
+    }
     if (!confirm('이 졸업생을 삭제하시겠습니까?')) return;
+    isMutatingMember = true;
     try {
         await database.ref(`members/alumni/${key}`).remove();
         showAlert('졸업생이 삭제되었습니다.', 'success');
         await loadAndRenderMembers();
     } catch (error) {
         showAlert('삭제 실패: ' + error.message, 'error');
+    } finally {
+        isMutatingMember = false;
     }
 };
 
