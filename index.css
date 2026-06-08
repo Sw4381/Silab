@@ -609,3 +609,238 @@
     .stat-divider { display: none; }
     .stat-num    { font-size: 1.4rem; }
 }
+
+/* ===================== 학생 모집 CTA ===================== */
+.join-cta {
+    background: linear-gradient(135deg, #162d55, #24488c);
+    padding: 56px 20px;
+    text-align: center;
+}
+
+.join-cta-inner {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.join-cta-inner h2 {
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+}
+
+.join-cta-inner p {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 26px;
+}
+
+.join-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    background: #fff;
+    color: #162d55;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    padding: 13px 32px;
+    border-radius: 26px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+}
+
+.join-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* ===================== 연락(문의) 모달 ===================== */
+.contact-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.contact-modal-content {
+    position: relative;
+    background: #fff;
+    max-width: 460px;
+    width: 90%;
+    margin: 40px auto;
+    padding: 34px 30px 30px;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.contact-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 1.6rem;
+    color: #aab5c5;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.contact-close:hover { color: #162d55; }
+
+.contact-modal-content h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #162d55;
+    margin-bottom: 6px;
+}
+
+.contact-intro {
+    font-size: 0.86rem;
+    color: #7a8899;
+    margin-bottom: 20px;
+}
+
+#contactForm .form-group { margin-bottom: 15px; }
+
+#contactForm label {
+    display: block;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #44546a;
+    margin-bottom: 6px;
+}
+
+#contactForm input,
+#contactForm textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d6deea;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+#contactForm input:focus,
+#contactForm textarea:focus {
+    outline: none;
+    border-color: #24488c;
+    box-shadow: 0 0 0 3px rgba(36, 72, 140, 0.12);
+}
+
+.contact-submit {
+    width: 100%;
+    margin-top: 6px;
+    padding: 13px;
+    background: linear-gradient(135deg, #162d55, #24488c);
+    color: #fff;
+    font-size: 0.98rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.contact-submit:hover { opacity: 0.92; }
+.contact-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ===================== 문의 게시판 (관리자) ===================== */
+.inquiry-badge {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 6px;
+    margin-left: 4px;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.inquiry-item {
+    border: 1px solid #e8edf5;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    background: #fafcff;
+}
+
+.inquiry-item.unread {
+    border-color: #c5d6f5;
+    background: #f1f6ff;
+}
+
+.inquiry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.inquiry-name {
+    font-weight: 700;
+    color: #162d55;
+    font-size: 0.98rem;
+}
+
+.inquiry-new {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #e74c3c;
+    vertical-align: middle;
+}
+
+.inquiry-date {
+    font-size: 0.78rem;
+    color: #9aa7b8;
+    white-space: nowrap;
+}
+
+.inquiry-contact {
+    font-size: 0.82rem;
+    color: #5a6b80;
+    margin-bottom: 10px;
+}
+
+.inquiry-contact a { color: #24488c; text-decoration: none; }
+.inquiry-contact a:hover { text-decoration: underline; }
+
+.inquiry-message {
+    font-size: 0.9rem;
+    color: #33405a;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.inquiry-actions {
+    margin-top: 12px;
+    text-align: right;
+}
+
+.inquiry-del-btn {
+    background: none;
+    border: 1px solid #e0b4b4;
+    color: #c0392b;
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.inquiry-del-btn:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
