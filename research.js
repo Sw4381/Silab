@@ -241,6 +241,10 @@ function createResearchCard(key, item) {
 
     div.innerHTML = `
         ${actionsHtml}
+        <div class="card-image">
+            <img src="${imageUrl}" alt="${item.title || '연구'}" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Research'">
+        </div>
+
         <div class="slide-header">
             <h2 class="project-title">${item.title || ''}</h2>
             <div class="project-subtitle">
@@ -249,10 +253,6 @@ function createResearchCard(key, item) {
             <div class="goals-row">
                 ${goalsHtml}
             </div>
-        </div>
-
-        <div class="card-image">
-            <img src="${imageUrl}" alt="${item.title || '연구'}" onerror="this.src='https://via.placeholder.com/600x220/4facfe/ffffff?text=Research'">
         </div>
 
         <div class="card-summary">
