@@ -49,6 +49,7 @@ Silab/
 - **projects**: 연구과제/프로젝트 목록 (연도별)
 - **Publication**: 논문 목록 (SCI/KCI 등 구분)
 - **photo**: 워크숍, 학회 등 활동 사진 갤러리
+- **performance**: (로그인 전용) 과제별 연차 실적 요구사항(목표) 입력 + 실적 등록 → 달성/목표 자동 집계 대시보드. 로그아웃 시 내용 비공개, 메뉴(`.nav-perf`)도 숨김. DB 경로: `performance/{과제}/{meta, rows, achievements}`
 
 ---
 

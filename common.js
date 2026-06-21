@@ -11,6 +11,13 @@ function escHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+// 로그인 전용 메뉴(Performance) 표시 토글
+function setPerfNav(show) {
+    document.querySelectorAll('.nav-perf').forEach(function (a) {
+        a.style.display = show ? '' : 'none';
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // 현재 페이지 자동 활성화
     var currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -18,6 +25,20 @@ document.addEventListener('DOMContentLoaded', function () {
         var href = link.getAttribute('href').replace('./', '');
         link.classList.toggle('active', href === currentPage);
     });
+
+    // 로그인 상태에 따라 Performance 메뉴 노출.
+    // 캐시값으로 즉시 반영 후, Firebase 인증 상태로 정정한다.
+    setPerfNav(localStorage.getItem('silab_auth') === '1');
+    if (typeof firebase !== 'undefined' && typeof firebaseConfig !== 'undefined') {
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            firebase.auth().onAuthStateChanged(function (user) {
+                var ok = !!(user && (typeof ALLOWED_EMAIL === 'undefined' || user.email === ALLOWED_EMAIL));
+                localStorage.setItem('silab_auth', ok ? '1' : '0');
+                setPerfNav(ok);
+            });
+        } catch (e) { /* firebase 미로드 페이지는 캐시값 유지 */ }
+    }
 
     var hamburger = document.getElementById('hamburger');
     var menu = document.querySelector('.menu');
