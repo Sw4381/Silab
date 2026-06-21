@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보안 지능 연구실 - 과제 실적 진행상황</title>
+    <link rel="icon" href="./image.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="photo.css">
+    <link rel="stylesheet" href="performance.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <a href="index.html">
+                <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+            </a>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="menu">
+            <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./research.html"><i class="fas fa-flask"></i> Research</a>
+            <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
+            <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
+            <a href="./performance.html" class="nav-perf active" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>
+        </nav>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> 로그아웃
+            </button>
+        </div>
+    </header>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fas fa-lock"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">연구실 멤버만 접근 가능합니다.</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- 로그아웃 상태 게이트 -->
+        <div id="authGate" class="auth-gate">
+            <i class="fas fa-user-lock"></i>
+            <h2>과제 실적 진행상황</h2>
+            <p>이 페이지는 연구실 멤버 로그인 후에만 볼 수 있습니다.</p>
+            <button class="login-btn gate-btn" id="gateLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인하기
+            </button>
+        </div>
+
+        <!-- 로그인 상태 본문 -->
+        <div id="perfApp" style="display:none;">
+            <div class="page-hero">
+                <h1><i class="fas fa-chart-line"></i> 과제 실적 진행상황</h1>
+                <p>과제별 연차 실적 요구사항(목표)을 입력하고, 실적을 등록하면 달성/목표가 자동 집계됩니다.</p>
+            </div>
+
+            <!-- 과제 선택/관리 툴바 -->
+            <div class="perf-toolbar">
+                <div class="toolbar-left">
+                    <label for="projectSelect"><i class="fas fa-folder"></i> 과제</label>
+                    <select id="projectSelect"></select>
+                </div>
+                <div class="toolbar-right">
+                    <button class="tb-btn primary" id="addProjectBtn"><i class="fas fa-plus"></i> 과제 추가</button>
+                    <button class="tb-btn" id="editProjectBtn"><i class="fas fa-pen"></i> 과제 수정</button>
+                    <button class="tb-btn danger" id="deleteProjectBtn"><i class="fas fa-trash"></i> 과제 삭제</button>
+                </div>
+            </div>
+
+            <!-- 전체 개요 (과제 미선택 / '전체 과제' 선택 시) -->
+            <div id="overviewWrap" class="overview-wrap"></div>
+
+            <!-- 논문 / 특허 트래커 (개요에서만 표시) -->
+            <div id="trackWrap">
+                <!-- 논문 -->
+                <section class="track-section">
+                    <div class="track-head">
+                        <h2><i class="fas fa-file-lines"></i> <span id="paperTitle">논문 실적</span></h2>
+                        <div class="track-head-right">
+                            <span class="track-legend"><i class="dot blue"></i> 완료 <i class="dot red"></i> 심사중</span>
+                            <select id="paperYearSel" title="연도 선택"></select>
+                            <button class="tb-btn" id="paperTargetBtn"><i class="fas fa-bullseye"></i> 목표 편집</button>
+                            <button class="tb-btn" id="paperColsBtn"><i class="fas fa-table-columns"></i> 열 편집</button>
+                            <button class="tb-btn primary" id="addPaperBtn"><i class="fas fa-plus"></i> 논문 추가</button>
+                        </div>
+                    </div>
+                    <div id="paperMatrix" class="track-matrix"></div>
+                    <div id="paperSummary" class="track-summary"></div>
+                    <div id="paperGoal" class="goal-block"></div>
+                    <div class="track-memo">
+                        <div class="track-memo-head"><i class="fas fa-triangle-exclamation"></i> 전년도 미달 대응 메모 <button class="tb-btn mini" id="paperMemoBtn">수정</button></div>
+                        <div id="paperMemo" class="track-memo-body"></div>
+                    </div>
+                </section>
+
+                <!-- 특허 -->
+                <section class="track-section">
+                    <div class="track-head">
+                        <h2><i class="fas fa-certificate"></i> 진행중인 특허 실적</h2>
+                        <div class="track-head-right">
+                            <span class="track-legend"><i class="dot blue"></i> 출원 <i class="dot red"></i> 등록(완료)</span>
+                            <button class="tb-btn" id="patentTargetBtn"><i class="fas fa-bullseye"></i> 목표 편집</button>
+                            <button class="tb-btn" id="patentColsBtn"><i class="fas fa-table-columns"></i> 열 편집</button>
+                            <button class="tb-btn primary" id="addPatentBtn"><i class="fas fa-plus"></i> 특허 추가</button>
+                        </div>
+                    </div>
+                    <div id="patentMatrix" class="track-matrix"></div>
+                    <div id="patentSummary" class="track-summary"></div>
+                    <div id="patentGoal" class="goal-block"></div>
+                    <div class="track-memo">
+                        <div class="track-memo-head"><i class="fas fa-triangle-exclamation"></i> 전년도 미달 대응 메모 <button class="tb-btn mini" id="patentMemoBtn">수정</button></div>
+                        <div id="patentMemo" class="track-memo-body"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 과제 상세 (특정 과제 선택 시) -->
+            <div id="detailWrap" style="display:none;">
+            <!-- 진척 요약 -->
+            <div id="summaryCards" class="summary-cards"></div>
+
+            <!-- 매트릭스 -->
+            <div class="matrix-section">
+                <div class="matrix-head">
+                    <h2><i class="fas fa-table"></i> 실적 요구사항 / 달성 현황</h2>
+                    <div class="matrix-actions">
+                        <button class="tb-btn primary" id="addAchBtn"><i class="fas fa-plus-circle"></i> 실적 추가</button>
+                        <button class="tb-btn" id="editProjectBtn2"><i class="fas fa-edit"></i> 차년도·목표 수정</button>
+                    </div>
+                </div>
+                <div id="matrixWrap" class="matrix-wrap"></div>
+            </div>
+
+            <!-- 등록된 실적 -->
+            <div class="ach-section">
+                <h2><i class="fas fa-clipboard-list"></i> 등록된 실적</h2>
+                <div id="achList" class="ach-list"></div>
+            </div>
+            </div><!-- /detailWrap -->
+        </div>
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="./image.png" alt="SILAB" class="footer-logo">
+                    <div>
+                        <span class="footer-lab-name">SILAB</span>
+                        <span class="footer-lab-sub">보안 지능 연구실</span>
+                    </div>
+                </div>
+                <div class="footer-info">
+                    <div class="footer-info-item">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:kinjecs0@gmail.com">kinjecs0@gmail.com</a>
+                    </div>
+                    <div class="footer-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>가천대학교 AI소프트웨어학부 스마트보안학과</span>
+                    </div>
+                </div>
+                <div class="footer-copy">© 2025 SILAB · Gachon University</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ===== 과제 추가/수정 모달 (메타 + 차년도/요구실적 통합) ===== -->
+    <div id="projectFormModal" class="perf-modal">
+        <div class="perf-modal-box wide">
+            <div class="perf-modal-head">
+                <h3 id="projectFormTitle">새 과제 추가</h3>
+                <button class="perf-modal-close" data-close="projectFormModal">&times;</button>
+            </div>
+            <form id="projectForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projectName">과제명</label>
+                        <input type="text" id="projectName" name="name" required placeholder="예: BAS">
+                    </div>
+                    <div class="form-group">
+                        <label for="projectAgency">부처/기관 (선택)</label>
+                        <input type="text" id="projectAgency" name="agency" placeholder="예: 과학기술정보통신부">
+                    </div>
+                </div>
+
+                <div class="rows-editor-head">
+                    <label class="targets-label" style="margin:0;">차년도별 요구실적 (목표)</label>
+                    <button type="button" class="tb-btn" id="addRowBlockBtn"><i class="fas fa-plus"></i> 차년도 추가</button>
+                </div>
+                <div class="rows-editor-cols">
+                    <span class="rec-meta">단계 / 차년도 / 연도</span>
+                    <span class="rec-targets">SCIE · 비SCIE · 기술문서 · 특허출원 · 특허등록 · SW등록</span>
+                    <span class="rec-act"></span>
+                </div>
+                <div id="rowsEditor" class="rows-editor"></div>
+
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn" data-close="projectFormModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== 실적 추가 모달 ===== -->
+    <div id="achFormModal" class="perf-modal">
+        <div class="perf-modal-box">
+            <div class="perf-modal-head">
+                <h3 id="achFormTitle">실적 추가</h3>
+                <button class="perf-modal-close" data-close="achFormModal">&times;</button>
+            </div>
+            <form id="achForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="achRow">차년도 (단계)</label>
+                        <select id="achRow" name="rowKey" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="achCategory">항목</label>
+                        <select id="achCategory" name="category" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="achWeight">기여도 (0~1)</label>
+                        <input type="number" id="achWeight" name="weight" step="any" min="0" max="1" value="1" placeholder="예: 0.7" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="achTitle">실적 제목</label>
+                    <input type="text" id="achTitle" name="title" required placeholder="예: IEEE Access 게재 / 특허출원 제10-2026-...호">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="achDate">일자</label>
+                        <input type="month" id="achDate" name="date">
+                    </div>
+                    <div class="form-group">
+                        <label for="achLink">근거 링크 (선택)</label>
+                        <input type="url" id="achLink" name="link" placeholder="https://">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="achNote">비고 (선택)</label>
+                    <textarea id="achNote" name="note" rows="2" placeholder="저자, 학회/저널명, 특허번호 등"></textarea>
+                </div>
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn" data-close="achFormModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== 논문 추가/수정 모달 ===== -->
+    <div id="paperFormModal" class="perf-modal">
+        <div class="perf-modal-box wide">
+            <div class="perf-modal-head">
+                <h3 id="paperFormTitle">논문 추가</h3>
+                <button class="perf-modal-close" data-close="paperFormModal">&times;</button>
+            </div>
+            <form id="paperForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="paperLabel">논문 (저자/약칭)</label>
+                        <input type="text" id="paperLabel" name="label" required placeholder="예: 선우(gnn)">
+                    </div>
+                    <div class="form-group">
+                        <label for="paperVenue">저널/학회</label>
+                        <input type="text" id="paperVenue" name="venue" placeholder="예: jnca">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="paperType">구분</label>
+                        <input type="text" id="paperType" name="type" placeholder="예: SCI">
+                    </div>
+                    <div class="form-group">
+                        <label for="paperYear">연도</label>
+                        <input type="number" id="paperYear" name="year" placeholder="예: 2026">
+                    </div>
+                    <div class="form-group">
+                        <label for="paperDate">진행일 (텍스트)</label>
+                        <input type="text" id="paperDate" name="date" placeholder="예: 26.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="paperStatus">상태</label>
+                        <select id="paperStatus" name="status"></select>
+                    </div>
+                </div>
+                <div class="rows-editor-head">
+                    <label class="targets-label" style="margin:0;">과제별 기여도 (합이 보통 1.0)</label>
+                    <button type="button" class="tb-btn" id="addPaperContribBtn"><i class="fas fa-plus"></i> 과제 추가</button>
+                </div>
+                <div id="paperContribs" class="contrib-editor"></div>
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn" data-close="paperFormModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== 특허 추가/수정 모달 ===== -->
+    <div id="patentFormModal" class="perf-modal">
+        <div class="perf-modal-box wide">
+            <div class="perf-modal-head">
+                <h3 id="patentFormTitle">특허 추가</h3>
+                <button class="perf-modal-close" data-close="patentFormModal">&times;</button>
+            </div>
+            <form id="patentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="patentLabel">특허 (발명자/약칭)</label>
+                        <input type="text" id="patentLabel" name="label" required placeholder="예: 선우(GNN)">
+                    </div>
+                    <div class="form-group">
+                        <label for="patentDate">진행일 (텍스트)</label>
+                        <input type="text" id="patentDate" name="date" placeholder="예: 25.6">
+                    </div>
+                    <div class="form-group">
+                        <label for="patentStatus">상태</label>
+                        <select id="patentStatus" name="status"></select>
+                    </div>
+                </div>
+                <div class="rows-editor-head">
+                    <label class="targets-label" style="margin:0;">과제별 기여도 (합이 보통 1.0)</label>
+                    <button type="button" class="tb-btn" id="addPatentContribBtn"><i class="fas fa-plus"></i> 과제 추가</button>
+                </div>
+                <div id="patentContribs" class="contrib-editor"></div>
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn" data-close="patentFormModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== 목표 편집 모달 (논문/특허 공용) ===== -->
+    <div id="targetFormModal" class="perf-modal">
+        <div class="perf-modal-box">
+            <div class="perf-modal-head">
+                <h3 id="targetFormTitle">목표 편집</h3>
+                <button class="perf-modal-close" data-close="targetFormModal">&times;</button>
+            </div>
+            <form id="targetForm">
+                <p class="target-hint">과제별 목표 수량을 입력하세요. (0이면 목표 없음)</p>
+                <div id="targetFields"></div>
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn" data-close="targetFormModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="performance.js"></script>
+</body>
+</html>
