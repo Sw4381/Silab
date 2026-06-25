@@ -11,6 +11,19 @@ function escHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+// 교수님 지정 과제 순서 (학생인건비·예산 공통). 이름이 대체로 일치하면 이 순서로 정렬된다.
+var SILAB_CANON = ['KISTI', 'BAS', '연구재단(개인)', '연구재단(집단)', 'K-Hero', '서교수님', '해외파견', '개인정보(용역)', 'Z3soft(용역)', '선박(용역)'];
+function silabCanonNorm(s) { return String(s == null ? '' : s).toLowerCase().replace(/[\s()（）_\-~,.·]/g, ''); }
+var SILAB_CANON_NORM = SILAB_CANON.map(silabCanonNorm);
+function silabCanonRank(name) {
+    var n = silabCanonNorm(name); if (!n) return 999;
+    for (var i = 0; i < SILAB_CANON_NORM.length; i++) {
+        var c = SILAB_CANON_NORM[i];
+        if (c === n || n.indexOf(c) >= 0 || c.indexOf(n) >= 0) return i;
+    }
+    return 999;
+}
+
 // 로그인 전용 메뉴(Performance) 표시 토글
 function setPerfNav(show) {
     document.querySelectorAll('.nav-perf').forEach(function (a) {

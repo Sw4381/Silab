@@ -50,6 +50,51 @@
 .gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .gauge-cap { font-size: 0.78rem; font-weight: 700; color: var(--text-medium); white-space: nowrap; }
 
+/* ===== 연구활동비 집행현황 블록 ===== */
+.exec-block { margin-bottom: 22px; }
+.exec-card { padding: 18px 20px; }
+.exec-overview { padding: 18px 20px; margin-bottom: 22px; }
+.exec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.exec-head h2 { font-size: 1.12em; color: var(--color-primary); margin: 0; }
+.exec-head h2 i { color: var(--color-accent); margin-right: 6px; }
+.exec-metrics { display: flex; flex-wrap: wrap; gap: 14px 30px; margin-bottom: 12px; }
+.exec-metrics.big { gap: 16px 40px; }
+.exec-m { display: flex; flex-direction: column; gap: 2px; }
+.exec-m-label { font-size: 0.76em; color: var(--text-light); }
+.exec-m-val { font-size: 1.25em; font-weight: 800; color: var(--color-primary); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.exec-m-val small { font-size: 0.55em; font-weight: 600; color: #9aa7b5; margin-left: 2px; }
+.exec-m-val.neg { color: var(--color-danger); }
+.exec-bar { height: 12px; background: #eef2f7; border-radius: 7px; overflow: hidden; }
+.exec-bar > span { display: block; height: 100%; border-radius: 7px; background: linear-gradient(90deg, var(--color-accent), var(--color-primary)); transition: width .3s ease; }
+.exec-bar.sm { height: 8px; width: 84px; display: inline-block; vertical-align: middle; }
+.exec-pace-note { font-size: 0.8em; color: var(--text-light); margin-top: 8px; }
+.exec-pace-note b { color: var(--text-medium); }
+.exec-issue { margin-top: 12px; font-size: 0.9em; color: var(--text-medium); background: #f7fafd; border: 1px solid #e8eef5; border-radius: 10px; padding: 10px 14px; }
+.exec-issue i { color: var(--color-accent); margin-right: 6px; }
+
+/* 페이스 배지 */
+.pace-badge { font-size: 0.78em; font-weight: 700; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
+.pace-ok { background: #eafaf0; color: #1f8a4c; }
+.pace-slow { background: #fdecee; color: var(--color-danger); }
+.pace-fast { background: #eaf3ff; color: var(--color-accent); }
+.pace-na { background: #f0f2f5; color: #8a97a6; }
+
+/* 집행현황 표 */
+.exec-table { min-width: 820px; }
+.exec-table .ex-name { text-align: left; font-weight: 700; color: var(--color-primary); }
+.exec-table th.ex-name, .exec-table th.ex-note { text-align: left; }
+.exec-table .ex-barcell { white-space: nowrap; text-align: left; }
+.exec-table .ex-rate { font-size: 0.82em; font-weight: 700; margin-left: 7px; font-variant-numeric: tabular-nums; }
+.exec-table .ex-pace { text-align: center; }
+.exec-table .ex-note { text-align: left; color: var(--text-medium); font-size: 0.92em; white-space: normal; min-width: 180px; }
+.exec-overview .matrix-wrap { margin-top: 14px; box-shadow: none; border: 1px solid #e8eef5; }
+
+/* 접이 블록 안의 '이 과제 수정' 버튼 자리 */
+details.pay-collapse > summary .blk-note { font-size: 0.68em; font-weight: 600; color: #9aa7b5; }
+details.pay-collapse > summary .tb-btn { margin-left: auto; }
+details.pay-collapse > summary .people-period { margin-left: auto; font-size: 0.8em; color: var(--text-light); }
+details.pay-collapse > summary .tb-btn + .cl-chevron, details.pay-collapse > summary .people-period + .cl-chevron { margin-left: 12px; }
+
 /* ===== 상세: 예산 항목 매트릭스 ===== */
 .bud-matrix { width: 100%; }
 .bud-matrix th, .bud-matrix td { text-align: right; }
@@ -90,12 +135,20 @@
 .ie-link select { flex: 1; min-width: 160px; padding: 8px 10px; border: 1px solid #d9e2ec; border-radius: 8px; font-size: 0.88rem; background: #fff; }
 .ie-link select:disabled { background: #f1f4f8; color: #9aa7b5; }
 
-.modal-items { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 16px; margin-bottom: 12px; }
+.modal-items { display: grid; grid-template-columns: 1fr; gap: 7px 16px; margin-bottom: 6px; }
 .mi-row { display: flex; align-items: center; gap: 8px; }
 .modal-items .mi-label { flex: 1 1 auto; min-width: 0; font-size: 0.84rem; color: var(--text-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.modal-items .mi-input { flex: 0 0 132px; width: 132px; box-sizing: border-box; padding: 7px 9px; border: 1px solid #dde5ee; border-radius: 7px; text-align: right; font-size: 0.9em; font-variant-numeric: tabular-nums; }
-.mi-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(79,172,254,.15); }
+.modal-items .mi-input, .modal-items .mi-spent { flex: 0 0 130px; width: 130px; box-sizing: border-box; padding: 7px 9px; border: 1px solid #dde5ee; border-radius: 7px; text-align: right; font-size: 0.9em; font-variant-numeric: tabular-nums; }
+.modal-items .mi-spent { border-color: #e6dcc5; background: #fffdf6; }
+.mi-input:focus, .mi-spent:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(79,172,254,.15); }
 .mi-input[readonly] { background: #eef3f9; color: var(--text-medium); border-color: transparent; }
+.mi-row.mi-head { margin-bottom: 2px; }
+.mi-head .mi-col { flex: 0 0 130px; width: 130px; text-align: right; font-size: 0.72rem; font-weight: 700; color: var(--text-light); }
+/* 상세 예산표 진행률/잔액 */
+.bud-matrix .mtx-prog { white-space: nowrap; text-align: right; }
+.bud-matrix .mtx-prog .ex-rate { font-size: 0.82em; font-weight: 700; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.bud-matrix .mtx-neg { color: var(--color-danger); }
+.targets-hint { font-size: 0.74rem; color: var(--text-light); }
 
 /* 배분율 요약 (모달 미리보기) */
 .alloc-summary { margin-top: 6px; }
@@ -108,7 +161,7 @@
 .alloc-summary .as-text b { color: var(--color-primary); font-variant-numeric: tabular-nums; }
 .alloc-summary .as-text .ok { color: #1f8a4c; font-weight: 700; } .alloc-summary .as-text .high { color: var(--color-accent); font-weight: 700; } .alloc-summary .as-text .over { color: var(--color-danger); font-weight: 700; }
 
-@media (max-width: 640px) { .modal-items { grid-template-columns: 1fr; } .mi-input { width: 120px; } }
+@media (max-width: 640px) { .modal-items .mi-input, .modal-items .mi-spent, .mi-head .mi-col { flex-basis: 96px; width: 96px; } }
 
 /* ===== 모달: 인력구성 편집 ===== */
 .pe-head, .pe-row { display: grid; grid-template-columns: 96px 1.3fr 64px 1fr 64px 1.2fr 30px; gap: 6px; align-items: center; }

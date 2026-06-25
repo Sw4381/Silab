@@ -107,23 +107,29 @@
             <!-- 과제 상세 -->
             <div id="detailWrap" style="display:none;">
                 <div id="summaryCards" class="summary-cards"></div>
-                <div class="matrix-section">
-                    <div class="matrix-head">
-                        <h2><i class="fas fa-coins"></i> 예산 항목 배정</h2>
-                        <div class="matrix-actions">
-                            <button class="tb-btn" id="editProjectBtn2"><i class="fas fa-pen"></i> 이 과제 수정</button>
-                        </div>
-                    </div>
-                    <div id="matrixWrap" class="matrix-wrap"></div>
-                </div>
 
-                <div class="matrix-section">
-                    <div class="matrix-head">
-                        <h2><i class="fas fa-users"></i> 인력구성 (세부)</h2>
+                <!-- 블록 1: 연구활동비 집행현황 / 이슈 (한눈에) -->
+                <div id="execDetail" class="exec-block"></div>
+
+                <!-- 블록 2: 예산 항목 배정 (기본 접힘) -->
+                <details class="matrix-section pay-collapse">
+                    <summary>
+                        <span class="cl-title"><i class="fas fa-coins"></i> 예산 항목 배정 <small class="blk-note">(취합 계산용)</small></span>
+                        <button class="tb-btn" id="editProjectBtn2"><i class="fas fa-pen"></i> 이 과제 수정</button>
+                        <i class="fas fa-chevron-down cl-chevron"></i>
+                    </summary>
+                    <div id="matrixWrap" class="matrix-wrap"></div>
+                </details>
+
+                <!-- 블록 3: 인력구성 (세부) (기본 접힘) -->
+                <details class="matrix-section pay-collapse">
+                    <summary>
+                        <span class="cl-title"><i class="fas fa-users"></i> 인력구성 (세부)</span>
                         <span class="people-period" id="peoplePeriod"></span>
-                    </div>
+                        <i class="fas fa-chevron-down cl-chevron"></i>
+                    </summary>
                     <div id="peopleWrap" class="matrix-wrap"></div>
-                </div>
+                </details>
             </div>
         </div>
 
@@ -166,6 +172,14 @@
                 </div>
                 <div id="modalItems" class="modal-items"></div>
                 <div id="modalPreview" class="alloc-summary"></div>
+
+                <div class="rows-editor-head" style="margin-top:16px;">
+                    <label class="targets-label" style="margin:0;">연구활동비 집행 이슈 / 메모 (선택)</label>
+                    <span class="targets-hint">집행액은 위 ‘집행’ 칸에 항목별로 입력</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;"><label for="bActNote">집행 이슈 / 메모</label><input type="text" id="bActNote" placeholder="예: 장비 발주 지연, 하반기 집중 집행 예정"></div>
+                </div>
 
                 <div class="rows-editor-head" style="margin-top:18px;">
                     <label class="targets-label" style="margin:0;">인력구성 (세부)</label>
