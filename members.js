@@ -143,7 +143,6 @@ function renderProfessorSection(p) {
                 <p><strong>${escHtml(p.title)}</strong></p>
                 <p><strong>${escHtml(p.department)}</strong></p>
                 <p><strong>${escHtml(p.university)}</strong></p>
-                <p class="email"><i class="fas fa-envelope"></i> ${escHtml(p.email)}</p>
             </div>
             <div class="professor-history">
                 <h3><i class="fas fa-graduation-cap"></i> Academic Background & Experience</h3>
@@ -300,9 +299,6 @@ function createStudentCard(section, key, member) {
     div.setAttribute('data-section', section);
 
     const photoSrc = member.photo || './members_img/f4.png';
-    const emailDisplay = member.email && member.email !== '--' && member.email !== '---'
-        ? `<a href="mailto:${member.email}">${member.email}</a>`
-        : (member.email || '--');
 
     const showActions = currentUser && (editMode || deleteMode);
     const showEdit = currentUser && editMode;
@@ -316,10 +312,6 @@ function createStudentCard(section, key, member) {
                 <div class="detail-row">
                     <span class="detail-label"><i class="fas fa-id-badge"></i> 직책</span>
                     <span class="detail-value">${escHtml(member.role)}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label"><i class="fas fa-envelope"></i> 이메일</span>
-                    <span class="detail-value email">${emailDisplay}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label"><i class="fas fa-flask"></i> 연구분야</span>
