@@ -42,7 +42,7 @@ const state = {
     editKey: null,     // 현재 인라인 편집 중인 과제 키 (null=편집 안 함)
     isNew: false,      // 신규 과제 편집 여부
     dirty: false,      // 저장 안 된 변경 여부
-    monthsExpanded: false, // 학생 현황표: false=분기 요약, true=12개월 펼침
+    monthsExpanded: true, // 총액표: true=12개월 펼침(기본), false=분기 요약
     isSeed: false
 };
 
@@ -60,9 +60,9 @@ function sumIdx(arr, idxs) { return idxs.reduce((a, i) => a + num(arr[i]), 0); }
 
 // DOM refs
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm, userInfo, userName;
-let authGate, payApp, yearSelect, summaryCards, studentMatrix, seedBanner;
+let authGate, payApp, yearSelect, seedBanner;
 let projChips, inlineEditor, dirtyBadge;
-let dashStudents, dashProjects, alertWrap;
+let blkAll, blkRnd, blkSvc, sumAll, sumRnd, sumSvc;
 
 // ==================== 유틸 ====================
 function escHtmlSafe(s) {
@@ -230,180 +230,110 @@ function renderAll() {
     renderChips();
 }
 
-// 위쪽 요약 + 대시보드 + 학생표만 다시 그림 (편집 입력 중 호출 — 에디터 DOM은 건드리지 않아 포커스 유지)
+// 위쪽 3개 총액표만 다시 그림 (편집 입력 중 호출 — 에디터 DOM은 건드리지 않아 포커스 유지)
 function refreshOverview() {
     const live = liveProjects();
-    renderSummary(live);
-    renderDashboard(live);
-    renderStudents(live);
+    const rd = filterProjectMap(live, isRnd);
+    const svc = filterProjectMap(live, p => !isRnd(p));
+    if (blkAll) blkAll.innerHTML = totalsTableHTML(live);
+    if (blkRnd) blkRnd.innerHTML = totalsTableHTML(rd);
+    if (blkSvc) blkSvc.innerHTML = totalsTableHTML(svc);
+    setBlockSum(sumAll, live);
+    setBlockSum(sumRnd, rd);
+    setBlockSum(sumSvc, svc);
     if (dirtyBadge) dirtyBadge.style.display = state.dirty ? 'inline-flex' : 'none';
 }
 
-function renderSummary(live) {
-    const studs = studentTotals(live);
-    const activeStuds = studs.filter(s => s.total > 0);
-    const projCount = Object.keys(state.projects).length;
-    const grand = studs.reduce((a, s) => a + s.total, 0);
-    const now = new Date();
-    const mi = (now.getFullYear() === state.year) ? now.getMonth() : 0;   // 0-based
-    const monthTotal = studs.reduce((a, s) => a + s.m[mi], 0);
-    const over = studs.filter(s => s.ratio > 1.0001).length;
-    const cards = [
-        { ic: 'fa-user-group', label: '참여 학생', val: activeStuds.length + '명', sub: '전체 ' + studs.length + '명' },
-        { ic: 'fa-folder-open', label: '과제 수', val: projCount + '개', sub: state.year + '년' },
-        { ic: 'fa-won-sign', label: '연간 총 지급액', val: fmt(grand), sub: '만원' },
-        { ic: 'fa-calendar-day', label: MONTHS[mi] + ' 지급액', val: fmt(monthTotal), sub: '만원' },
-        { ic: 'fa-triangle-exclamation', label: '기준 초과', val: over + '명', sub: '비율 100% 초과', warn: over > 0 }
-    ];
-    summaryCards.innerHTML = cards.map(c => `
-        <div class="summary-card${c.warn ? ' warn' : ''}">
-            <div class="sc-icon"><i class="fas ${c.ic}"></i></div>
-            <div class="sc-body">
-                <div class="sc-label">${c.label}</div>
-                <div class="sc-value">${escHtmlSafe(c.val)}</div>
-                <div class="sc-sub">${escHtmlSafe(c.sub)}</div>
-            </div>
-        </div>`).join('');
+// 재원 구분: 국가R&D = R&D, 그 외(비R&D·기타) = 용역
+function isRnd(p) { return p.category === '국가R&D'; }
+function filterProjectMap(live, pred) {
+    const out = {};
+    Object.keys(live).forEach(k => { if (pred(live[k])) out[k] = live[k]; });
+    return out;
+}
+function blockStat(projects) {
+    const studs = studentTotals(projects);
+    return { grand: studs.reduce((a, s) => a + s.total, 0), n: studs.filter(s => s.total > 0).length };
+}
+function setBlockSum(el, projects) {
+    if (!el) return;
+    const { grand, n } = blockStat(projects);
+    el.innerHTML = `<b>${fmt(grand)}</b> 만원 <span class="bs-n">· ${n}명</span>`;
 }
 
-function renderStudents(live) {
-    const studs = studentTotals(live);
-    if (!studs.length) { studentMatrix.innerHTML = '<div class="pay-empty">등록된 인건비가 없습니다. 아래 ‘새 과제’로 시작하세요.</div>'; return; }
-    // 편집 중이면 저장본(baseline)과 비교해 바뀐 셀 강조
-    const baseMap = state.editKey ? studentTotals(state.projects).reduce((m, s) => (m[s.name] = s, m), {}) : null;
-    const eq = (a, b) => Math.abs(num(a) - num(b)) < 0.005;
+// 학생별 월별 총액표 (이름 · 월/분기 · 개인 총액). projects 부분집합으로 전체/R&D/용역을 동일 형식으로 렌더.
+function totalsTableHTML(projects) {
+    const studs = studentTotals(projects).filter(s => s.total > 0);
+    if (!studs.length) return '<div class="pay-empty">해당 항목 인건비가 없습니다.</div>';
     const groups = monthGroups();
     const compact = state.monthsExpanded ? '' : ' compact';
-
-    const colTotals = groups.map(() => 0); let extTotal = 0, grand = 0;
-    studs.forEach(s => { groups.forEach((g, gi) => colTotals[gi] += sumIdx(s.m, g.idxs)); extTotal += s.ext; grand += s.total; });
+    const colTotals = groups.map(() => 0); let grand = 0;
+    studs.forEach(s => { groups.forEach((g, gi) => colTotals[gi] += sumIdx(s.m, g.idxs)); grand += s.total; });
 
     const head = `<tr>
         <th class="sticky-l">이름</th>
         ${groups.map(g => `<th>${g.label}</th>`).join('')}
-        <th class="col-ext">외부</th>
-        <th class="col-total">총합</th>
-        <th class="col-cap">기준</th>
-        <th class="col-ratio">비율</th>
+        <th class="col-total">총액</th>
     </tr>`;
-
     const body = studs.map((s, si) => {
-        const base = baseMap ? baseMap[s.name] : null;
-        const totalChg = baseMap && (!base || !eq(s.total, base.total)) ? ' chg' : '';
         const cells = groups.map(g => {
             const v = sumIdx(s.m, g.idxs);
-            const bv = base ? sumIdx(base.m, g.idxs) : 0;
-            const chg = baseMap && !eq(v, bv) ? ' chg' : '';
-            return `<td class="${v ? '' : 'z'}${chg}">${v ? fmt(v) : ''}</td>`;
+            return `<td class="${v ? '' : 'z'}">${v ? fmt(v) : ''}</td>`;
         }).join('');
-        return `
-        <tr class="${si % 2 ? 's-alt' : ''}">
+        return `<tr class="${si % 2 ? 's-alt' : ''}">
             <td class="sticky-l name">${escHtmlSafe(s.name)}</td>
             ${cells}
-            <td class="col-ext">${s.ext ? fmt(s.ext) : ''}</td>
-            <td class="col-total${totalChg}"><b>${fmt(s.total)}</b></td>
-            <td class="col-cap">${s.cap ? fmt(s.cap) : '-'}</td>
-            <td class="col-ratio">
-                ${s.cap ? `<div class="ratio-cell ${ratioClass(s.ratio)}${totalChg}">
-                    <div class="ratio-bar"><span style="width:${Math.min(100, s.ratio * 100).toFixed(0)}%"></span></div>
-                    <span class="ratio-num">${(s.ratio * 100).toFixed(1)}%</span>
-                </div>` : '<span class="z">-</span>'}
-            </td>
-        </tr>`; }).join('');
-
+            <td class="col-total"><b>${fmt(s.total)}</b></td>
+        </tr>`;
+    }).join('');
     const foot = `<tr class="foot">
         <td class="sticky-l">합계</td>
         ${colTotals.map(v => `<td>${v ? fmt(v) : ''}</td>`).join('')}
-        <td class="col-ext">${extTotal ? fmt(extTotal) : ''}</td>
         <td class="col-total"><b>${fmt(grand)}</b></td>
-        <td class="col-cap"></td><td class="col-ratio"></td>
     </tr>`;
-
-    studentMatrix.innerHTML = `<table class="student-table${compact}"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
-}
-
-// ==================== 시각 대시보드 ====================
-function renderDashboard(live) {
-    const colors = projectColorMap(live);
-    const keys = Object.keys(live).sort((a, b) => (live[a].order || 0) - (live[b].order || 0));
-    const studs = studentTotals(live);
-    const sumRow = m => m.reduce((a, b) => a + num(b), 0);
-
-    // 학생 → {과제키: 연간합}
-    const spp = {}; studs.forEach(s => spp[s.name] = {});
-    keys.forEach(k => (live[k].rows || []).forEach(r => {
-        if (!spp[r.name]) spp[r.name] = {};
-        spp[r.name][k] = (spp[r.name][k] || 0) + sumRow(r.m);
-    }));
-
-    // --- 점검 필요: 참여율 한도 초과(>100%) / 임박(>=90%) ---
-    if (alertWrap) {
-        const flagged = studs.filter(s => s.cap && s.ratio >= 0.9).sort((a, b) => b.ratio - a.ratio);
-        if (!flagged.length) {
-            alertWrap.innerHTML = `<div class="alert-ok"><i class="fas fa-circle-check"></i> 참여율 한도 초과·임박 학생이 없습니다.</div>`;
-        } else {
-            const chips = flagged.map(s => {
-                const over = s.ratio > 1.0001;
-                return `<span class="alert-chip ${over ? 'over' : 'high'}"><b>${escHtmlSafe(s.name)}</b> ${Math.round(s.ratio * 100)}% <em>${over ? '한도 초과' : '한도 임박'}</em></span>`;
-            }).join('');
-            alertWrap.innerHTML = `<div class="alert-title"><i class="fas fa-triangle-exclamation"></i> 점검 필요 · 참여율(계상률) 한도</div><div class="alert-chips">${chips}</div>`;
-        }
-    }
-
-    // --- 학생별 참여율 · 총 수령액 (총 수령액 높은 순) ---
-    const ordered = studs.slice().sort((a, b) => (b.total - a.total) || ((b.ratio || 0) - (a.ratio || 0)));
-    const gmax = Math.max(1, ...studs.map(s => Math.max(s.total, s.cap || 0)));
-    dashStudents.innerHTML = ordered.map(s => {
-        const segs = keys.filter(k => (spp[s.name][k] || 0) > 0).map(k =>
-            `<span class="st-seg" style="width:${(spp[s.name][k] / gmax * 100).toFixed(2)}%;background:${colors[k]}" title="${escHtmlSafe(live[k].name)} · ${fmt(spp[s.name][k])}만원"></span>`).join('');
-        const capPct = s.cap ? Math.min(100, s.cap / gmax * 100) : null;
-        const over = s.cap && s.total > s.cap * 1.0001;
-        return `<div class="st-row">
-            <div class="st-name">${escHtmlSafe(s.name)}</div>
-            <div class="st-track">
-                <div class="st-bar">${segs}</div>
-                ${capPct !== null ? `<span class="st-cap" style="left:${capPct.toFixed(2)}%"></span>` : ''}
-            </div>
-            <div class="st-amt">${fmt(s.total)}<small>만원</small></div>
-            <div class="st-pct ${ratioClass(s.ratio)}">${s.cap ? Math.round(s.ratio * 100) + '%' : '–'}${over ? ' <i class="fas fa-triangle-exclamation"></i>' : ''}</div>
-        </div>`;
-    }).join('') || '<div class="pay-empty" style="padding:18px">학생 없음</div>';
-
-    // --- 3) 과제별 예산 (색 = 재원, 클릭 시 편집) ---
-    const pmax = Math.max(1, ...keys.map(k => projectTotal(live[k])));
-    dashProjects.innerHTML = keys.map(k => {
-        const p = live[k]; const t = projectTotal(p);
-        return `<div class="dp-row${k === state.editKey ? ' active' : ''}" data-key="${escHtmlSafe(k)}" title="클릭하여 편집">
-            <span class="dp-dot" style="background:${colors[k]}"></span>
-            <span class="dp-name">${escHtmlSafe(p.name)}</span>
-            <span class="dp-bar"><span style="width:${(t / pmax * 100).toFixed(1)}%;background:${colors[k]}"></span></span>
-            <span class="dp-val">${fmt(t)}</span>
-        </div>`;
-    }).join('') || '<div class="pay-empty" style="padding:18px">과제 없음 — 아래에서 추가하세요</div>';
-    dashProjects.querySelectorAll('.dp-row').forEach(el => el.addEventListener('click', () => selectProject(el.dataset.key)));
+    return `<table class="student-table${compact}"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
 }
 
 // ==================== 과제 칩 ====================
 function renderChips() {
     const keys = Object.keys(state.projects).sort((a, b) => (state.projects[a].order || 0) - (state.projects[b].order || 0));
     const catDot = p => p.category === '국가R&D' ? 'cat-nat' : (p.category === '비R&D' ? 'cat-non' : 'cat-etc');
-    let html = keys.map(k => {
+    let html = keys.map((k, i) => {
         const p = state.projects[k];
-        return `<button type="button" class="chip${k === state.editKey ? ' active' : ''}" data-key="${escHtmlSafe(k)}">
+        const left = i > 0 ? `<span class="chip-arrow" data-move="-1" data-key="${escHtmlSafe(k)}" title="앞으로"><i class="fas fa-angle-left"></i></span>` : '';
+        const right = i < keys.length - 1 ? `<span class="chip-arrow" data-move="1" data-key="${escHtmlSafe(k)}" title="뒤로"><i class="fas fa-angle-right"></i></span>` : '';
+        return `<span class="chip${k === state.editKey ? ' active' : ''}" data-key="${escHtmlSafe(k)}">
             <span class="chip-dot ${catDot(p)}"></span>
             <span class="chip-name">${escHtmlSafe(p.name)}</span>
-            <span class="chip-sum">${fmt(projectTotal(p))}</span>
-        </button>`;
+            <span class="chip-move">${left}${right}</span>
+        </span>`;
     }).join('');
     if (state.isNew && state.editKey) {
-        html += `<button type="button" class="chip active" data-key="${escHtmlSafe(state.editKey)}">
-            <span class="chip-dot cat-etc"></span><span class="chip-name">새 과제…</span></button>`;
+        html += `<span class="chip active" data-key="${escHtmlSafe(state.editKey)}">
+            <span class="chip-dot cat-etc"></span><span class="chip-name">새 과제…</span></span>`;
     }
     html += `<button type="button" class="chip add" id="newChip"><i class="fas fa-plus"></i> 새 과제</button>`;
     projChips.innerHTML = html;
     projChips.querySelectorAll('.chip[data-key]').forEach(c => c.addEventListener('click', () => selectProject(c.dataset.key)));
+    projChips.querySelectorAll('.chip-arrow').forEach(a => a.addEventListener('click', e => {
+        e.stopPropagation();
+        moveProject(a.dataset.key, Number(a.dataset.move));
+    }));
     const nc = document.getElementById('newChip');
     if (nc) nc.addEventListener('click', newProject);
+}
+
+// 과제 칩 순서 변경 (이웃과 교환 후 저장)
+async function moveProject(key, dir) {
+    const keys = Object.keys(state.projects).sort((a, b) => (state.projects[a].order || 0) - (state.projects[b].order || 0));
+    const i = keys.indexOf(key); const j = i + dir;
+    if (i < 0 || j < 0 || j >= keys.length) return;
+    keys.forEach((k, idx) => { state.projects[k].order = idx; });   // order 정규화
+    const t = state.projects[keys[i]].order;
+    state.projects[keys[i]].order = state.projects[keys[j]].order;
+    state.projects[keys[j]].order = t;
+    try { await saveAll(); renderAll(); }
+    catch (err) { showAlert('순서 저장 실패: ' + err.message, 'error'); }
 }
 
 // ==================== 인라인 과제 편집 ====================
@@ -568,11 +498,12 @@ document.addEventListener('DOMContentLoaded', function () {
     authGate = document.getElementById('authGate');
     payApp = document.getElementById('payApp');
     yearSelect = document.getElementById('yearSelect');
-    summaryCards = document.getElementById('summaryCards');
-    dashStudents = document.getElementById('dashStudents');
-    dashProjects = document.getElementById('dashProjects');
-    alertWrap = document.getElementById('alertWrap');
-    studentMatrix = document.getElementById('studentMatrix');
+    blkAll = document.getElementById('blkAll');
+    blkRnd = document.getElementById('blkRnd');
+    blkSvc = document.getElementById('blkSvc');
+    sumAll = document.getElementById('sumAll');
+    sumRnd = document.getElementById('sumRnd');
+    sumSvc = document.getElementById('sumSvc');
     projChips = document.getElementById('projChips');
     inlineEditor = document.getElementById('inlineEditor');
     dirtyBadge = document.getElementById('dirtyBadge');

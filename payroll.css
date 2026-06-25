@@ -160,13 +160,35 @@
 .chip-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; }
 .chip.active .chip-dot { box-shadow: 0 0 0 2px rgba(255, 255, 255, .5); }
 .chip-name { white-space: nowrap; }
-.chip-sum { font-size: 0.82em; opacity: .7; font-variant-numeric: tabular-nums; }
-.chip.active .chip-sum { opacity: .85; }
+.chip-move { display: inline-flex; align-items: center; gap: 1px; margin-left: 3px; }
+.chip-arrow { display: inline-flex; width: 17px; height: 17px; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.82em; color: #9aa7b5; cursor: pointer; transition: all .12s; }
+.chip-arrow:hover { background: #e6eef7; color: var(--color-primary); }
+.chip.active .chip-arrow { color: rgba(255, 255, 255, .7); }
+.chip.active .chip-arrow:hover { background: rgba(255, 255, 255, .22); color: #fff; }
 .chip.add { border-style: dashed; color: var(--color-accent); border-color: #c7dcf0; }
 .chip.add:hover { background: #eef6ff; border-color: var(--color-accent); }
 .cat-nat { background: #3b82d6; }
 .cat-non { background: #e08a2a; }
 .cat-etc { background: #9aa7b5; }
+
+/* ===== 4블록 (전체/R&D/용역/입력) ===== */
+.pay-block { margin-bottom: 22px; }
+.blk-note { font-size: 0.68em; font-weight: 600; color: #9aa7b5; }
+.block-sum { font-size: 0.86em; color: var(--text-medium); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.block-sum b { color: var(--color-primary); font-size: 1.05em; }
+.block-sum .bs-n { color: #9aa7b5; font-weight: 500; }
+
+/* 접이식 블록 (R&D · 용역) */
+details.pay-collapse { background: #fff; border: 1px solid #e8eef5; border-radius: 14px; box-shadow: 0 2px 10px rgba(0, 60, 120, .04); overflow: hidden; }
+details.pay-collapse > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 14px 18px; font-weight: 800; color: var(--color-primary); }
+details.pay-collapse > summary::-webkit-details-marker { display: none; }
+details.pay-collapse > summary .cl-title { flex: 1; }
+details.pay-collapse > summary .cl-title i { color: var(--color-accent); margin-right: 6px; }
+details.pay-collapse > summary .cl-chevron { color: #9aa7b5; transition: transform .2s ease; }
+details.pay-collapse[open] > summary .cl-chevron { transform: rotate(180deg); }
+details.pay-collapse[open] > summary { border-bottom: 1px solid #eef2f7; }
+details.pay-collapse:hover { border-color: var(--color-accent-light); }
+details.pay-collapse .matrix-wrap { border: none; border-radius: 0; box-shadow: none; }
 
 /* ===== 인라인 편집기 ===== */
 .inline-editor { background: #fff; border: 1px solid #e1e9f2; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(0, 60, 120, .06); }
