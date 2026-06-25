@@ -111,30 +111,6 @@
                 </div>
             </div>
 
-            <!-- 요약 카드 -->
-            <div id="summaryCards" class="summary-cards"></div>
-
-            <!-- ⚠ 점검 필요 (참여율 한도 초과/임박 자동 추출) -->
-            <section id="alertWrap" class="alert-band"></section>
-
-            <!-- 시각 대시보드 -->
-            <section class="dash-band payroll-band">
-                <div class="dash-card dash-students-card">
-                    <div class="dash-head">
-                        <h3>학생별 참여율 · 총 수령액</h3>
-                        <span class="dash-sub">막대 = 연간 총액(재원 구성) · 세로선 = 1인 기준(100%) · 참여율 높은 순</span>
-                    </div>
-                    <div id="dashStudents" class="dash-stack-list"></div>
-                </div>
-                <div class="dash-card dash-projects-card">
-                    <div class="dash-head">
-                        <h3>과제별 인건비 비중</h3>
-                        <span class="dash-sub">색 = 재원 구분 · 클릭하여 편집</span>
-                    </div>
-                    <div id="dashProjects" class="dash-proj-list"></div>
-                </div>
-            </section>
-
             <!-- 툴바 -->
             <div class="perf-toolbar">
                 <div class="toolbar-left">
@@ -142,30 +118,50 @@
                     <select id="yearSelect"></select>
                 </div>
                 <div class="toolbar-right">
+                    <button class="tb-btn" id="toggleMonths"><i class="fas fa-down-left-and-up-right-to-center"></i> 분기로 접기</button>
                     <button class="tb-btn" id="editCapsBtn"><i class="fas fa-sliders"></i> 기준(100%) 편집</button>
                     <button class="tb-btn primary" id="addProjectBtn"><i class="fas fa-plus"></i> 새 과제</button>
                 </div>
             </div>
 
-            <!-- 학생별 월별 현황 (실시간 반영) -->
-            <section class="pay-view">
+            <!-- 블록 1: 전체 총액 (R&D + 용역) -->
+            <section class="pay-block">
                 <div class="pay-sec-head">
-                    <h2><i class="fas fa-user-group"></i> 학생별 인건비 현황</h2>
-                    <span class="live-tag"><i class="fas fa-bolt"></i> 아래에서 과제를 조정하면 실시간 반영</span>
+                    <h2><i class="fas fa-layer-group"></i> 전체 총액 <small class="blk-note">(R&amp;D + 용역)</small></h2>
+                    <span id="sumAll" class="block-sum"></span>
                     <span class="head-spacer"></span>
-                    <button class="tb-btn mini" id="toggleMonths"><i class="fas fa-up-right-and-down-left-from-center"></i> 월별 펼치기</button>
+                    <span class="live-tag"><i class="fas fa-bolt"></i> 아래 ‘과제별 입력’을 조정하면 실시간 반영</span>
                 </div>
-                <div id="studentMatrix" class="matrix-wrap"></div>
-                <p class="pay-hint"><i class="fas fa-lightbulb"></i> 기본은 <b>분기 요약</b>이며 ‘월별 펼치기’로 12개월 상세를 볼 수 있어요. 비율 = 연간 총액 ÷ 1인 기준(100%) · 100% 초과 빨강 / 90%↑ 주황 · 편집 중 바뀐 칸은 파랑.</p>
+                <div id="blkAll" class="matrix-wrap"></div>
             </section>
 
-            <!-- 과제 조정 (인라인) -->
+            <!-- 블록 2: R&D 총액 (기본 접힘) -->
+            <details class="pay-block pay-collapse">
+                <summary>
+                    <span class="cl-title"><i class="fas fa-flask"></i> R&amp;D 총액 <small class="blk-note">(국가R&amp;D 과제)</small></span>
+                    <span id="sumRnd" class="block-sum"></span>
+                    <i class="fas fa-chevron-down cl-chevron"></i>
+                </summary>
+                <div id="blkRnd" class="matrix-wrap"></div>
+            </details>
+
+            <!-- 블록 3: 용역 총액 (기본 접힘) -->
+            <details class="pay-block pay-collapse">
+                <summary>
+                    <span class="cl-title"><i class="fas fa-file-signature"></i> 용역 총액 <small class="blk-note">(비R&amp;D 과제)</small></span>
+                    <span id="sumSvc" class="block-sum"></span>
+                    <i class="fas fa-chevron-down cl-chevron"></i>
+                </summary>
+                <div id="blkSvc" class="matrix-wrap"></div>
+            </details>
+
+            <!-- 블록 4: 과제별 입력 (인라인) -->
             <section class="adjust-section">
                 <div class="pay-sec-head">
-                    <h2><i class="fas fa-sliders"></i> 과제 조정</h2>
+                    <h2><i class="fas fa-pen-to-square"></i> 과제별 입력</h2>
                     <span id="dirtyBadge" class="dirty-badge" style="display:none;"><i class="fas fa-circle"></i> 저장되지 않은 변경</span>
                 </div>
-                <p class="pay-hint" style="margin-top:0;"><i class="fas fa-hand-pointer"></i> 과제를 클릭하면 아래에서 바로 수정할 수 있고, 위 표가 즉시 갱신됩니다.</p>
+                <p class="pay-hint" style="margin-top:0;"><i class="fas fa-hand-pointer"></i> 과제를 클릭하면 아래에서 바로 수정하고, 위 표가 즉시 갱신됩니다. 칩의 <i class="fas fa-angle-left"></i> <i class="fas fa-angle-right"></i> 로 순서를 바꿀 수 있어요.</p>
                 <div id="projChips" class="proj-chips"></div>
 
                 <div id="inlineEditor" class="inline-editor" style="display:none;">
