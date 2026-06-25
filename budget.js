@@ -67,7 +67,14 @@ function showAlert(msg, type) { const el = document.createElement('div'); el.cla
 function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
 function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
 function normalize(s) { return String(s || '').toLowerCase().replace(/[\s()（）_\-~,.·]/g, ''); }
-function sortedKeys() { return Object.keys(state.projects).sort((a, b) => (state.projects[a].order || 0) - (state.projects[b].order || 0)); }
+// 교수님 지정 순서(과제명 매칭) 우선, 그 외엔 order → 미매칭은 뒤로
+function sortedKeys() {
+    const P = state.projects;
+    return Object.keys(P).sort((a, b) => {
+        const ca = silabCanonRank(P[a].name), cb = silabCanonRank(P[b].name);
+        return (ca - cb) || ((P[a].order || 0) - (P[b].order || 0));
+    });
+}
 function currentProject() { return state.projects[state.currentKey]; }
 
 function normalizePerson(e) {
@@ -80,6 +87,14 @@ function normalizePerson(e) {
     if (e.months != null && e.months !== '') o.months = num(e.months);
     return o;
 }
+// 항목별 집행맵 정리 (+ 구버전 actSpent → spent.activity 마이그레이션)
+function spentClean(p) {
+    const o = {}; const src = p.spent;
+    if (src) Object.keys(src).forEach(k => { if (BITEMS.find(i => i.key === k)) o[k] = num(src[k]); });
+    if (o.activity == null && num(p.actSpent)) o.activity = num(p.actSpent);
+    return o;
+}
+function spentOf(p, key) { return num((p.spent || {})[key]); }
 function normalizeProject(p) {
     const clean = obj => { const o = {}; if (obj) Object.keys(obj).forEach(k => { if (BITEMS.find(i => i.key === k)) o[k] = num(obj[k]); }); return o; };
     let people = p.people;
@@ -90,7 +105,8 @@ function normalizeProject(p) {
         category: CATEGORIES.includes(p.category) ? p.category : '국가R&D',
         manager: String(p.manager || ''), period: String(p.period || ''), note: String(p.note || ''),
         order: num(p.order), payrollName: String(p.payrollName || ''),
-        alloc: clean(p.alloc), people
+        actNote: String(p.actNote || ''),   // 연구활동비 집행 이슈/메모
+        alloc: clean(p.alloc), spent: spentClean(p), people
     };
 }
 
@@ -143,6 +159,38 @@ function calc(m) {
 }
 function total(p) { return calc(effAlloc(p)).grand; }
 
+// ==================== 연구활동비 집행현황 ====================
+// 배정 = 연구활동비(activity) 배정액 · 집행 = 수기 입력(actSpent) · 잔액 = 배정-집행
+function actStat(p) {
+    const budget = num(effAlloc(p).activity);
+    const spent = spentOf(p, 'activity');
+    return { budget, spent, remain: budget - spent, rate: pct(spent, budget) };
+}
+// 과제 기간(차년도) 중 현재까지 경과 비율 (전체 연도(ALL)·기간미상이면 null)
+function elapsedFraction(p) {
+    if (state.year === ALL) return null;
+    const list = periodMonths(p.period, state.year);
+    if (!list.length) return null;
+    const now = new Date(), ny = now.getFullYear(), nm = now.getMonth() + 1;
+    let el = 0;
+    list.forEach(({ year, m }) => { const mm = m + 1; if (year < ny || (year === ny && mm <= nm)) el++; });
+    return el / list.length;
+}
+// 집행률 vs 기간경과율 비교 → 페이스 해석
+function paceOf(p) {
+    const { budget, rate } = actStat(p);
+    if (!budget) return { label: '연구활동비 없음', cls: 'na', el: null };
+    const el = elapsedFraction(p);
+    if (el == null) return { label: '—', cls: 'na', el: null };
+    if (el <= 0) return { label: '시작 전', cls: 'na', el };
+    const diff = rate - el;
+    if (diff < -0.15) return { label: '집행 지연', cls: 'slow', el, diff };
+    if (diff > 0.15) return { label: '빠른 집행', cls: 'fast', el, diff };
+    return { label: '적정 페이스', cls: 'ok', el, diff };
+}
+function execBarHTML(rate, sm) { const w = Math.min(100, Math.max(0, rate * 100)); return `<div class="exec-bar${sm ? ' sm' : ''}"><span style="width:${w.toFixed(1)}%"></span></div>`; }
+function paceBadge(pace) { return `<span class="pace-badge pace-${pace.cls}">${escHtmlSafe(pace.label)}</span>`; }
+
 // ==================== 인증 ====================
 async function loginUser(email, password) {
     if (!ALLOWED_USERS.includes(email)) throw new Error('접근 권한이 없습니다. 연구실 멤버만 사용할 수 있습니다.');
@@ -190,7 +238,7 @@ async function loadAllYears() {
         list.forEach(p0 => {
             const p = normalizeProject(p0), nm = p.name;
             if (!byName[nm]) { byName[nm] = p; byName[nm].order = i++; byName[nm].period = '전체기간 누계'; byName[nm].people = []; }
-            else { const t = byName[nm]; BITEMS.forEach(it => t.alloc[it.key] = num(t.alloc[it.key]) + num(p.alloc[it.key])); }
+            else { const t = byName[nm]; BITEMS.forEach(it => { t.alloc[it.key] = num(t.alloc[it.key]) + num(p.alloc[it.key]); t.spent[it.key] = num((t.spent || {})[it.key]) + spentOf(p, it.key); }); }
         });
     });
     state.projects = byName; state.isSeed = false;
@@ -256,8 +304,38 @@ function renderOverview() {
 
     if (!keys.length) { overviewWrap.innerHTML = kpiHtml + `<div class="empty-state"><i class="fas fa-folder-open"></i><h3>등록된 예산이 없습니다</h3><p>상단 '과제 추가'로 시작하세요.</p></div>`; return; }
 
-    // 총액(절대금액) 높은 순 정렬
-    const byAmt = keys.slice().sort((a, b) => total(state.projects[b]) - total(state.projects[a]));
+    // 교수님 지정 순서(고정) — keys 가 이미 그 순서
+    const byAmt = keys.slice();
+
+    // ---- 연구활동비 집행현황 (전체 취합) — 예산에서 가장 중요 ----
+    let eBud = 0, eSpent = 0;
+    keys.forEach(k => { const st = actStat(state.projects[k]); eBud += st.budget; eSpent += st.spent; });
+    const eRemain = eBud - eSpent, eRate = pct(eSpent, eBud);
+    const execRows = byAmt.filter(k => actStat(state.projects[k]).budget > 0).map(k => {
+        const p = state.projects[k], st = actStat(p), pace = paceOf(p);
+        return `<tr data-key="${escHtmlSafe(k)}">
+            <td class="ex-name">${escHtmlSafe(p.name)}</td>
+            <td class="bt-num">${won(st.budget)}</td>
+            <td class="bt-num">${won(st.spent)}</td>
+            <td class="bt-num">${won(st.remain)}</td>
+            <td class="ex-barcell">${execBarHTML(st.rate, true)}<span class="ex-rate">${Math.round(st.rate * 100)}%</span></td>
+            <td class="ex-pace">${state.year !== ALL ? paceBadge(pace) : '<span class="muted">-</span>'}</td>
+            <td class="ex-note">${p.actNote ? escHtmlSafe(p.actNote) : '<span class="muted">-</span>'}</td>
+        </tr>`;
+    }).join('');
+    const execHtml = `<div class="ov-sec-head"><i class="fas fa-gauge-high"></i> 연구활동비 집행현황 / 이슈 <span class="ov-sec-sub">(예산에서 가장 중요한 부분)</span></div>
+        <div class="exec-overview card">
+            <div class="exec-metrics big">
+                <div class="exec-m"><span class="exec-m-label">연구활동비 배정</span><span class="exec-m-val">${wonShort(eBud)}<small>원</small></span></div>
+                <div class="exec-m"><span class="exec-m-label">집행</span><span class="exec-m-val">${wonShort(eSpent)}<small>원</small></span></div>
+                <div class="exec-m"><span class="exec-m-label">잔액</span><span class="exec-m-val${eRemain < 0 ? ' neg' : ''}">${wonShort(eRemain)}<small>원</small></span></div>
+                <div class="exec-m"><span class="exec-m-label">전체 집행률</span><span class="exec-m-val">${Math.round(eRate * 100)}<small>%</small></span></div>
+            </div>
+            ${execBarHTML(eRate)}
+            ${execRows
+            ? `<div class="matrix-wrap"><table class="bud-ov-table exec-table"><thead><tr><th class="ex-name">과제</th><th class="bt-num">배정</th><th class="bt-num">집행</th><th class="bt-num">잔액</th><th>집행률</th><th>페이스</th><th class="ex-note">이슈/메모</th></tr></thead><tbody>${execRows}</tbody></table></div>`
+            : `<div class="muted" style="padding:12px 2px 2px">연구활동비 배정/집행이 입력된 과제가 없습니다. ‘과제 추가/수정’에서 연구활동비 배정과 집행액을 입력하면 여기에 집계됩니다.</div>`}
+        </div>`;
 
     // 과제별 요약 표 (검토용) — 직접비를 항목별로 풀어서 표시
     const cz = v => v ? won(v) : '<span class="muted">-</span>';   // 0이면 '-'
@@ -301,11 +379,34 @@ function renderOverview() {
             <div class="cmp-legend"><span><i class="cmp-labor"></i>인건비 ${wonShort(x.labor)}</span><span><i class="cmp-direct"></i>직접비 ${wonShort(x.directOnly)}</span><span><i class="cmp-indirect"></i>간접·부가 ${wonShort(x.io)}</span></div>
         </div>`;
     }).join('');
-    overviewWrap.innerHTML = kpiHtml
-        + `<div class="ov-sec-head"><i class="fas fa-table"></i> 과제별 예산 요약 <span class="ov-sec-sub">(총액 높은 순)</span></div>` + tableHtml
+    overviewWrap.innerHTML = kpiHtml + execHtml
+        + `<div class="ov-sec-head"><i class="fas fa-table"></i> 과제별 예산 요약 <span class="ov-sec-sub">(지정 순서)</span></div>` + tableHtml
         + `<div class="ov-sec-head"><i class="fas fa-grip"></i> 과제별 카드</div><div class="ov-grid">${cards}</div>`;
     overviewWrap.querySelectorAll('.ov-card').forEach(el => el.addEventListener('click', () => selectProject(el.dataset.key)));
-    overviewWrap.querySelectorAll('.bud-ov-table tbody tr').forEach(el => el.addEventListener('click', () => selectProject(el.dataset.key)));
+    overviewWrap.querySelectorAll('.bud-ov-table tbody tr[data-key]').forEach(el => el.addEventListener('click', () => selectProject(el.dataset.key)));
+}
+
+// ---- 연구활동비 집행현황 블록 (상세) ----
+function renderExecDetail(p) {
+    const el = document.getElementById('execDetail'); if (!el) return;
+    const s = actStat(p), pace = paceOf(p);
+    const elp = (pace.el != null) ? Math.round(pace.el * 100) : null;
+    el.innerHTML = `
+    <div class="exec-card card">
+        <div class="exec-head">
+            <h2><i class="fas fa-gauge-high"></i> 연구활동비 집행현황 / 이슈</h2>
+            ${state.year !== ALL ? paceBadge(pace) : ''}
+        </div>
+        <div class="exec-metrics">
+            <div class="exec-m"><span class="exec-m-label">배정</span><span class="exec-m-val">${won(s.budget)}<small>원</small></span></div>
+            <div class="exec-m"><span class="exec-m-label">집행</span><span class="exec-m-val">${won(s.spent)}<small>원</small></span></div>
+            <div class="exec-m"><span class="exec-m-label">잔액</span><span class="exec-m-val${s.remain < 0 ? ' neg' : ''}">${won(s.remain)}<small>원</small></span></div>
+            <div class="exec-m"><span class="exec-m-label">집행률</span><span class="exec-m-val">${Math.round(s.rate * 100)}<small>%</small></span></div>
+        </div>
+        ${execBarHTML(s.rate)}
+        ${elp != null ? `<div class="exec-pace-note">기간 경과 <b>${elp}%</b> 대비 집행률 <b>${Math.round(s.rate * 100)}%</b></div>` : ''}
+        <div class="exec-issue"><i class="fas fa-pen-to-square"></i> ${p.actNote ? escHtmlSafe(p.actNote) : '<span class="muted">집행 이슈/메모가 없습니다. ‘이 과제 수정’에서 입력하세요.</span>'}</div>
+    </div>`;
 }
 
 // ---- 과제 상세 ----
@@ -336,16 +437,26 @@ function renderDetail() {
         </div>
         <div class="cat-chips">${chips}</div>`;
 
+    renderExecDetail(p);
+
+    const sp = {}; BITEMS.forEach(it => sp[it.key] = spentOf(p, it.key));
+    const cs = calc(sp);
+    const execCells = (vv, sv) => {
+        const remain = vv - sv, rate = pct(sv, vv);
+        return `<td>${sv ? won(sv) : '<span class="muted">–</span>'}</td>
+            <td class="${remain < 0 ? 'mtx-neg' : ''}">${vv ? won(remain) : '<span class="muted">–</span>'}</td>
+            <td class="mtx-prog">${vv ? `<div class="exec-bar sm"><span style="width:${Math.min(100, rate * 100).toFixed(1)}%"></span></div><span class="ex-rate">${Math.round(rate * 100)}%</span>` : ''}</td>`;
+    };
     const rows = LAYOUT.map(row => {
         if (row.type === 'item') {
-            const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), linked = it.linked && isLinked(p);
+            const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), sv = num(sp[row.key]), linked = it.linked && isLinked(p);
             return `<tr><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}</td>
-                <td>${v ? won(v) : '<span class="muted">–</span>'}</td><td class="mtx-share">${grand && v ? Math.round(pct(v, grand) * 100) + '%' : ''}</td></tr>`;
+                <td>${v ? won(v) : '<span class="muted">–</span>'}</td>${execCells(v, sv)}</tr>`;
         }
-        const val = c[row.calc], cls = row.type === 'total' ? 'mtx-total' : 'mtx-sub';
-        return `<tr class="${cls}"><td class="mtx-name">${row.label}</td><td>${won(val)}</td><td class="mtx-share">${grand ? Math.round(pct(val, grand) * 100) + '%' : ''}</td></tr>`;
+        const val = c[row.calc], sval = cs[row.calc], cls = row.type === 'total' ? 'mtx-total' : 'mtx-sub';
+        return `<tr class="${cls}"><td class="mtx-name">${row.label}</td><td>${won(val)}</td>${execCells(val, sval)}</tr>`;
     }).join('');
-    matrixWrap.innerHTML = `<table class="perf-matrix bud-matrix"><thead><tr><th class="mtx-name">항목</th><th>배정 (원)</th><th>비중</th></tr></thead><tbody>${rows}</tbody></table>`;
+    matrixWrap.innerHTML = `<table class="perf-matrix bud-matrix"><thead><tr><th class="mtx-name">항목</th><th>배정 (원)</th><th>집행 (원)</th><th>잔액</th><th>진행률</th></tr></thead><tbody>${rows}</tbody></table>`;
     document.getElementById('editProjectBtn2').style.display = state.readOnly ? 'none' : '';
     renderPeople(p);
 }
@@ -391,13 +502,15 @@ function loadSeedView() {
 
 // ==================== 모달 편집 ====================
 function modalItemsHTML(p) {
-    const a = p.alloc || {};
-    return BITEMS.map(it => {
+    const a = p.alloc || {}, sp = p.spent || {};
+    const head = `<div class="mi-row mi-head"><span class="mi-label"></span><span class="mi-col">배정 (원)</span><span class="mi-col">집행 (원)</span></div>`;
+    return head + BITEMS.map(it => {
         const linked = it.linked && isLinked(p);
         const v = linked ? payrollWindowSum(p, state.year) : num(a[it.key]);
         return `<div class="mi-row" data-k="${it.key}">
             <span class="mi-label">${it.label}${linked ? ' <i class="fas fa-link link-ic"></i>' : ''}</span>
-            <input type="text" inputmode="numeric" class="mi-input" value="${v || ''}"${linked ? ' readonly' : ''}></div>`;
+            <input type="text" inputmode="numeric" class="mi-input" value="${v || ''}"${linked ? ' readonly' : ''}>
+            <input type="text" inputmode="numeric" class="mi-spent" value="${num(sp[it.key]) || ''}" placeholder="집행"></div>`;
     }).join('');
 }
 // ---- 인력구성 편집 ----
@@ -466,14 +579,18 @@ function collectPeople() {
 }
 function collectModal() {
     const g = id => document.getElementById(id);
-    const alloc = {};
-    document.querySelectorAll('#modalItems .mi-row').forEach(r => { const inp = r.querySelector('.mi-input'); if (inp && !inp.readOnly) alloc[r.dataset.k] = num(inp.value); });
+    const alloc = {}, spent = {};
+    document.querySelectorAll('#modalItems .mi-row[data-k]').forEach(r => {
+        const inp = r.querySelector('.mi-input'); if (inp && !inp.readOnly) alloc[r.dataset.k] = num(inp.value);
+        const si = r.querySelector('.mi-spent'); if (si && num(si.value)) spent[r.dataset.k] = num(si.value);
+    });
     return {
         name: (g('bName').value.trim()) || '(새 과제)', category: g('bCategory').value,
         manager: g('bManager').value.trim(), period: g('bPeriod').value.trim(), note: g('bNote').value.trim(),
         payrollName: state.projects[state.editKey] ? (state.projects[state.editKey].payrollName || '') : '',
         order: state.projects[state.editKey] ? state.projects[state.editKey].order : Object.keys(state.projects).length,
-        alloc, people: collectPeople()
+        actNote: g('bActNote').value.trim(),
+        alloc, spent, people: collectPeople()
     };
 }
 function recalcModal() {
@@ -487,9 +604,13 @@ function recalcModal() {
         if (linkSum != null) { inp.readOnly = true; inp.value = linkSum || ''; if (!note) sr.querySelector('.mi-label').insertAdjacentHTML('beforeend', ' <i class="fas fa-link link-ic" title="인건비 페이지 자동연동(차년도 기간 합산)"></i>'); }
         else { inp.readOnly = false; if (note) note.remove(); }
     }
-    const m = {}; document.querySelectorAll('#modalItems .mi-row').forEach(r => m[r.dataset.k] = num(r.querySelector('.mi-input').value));
-    const c = calc(m);
-    g('modalPreview').innerHTML = `<div class="as-text">인건비 소계 <b>${won(c.labor)}</b> · 직접비 총계 <b>${won(c.direct)}</b> · <span class="hi">총액 <b>${won(c.grand)}</b>원</span></div>`;
+    const m = {}, sp = {};
+    document.querySelectorAll('#modalItems .mi-row[data-k]').forEach(r => {
+        m[r.dataset.k] = num(r.querySelector('.mi-input').value);
+        const si = r.querySelector('.mi-spent'); sp[r.dataset.k] = si ? num(si.value) : 0;
+    });
+    const c = calc(m), cs = calc(sp);
+    g('modalPreview').innerHTML = `<div class="as-text">인건비 소계 <b>${won(c.labor)}</b> · 직접비 총계 <b>${won(c.direct)}</b> · <span class="hi">총액 <b>${won(c.grand)}</b>원</span> · 집행 합계 <b>${won(cs.grand)}</b></div>`;
     // 인력 합계 vs 예산(학생·외부 인건비) 대조
     const ppl = collectPeople();
     const ps = ppl.filter(e => e.grp === 'student' && !e.note).reduce((a, e) => a + num(e.amount), 0);
@@ -507,8 +628,9 @@ function openProjectForm(key) {
     g('projectFormTitle').textContent = key ? '과제 수정' : '새 과제 추가';
     g('bName').value = key ? p.name : '';
     g('bCategory').value = p.category; g('bManager').value = p.manager; g('bPeriod').value = p.period; g('bNote').value = p.note;
+    g('bActNote').value = p.actNote || '';
     g('modalItems').innerHTML = modalItemsHTML(p);
-    document.querySelectorAll('#modalItems .mi-input').forEach(inp => inp.addEventListener('input', recalcModal));
+    document.querySelectorAll('#modalItems .mi-input, #modalItems .mi-spent').forEach(inp => inp.addEventListener('input', recalcModal));
     g('bName').oninput = recalcModal; g('bPeriod').oninput = recalcModal;   // 이름/기간 바뀌면 연동 재평가
     renderModalPeople(p.people);
     recalcModal();
@@ -587,7 +709,7 @@ document.addEventListener('DOMContentLoaded', function () {
     g('addProjectBtn').addEventListener('click', () => openProjectForm(null));
     const editCur = () => { if (currentProject()) openProjectForm(state.currentKey); else showAlert('수정할 과제를 먼저 선택하세요.', 'warning'); };
     g('editProjectBtn').addEventListener('click', editCur);
-    g('editProjectBtn2').addEventListener('click', editCur);
+    g('editProjectBtn2').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); editCur(); });
     g('deleteProjectBtn').addEventListener('click', deleteProject);
     g('addPersonBtn').addEventListener('click', () => { addPersonRow({ grp: 'student' }); recalcModal(); });
     g('projectForm').addEventListener('submit', saveProject);

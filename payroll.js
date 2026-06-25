@@ -296,44 +296,28 @@ function totalsTableHTML(projects) {
 
 // ==================== 과제 칩 ====================
 function renderChips() {
-    const keys = Object.keys(state.projects).sort((a, b) => (state.projects[a].order || 0) - (state.projects[b].order || 0));
+    // 교수님 지정 순서(과제명 매칭) 우선 → 그 외 order
+    const keys = Object.keys(state.projects).sort((a, b) => {
+        const ca = silabCanonRank(state.projects[a].name), cb = silabCanonRank(state.projects[b].name);
+        return (ca - cb) || ((state.projects[a].order || 0) - (state.projects[b].order || 0));
+    });
     const catDot = p => p.category === '국가R&D' ? 'cat-nat' : (p.category === '비R&D' ? 'cat-non' : 'cat-etc');
-    let html = keys.map((k, i) => {
+    let html = keys.map(k => {
         const p = state.projects[k];
-        const left = i > 0 ? `<span class="chip-arrow" data-move="-1" data-key="${escHtmlSafe(k)}" title="앞으로"><i class="fas fa-angle-left"></i></span>` : '';
-        const right = i < keys.length - 1 ? `<span class="chip-arrow" data-move="1" data-key="${escHtmlSafe(k)}" title="뒤로"><i class="fas fa-angle-right"></i></span>` : '';
-        return `<span class="chip${k === state.editKey ? ' active' : ''}" data-key="${escHtmlSafe(k)}">
+        return `<button type="button" class="chip${k === state.editKey ? ' active' : ''}" data-key="${escHtmlSafe(k)}">
             <span class="chip-dot ${catDot(p)}"></span>
             <span class="chip-name">${escHtmlSafe(p.name)}</span>
-            <span class="chip-move">${left}${right}</span>
-        </span>`;
+        </button>`;
     }).join('');
     if (state.isNew && state.editKey) {
-        html += `<span class="chip active" data-key="${escHtmlSafe(state.editKey)}">
-            <span class="chip-dot cat-etc"></span><span class="chip-name">새 과제…</span></span>`;
+        html += `<button type="button" class="chip active" data-key="${escHtmlSafe(state.editKey)}">
+            <span class="chip-dot cat-etc"></span><span class="chip-name">새 과제…</span></button>`;
     }
     html += `<button type="button" class="chip add" id="newChip"><i class="fas fa-plus"></i> 새 과제</button>`;
     projChips.innerHTML = html;
     projChips.querySelectorAll('.chip[data-key]').forEach(c => c.addEventListener('click', () => selectProject(c.dataset.key)));
-    projChips.querySelectorAll('.chip-arrow').forEach(a => a.addEventListener('click', e => {
-        e.stopPropagation();
-        moveProject(a.dataset.key, Number(a.dataset.move));
-    }));
     const nc = document.getElementById('newChip');
     if (nc) nc.addEventListener('click', newProject);
-}
-
-// 과제 칩 순서 변경 (이웃과 교환 후 저장)
-async function moveProject(key, dir) {
-    const keys = Object.keys(state.projects).sort((a, b) => (state.projects[a].order || 0) - (state.projects[b].order || 0));
-    const i = keys.indexOf(key); const j = i + dir;
-    if (i < 0 || j < 0 || j >= keys.length) return;
-    keys.forEach((k, idx) => { state.projects[k].order = idx; });   // order 정규화
-    const t = state.projects[keys[i]].order;
-    state.projects[keys[i]].order = state.projects[keys[j]].order;
-    state.projects[keys[j]].order = t;
-    try { await saveAll(); renderAll(); }
-    catch (err) { showAlert('순서 저장 실패: ' + err.message, 'error'); }
 }
 
 // ==================== 인라인 과제 편집 ====================
