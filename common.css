@@ -146,6 +146,14 @@ body {
     transform: translateY(-2px);
 }
 
+/* 헤더 로그인 버튼은 평소 숨김. 로고를 빠르게 5번 클릭하면 로그인 모달이 열린다.
+   (각 페이지 JS가 인라인 display 를 세팅하므로 !important 로 덮는다. 게이트 버튼 #gateLoginBtn 은 영향 없음) */
+#loginBtn { display: none !important; }
+
+/* performance/budget/payroll 은 로그인 모달을 .open 클래스로 여는데 해당 표시 규칙이 없어
+   열리지 않던 잠재 버그가 있어 공통으로 보강. (inline display 방식 페이지에는 .open 이 안 붙으므로 무영향) */
+.login-modal.open { display: block; }
+
 .user-info {
     color: rgba(255, 255, 255, 0.85);
     font-weight: 600;

@@ -42,6 +42,33 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) { /* firebase 미로드 페이지는 캐시값 유지 */ }
     }
 
+    // 숨겨진 관리자 진입: 좌측 상단 로고를 빠르게 5번 클릭하면 로그인 모달이 열린다.
+    // 주의: 이것은 보안 경계가 아니라 '로그인 버튼을 평소엔 안 보이게' 하는 수준이다.
+    //       (이 코드는 공개 소스에 그대로 노출됨) 실제 보호는 Firebase 비밀번호 + DB 규칙이 담당한다.
+    (function setupSecretLogin() {
+        var logo = document.querySelector('.logo a') || document.querySelector('.logo');
+        if (!logo) return;
+        var NEED = 5, WINDOW = 1500, NAV_DELAY = 320;
+        var href = (logo.getAttribute && logo.getAttribute('href')) || 'index.html';
+        var clicks = [];
+        var navTimer = null;
+        logo.addEventListener('click', function (e) {
+            e.preventDefault();
+            var now = Date.now();
+            clicks.push(now);
+            clicks = clicks.filter(function (t) { return now - t < WINDOW; });
+            if (navTimer) { clearTimeout(navTimer); navTimer = null; }
+            if (clicks.length >= NEED) {
+                clicks = [];
+                var b = document.getElementById('loginBtn');
+                if (b) b.click();      // 페이지별 모달 오픈 로직 재사용
+                return;
+            }
+            // 평소(단일/소수 클릭)에는 원래대로 홈으로 이동 (약간의 지연 후)
+            navTimer = setTimeout(function () { window.location.href = href; }, NAV_DELAY);
+        });
+    })();
+
     var hamburger = document.getElementById('hamburger');
     var menu = document.querySelector('.menu');
     if (!hamburger || !menu) return;
