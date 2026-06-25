@@ -33,7 +33,9 @@
             <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
             <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
             <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
-            <a href="./performance.html" class="nav-perf active" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>        </nav>
+            <a href="./performance.html" class="nav-perf active" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>
+            <a href="./budget.html" class="nav-perf" style="display:none;"><i class="fas fa-sack-dollar"></i> 예산</a>
+        </nav>
 
         <div class="auth-section">
             <div class="user-info" id="userInfo" style="display: none;">
@@ -86,8 +88,15 @@
         <!-- 로그인 상태 본문 -->
         <div id="perfApp" style="display:none;">
             <div class="page-hero">
-                <h1><i class="fas fa-chart-line"></i> 과제 실적 진행상황</h1>
+                <h1><i class="fas fa-chart-line"></i> 실적 현황</h1>
                 <p>과제별 연차 실적 요구사항(목표)을 입력하고, 실적을 등록하면 달성/목표가 자동 집계됩니다.</p>
+            </div>
+
+            <!-- 실적 보기 전환 탭 -->
+            <div class="perf-tabs">
+                <a href="./performance.html" class="perf-tab active"><i class="fas fa-chart-line"></i> 과제 실적 현황</a>
+                <a href="./team-performance.html" class="perf-tab"><i class="fas fa-people-group"></i> 팀별 실적 현황</a>
+                <a href="./member-performance.html" class="perf-tab"><i class="fas fa-ranking-star"></i> 멤버 실적 현황</a>
             </div>
 
             <!-- 과제 선택/관리 툴바 -->

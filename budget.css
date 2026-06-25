@@ -1,0 +1,128 @@
+/* budget.css - 과제별 예산 현황 (Performance 스타일) · common/photo/performance/payroll.css 위에 얹음 */
+
+.link-ic { color: var(--color-accent); font-size: 0.85em; }
+.neg { color: var(--color-danger); font-weight: 700; }
+.src-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+.c-nat { background: #1577a8; } .c-non { background: #e0892b; } .c-etc { background: #8c97a6; }
+
+/* ===== 전체 개요: 섹션 헤더 + 과제별 요약 표 ===== */
+.ov-sec-head { font-size: 0.92rem; font-weight: 800; color: var(--color-primary); margin: 6px 0 10px; }
+.ov-sec-head i { color: var(--color-accent); margin-right: 6px; }
+.ov-sec-head .ov-sec-sub { font-size: 0.78rem; font-weight: 500; color: var(--text-light); margin-left: 4px; }
+.bud-ov-tablewrap { margin-bottom: 22px; }
+.bud-ov-table { border-collapse: collapse; width: 100%; font-size: 0.86rem; min-width: 1060px; }
+.bud-ov-table th, .bud-ov-table td { padding: 11px 12px; border-bottom: 1px solid #eef2f7; white-space: nowrap; }
+.bud-ov-table thead th { background: #f4f8fc; color: var(--text-medium); font-weight: 700; text-align: right; }
+.bud-ov-table th.bt-name, .bud-ov-table th.bt-mgr { text-align: left; }
+.bud-ov-table .bt-name { text-align: left; font-weight: 700; color: var(--color-primary); }
+.bud-ov-table .bt-cat { text-align: left; color: var(--text-medium); font-size: 0.9em; }
+.bud-ov-table .bt-num { text-align: right; font-variant-numeric: tabular-nums; }
+.bud-ov-table .bt-total b { font-size: 1.04em; }
+.bud-ov-table .bt-pct { color: var(--text-light); font-size: 0.86em; margin-left: 2px; }
+.bud-ov-table .bt-mgr { text-align: left; color: var(--text-medium); }
+.bud-ov-table tbody tr { cursor: pointer; }
+.bud-ov-table tbody tr:nth-child(even) td { background: #f9fbfd; }
+.bud-ov-table tbody tr:hover td { background: #eef5fc; }
+.bud-ov-table tfoot .foot td { background: #eef3f9; font-weight: 800; color: var(--color-primary); border-top: 2px solid #dbe6f1; text-align: right; }
+.bud-ov-table tfoot .foot td:first-child { text-align: left; }
+
+/* ===== 전체 개요 카드 ===== */
+.ov-total { font-size: 0.9rem; color: var(--text-medium); margin: 8px 0 10px; }
+.ov-total b { color: var(--color-primary); font-size: 1.15em; font-variant-numeric: tabular-nums; }
+.ov-amt { font-size: 0.82rem; color: var(--text-medium); margin: 8px 0 10px; }
+.ov-amt b { color: var(--color-primary); }
+.alloc-summary .as-text .hi { color: var(--color-primary); font-weight: 700; }
+.alloc-summary .as-text .hi b { font-size: 1.1em; }
+.ov-overall-pct.ok { color: #1f8a4c; } .ov-overall-pct.high { color: var(--color-accent); } .ov-overall-pct.over { color: var(--color-danger); } .ov-overall-pct.zero { color: #b3bcc8; }
+.ov-bar-fill.ok { background: #58c27d; } .ov-bar-fill.high { background: var(--color-accent); } .ov-bar-fill.over { background: var(--color-danger); } .ov-bar-fill.zero { background: #cfd8e3; }
+
+/* 구성 막대 (인건비 / 직접비 / 간접·부가) */
+.cmp-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #eef2f7; }
+.cmp-seg { height: 100%; display: block; }
+.cmp-seg.cmp-labor, i.cmp-labor { background: #1577a8; }
+.cmp-seg.cmp-direct, i.cmp-direct { background: #4facfe; }
+.cmp-seg.cmp-indirect, i.cmp-indirect { background: #b9c6d6; }
+.cmp-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 0.72rem; color: var(--text-light); }
+.cmp-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.cmp-legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+/* 상세 게이지 라벨 */
+.gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.gauge-cap { font-size: 0.78rem; font-weight: 700; color: var(--text-medium); white-space: nowrap; }
+
+/* ===== 상세: 예산 항목 매트릭스 ===== */
+.bud-matrix { width: 100%; }
+.bud-matrix th, .bud-matrix td { text-align: right; }
+.bud-matrix th.mtx-name, .bud-matrix td.mtx-name { text-align: left; }
+.bud-matrix td { font-variant-numeric: tabular-nums; }
+.bud-matrix td.mtx-share { color: var(--text-light); width: 64px; }
+.bud-matrix tr.mtx-sub td { background: #f6f9fc; font-weight: 700; color: var(--color-primary); }
+.bud-matrix tr.mtx-total td { background: #e9f1f9; font-weight: 800; color: var(--color-primary); border-top: 2px solid #d3e2f0; font-size: 1.04em; }
+.bud-matrix tr.mtx-sub td.mtx-share, .bud-matrix tr.mtx-total td.mtx-share { color: inherit; }
+.cat-chip-lack { color: var(--text-light); font-weight: 700; }
+
+/* ===== 인력구성 표 ===== */
+.people-period { font-size: 0.82rem; color: var(--text-light); font-weight: 600; }
+.people-table { width: 100%; }
+.people-table th, .people-table td { text-align: right; }
+.people-table th.mtx-name, .people-table td.mtx-name { text-align: left; }
+.people-table td { font-variant-numeric: tabular-nums; }
+.people-table tr.pgrp td { background: #eef3f9; font-weight: 800; color: var(--color-primary); text-align: left; font-size: 0.86em; letter-spacing: -.01em; }
+.people-table tr.pnote td { color: var(--text-light); font-style: italic; }
+.people-table tr.mtx-sub td { background: #f6f9fc; font-weight: 700; color: var(--color-primary); }
+/* 인원별 구분: 사람이 바뀌면 윗선, 같은 사람 묶음은 옅은 줄무늬 */
+.people-table tbody tr td { border-bottom: none; }
+.people-table tbody tr.p-sep td { border-top: 1.5px solid #d5e1ee; }
+.people-table tbody tr.p-cont td { border-top: 1px dotted #e7eef6; }
+.people-table tbody tr.p-cont td.mtx-name { color: #aab4c0; }
+.people-table tbody tr.p-alt td { background: #fafcfe; }
+.people-table tbody tr.p-alt.pnote td { background: #fafcfe; }
+.people-table tbody tr.pgrp td, .people-table tbody tr.mtx-sub td { border-top: none; }
+.people-table tbody tr:hover td { background: #f2f8ff; }
+.people-table tbody tr.pexcl td { color: #aab4c0; }
+.excl-tag { font-size: 0.66em; font-weight: 700; color: #b5722a; background: #fff0e0; padding: 1px 6px; border-radius: 10px; margin-left: 4px; vertical-align: middle; }
+
+/* ===== 모달: 학생인건비 연동 + 항목 입력 ===== */
+.ie-link { margin-bottom: 14px; }
+.ie-link > label { display: block; font-size: 0.85em; font-weight: 600; color: var(--text-medium); margin-bottom: 6px; }
+.ie-link .link-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ie-link .chk { font-size: 0.86rem; color: var(--text-medium); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.ie-link select { flex: 1; min-width: 160px; padding: 8px 10px; border: 1px solid #d9e2ec; border-radius: 8px; font-size: 0.88rem; background: #fff; }
+.ie-link select:disabled { background: #f1f4f8; color: #9aa7b5; }
+
+.modal-items { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 16px; margin-bottom: 12px; }
+.mi-row { display: flex; align-items: center; gap: 8px; }
+.modal-items .mi-label { flex: 1 1 auto; min-width: 0; font-size: 0.84rem; color: var(--text-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal-items .mi-input { flex: 0 0 132px; width: 132px; box-sizing: border-box; padding: 7px 9px; border: 1px solid #dde5ee; border-radius: 7px; text-align: right; font-size: 0.9em; font-variant-numeric: tabular-nums; }
+.mi-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(79,172,254,.15); }
+.mi-input[readonly] { background: #eef3f9; color: var(--text-medium); border-color: transparent; }
+
+/* 배분율 요약 (모달 미리보기) */
+.alloc-summary { margin-top: 6px; }
+.alloc-summary .as-bar { position: relative; height: 12px; background: #eef2f7; border-radius: 6px; }
+.alloc-summary .as-bar > span { display: block; height: 100%; border-radius: 6px; transition: width .25s ease; }
+.alloc-summary .as-bar > span.ok { background: #1f8a4c; } .alloc-summary .as-bar > span.high { background: var(--color-accent); }
+.alloc-summary .as-bar > span.over { background: var(--color-danger); } .alloc-summary .as-bar > span.zero { background: #cfd8e3; }
+.alloc-summary .as-cap { position: absolute; top: -3px; bottom: -3px; left: 100%; width: 2px; background: #1f2a37; }
+.alloc-summary .as-text { margin-top: 7px; font-size: 0.84rem; color: var(--text-medium); }
+.alloc-summary .as-text b { color: var(--color-primary); font-variant-numeric: tabular-nums; }
+.alloc-summary .as-text .ok { color: #1f8a4c; font-weight: 700; } .alloc-summary .as-text .high { color: var(--color-accent); font-weight: 700; } .alloc-summary .as-text .over { color: var(--color-danger); font-weight: 700; }
+
+@media (max-width: 640px) { .modal-items { grid-template-columns: 1fr; } .mi-input { width: 120px; } }
+
+/* ===== 모달: 인력구성 편집 ===== */
+.pe-head, .pe-row { display: grid; grid-template-columns: 96px 1.3fr 64px 1fr 64px 1.2fr 30px; gap: 6px; align-items: center; }
+.pe-head { font-size: 0.72rem; color: var(--text-light); font-weight: 600; padding: 0 2px 5px; }
+.pe-head span:nth-child(n+3) { text-align: right; }
+.people-editor { display: flex; flex-direction: column; gap: 5px; max-height: 320px; overflow-y: auto; padding: 2px; }
+.pe-row input, .pe-row select { box-sizing: border-box; padding: 6px 8px; border: 1px solid #dde5ee; border-radius: 7px; font-size: 0.86em; }
+.pe-row input.pe-rate, .pe-row input.pe-base, .pe-row input.pe-months, .pe-row input.pe-amount { text-align: right; font-variant-numeric: tabular-nums; }
+.pe-row input:focus, .pe-row select:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(79, 172, 254, .15); }
+.pe-row .pe-memo { grid-column: 3 / 6; text-align: left !important; }
+.people-table td.pmemo { text-align: left; color: var(--text-light); font-style: italic; font-size: 0.92em; }
+.pe-del { border: none; background: #fdeef0; color: var(--color-danger); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; }
+.pe-del:hover { background: var(--color-danger); color: #fff; }
+.pe-sum { margin-top: 8px; font-size: 0.84rem; color: var(--text-medium); }
+.pe-sum b { color: var(--color-primary); font-variant-numeric: tabular-nums; }
+.pe-sum .pe-ok { color: #1f8a4c; font-weight: 700; }
+.pe-sum .pe-warn { color: var(--color-danger); font-weight: 700; }

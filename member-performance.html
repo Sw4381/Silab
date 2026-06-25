@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보안 지능 연구실 - 멤버별 실적</title>
+    <link rel="icon" href="./image.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="photo.css">
+    <link rel="stylesheet" href="performance.css">
+    <link rel="stylesheet" href="member-performance.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <a href="index.html">
+                <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+            </a>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="menu">
+            <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./research.html"><i class="fas fa-flask"></i> Research</a>
+            <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
+            <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
+            <a href="./performance.html" class="nav-perf" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>
+            <a href="./budget.html" class="nav-perf" style="display:none;"><i class="fas fa-sack-dollar"></i> 예산</a>
+        </nav>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> 로그아웃
+            </button>
+        </div>
+    </header>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fas fa-lock"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">연구실 멤버만 접근 가능합니다.</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- 로그아웃 상태 게이트 -->
+        <div id="authGate" class="auth-gate">
+            <i class="fas fa-user-lock"></i>
+            <h2>멤버별 실적</h2>
+            <p>이 페이지는 연구실 멤버 로그인 후에만 볼 수 있습니다.</p>
+            <button class="login-btn gate-btn" id="gateLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인하기
+            </button>
+        </div>
+
+        <!-- 로그인 상태 본문 -->
+        <div id="mpApp" style="display:none;">
+            <div class="page-hero">
+                <h1><i class="fas fa-ranking-star"></i> 실적 현황</h1>
+                <p>현재 구성원(파트타임·졸업생 제외)별로 논문(SCI·KCI·컨퍼런스)·특허·수상 실적을 종합 집계합니다.
+                   논문/수상은 <a href="./Publication.html">Publications</a>, 특허는 <a href="./performance.html">Performance</a> 트래커 데이터를 기준으로 합니다.</p>
+            </div>
+
+            <!-- 실적 보기 전환 탭 -->
+            <div class="perf-tabs">
+                <a href="./performance.html" class="perf-tab"><i class="fas fa-chart-line"></i> 과제 실적 현황</a>
+                <a href="./team-performance.html" class="perf-tab"><i class="fas fa-people-group"></i> 팀별 실적 현황</a>
+                <a href="./member-performance.html" class="perf-tab active"><i class="fas fa-ranking-star"></i> 멤버 실적 현황</a>
+            </div>
+
+            <!-- 가중치 안내 -->
+            <div class="mp-weight-note">
+                <span class="mp-weight-title"><i class="fas fa-scale-balanced"></i> 실적 점수 가중치</span>
+                <span class="mp-w-chip">SCI <b>3.0</b></span>
+                <span class="mp-w-chip">KCI <b>1.5</b></span>
+                <span class="mp-w-chip">국제컨퍼 <b>1.5</b></span>
+                <span class="mp-w-chip">국내컨퍼 <b>1.0</b></span>
+                <span class="mp-w-chip">특허등록 <b>2.0</b></span>
+                <span class="mp-w-chip">특허출원 <b>1.0</b></span>
+                <span class="mp-w-chip">수상 <b>1.0</b></span>
+                <span class="mp-w-sep">×</span>
+                <span class="mp-w-chip">1저자 <b>1.0</b></span>
+                <span class="mp-w-chip">공저 <b>0.3</b></span>
+            </div>
+
+            <!-- 컨트롤 -->
+            <div class="mp-toolbar">
+                <div class="mp-toolbar-left">
+                    <label class="mp-check"><input type="checkbox" id="mpFirstOnly"> 1저자 실적만 보기</label>
+                </div>
+                <div class="mp-toolbar-right">
+                    <button class="tb-btn" id="mpAliasBtn"><i class="fas fa-i-cursor"></i> 저자 표기 관리</button>
+                    <label for="mpSortSel"><i class="fas fa-sort"></i> 정렬</label>
+                    <select id="mpSortSel">
+                        <option value="score">실적 점수순</option>
+                        <option value="sci">SCI순</option>
+                        <option value="papers">논문 총건순</option>
+                        <option value="patents">특허순</option>
+                        <option value="name">이름순</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 전체 요약 카드 -->
+            <div id="mpStatCards" class="mp-stat-cards"></div>
+
+            <!-- 멤버 비교 표 -->
+            <section class="mp-section">
+                <h2><i class="fas fa-table-list"></i> 멤버별 실적 요약</h2>
+                <div id="mpTableWrap" class="mp-table-wrap"></div>
+            </section>
+
+            <!-- 멤버별 상세 카드 -->
+            <section class="mp-section">
+                <h2><i class="fas fa-id-card-clip"></i> 멤버별 상세</h2>
+                <div id="mpCards" class="mp-cards"></div>
+            </section>
+
+            <!-- 미배정 실적 -->
+            <section class="mp-section" id="mpUnassignedSection" style="display:none;">
+                <h2><i class="fas fa-circle-question"></i> 미배정 실적</h2>
+                <p class="mp-hint">아래 실적은 저자 라벨이 현재 구성원 이름과 매칭되지 않았습니다.
+                   Performance 페이지에서 라벨을 구성원 이름으로 맞추면 자동 집계됩니다. (졸업생/외부저자일 수 있습니다.)</p>
+                <div id="mpUnassigned" class="mp-unassigned"></div>
+            </section>
+        </div>
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="./image.png" alt="SILAB" class="footer-logo">
+                    <div>
+                        <span class="footer-lab-name">SILAB</span>
+                        <span class="footer-lab-sub">보안 지능 연구실</span>
+                    </div>
+                </div>
+                <div class="footer-info">
+                    <div class="footer-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>가천대학교 AI소프트웨어학부 스마트보안학과</span>
+                    </div>
+                </div>
+                <div class="footer-copy">© 2025 SILAB · Gachon University</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ===== 저자 표기(별칭) 관리 모달 ===== -->
+    <div id="aliasModal" class="perf-modal">
+        <div class="perf-modal-box wide">
+            <div class="perf-modal-head">
+                <h3><i class="fas fa-i-cursor"></i> 저자 표기(별칭) 관리</h3>
+                <button class="perf-modal-close" data-close="aliasModal">&times;</button>
+            </div>
+            <form id="aliasForm">
+                <p class="target-hint">
+                    멤버별로 논문 <b>저자란에 실제로 쓰이는 표기</b>를 세미콜론(;)으로 구분해 입력하세요.
+                    한글 이름은 자동 인식되며, 영문/이니셜은 <b>등록한 표기와 정확히 일치</b>할 때만 집계됩니다.
+                    (예: <code>Lee Seon Woo; S.W. Lee; L.S.W</code> → 'Lee'처럼 성만 있는 표기는 매칭되지 않습니다.)
+                </p>
+                <div id="aliasFields" class="alias-fields"></div>
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn" data-close="aliasModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="member-performance.js"></script>
+</body>
+</html>
