@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보안 지능 연구실 - 학생 인건비 관리</title>
+    <link rel="icon" href="./image.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="photo.css">
+    <link rel="stylesheet" href="performance.css">
+    <link rel="stylesheet" href="payroll.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <a href="index.html">
+                <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+            </a>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="menu">
+            <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./research.html"><i class="fas fa-flask"></i> Research</a>
+            <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
+            <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
+            <a href="./performance.html" class="nav-perf" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>
+            <a href="./budget.html" class="nav-perf" style="display:none;"><i class="fas fa-sack-dollar"></i> 예산</a>
+        </nav>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> 로그아웃
+            </button>
+        </div>
+    </header>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fas fa-lock"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">연구실 멤버만 접근 가능합니다.</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- 로그아웃 상태 게이트 -->
+        <div id="authGate" class="auth-gate">
+            <i class="fas fa-user-lock"></i>
+            <h2>학생 인건비 관리</h2>
+            <p>이 페이지는 연구실 멤버 로그인 후에만 볼 수 있습니다.</p>
+            <button class="login-btn gate-btn" id="gateLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인하기
+            </button>
+        </div>
+
+        <!-- 로그인 상태 본문 -->
+        <div id="payApp" style="display:none;">
+            <div class="page-hero">
+                <h1><i class="fas fa-won-sign"></i> 예산 · 인건비</h1>
+                <p>과제별 월별 인건비를 한눈에 보고, 과제를 추가하거나 클릭해서 바로 조정할 수 있습니다. (단위: 만원)</p>
+            </div>
+
+            <!-- 보기 전환 탭 -->
+            <div class="perf-tabs">
+                <a href="./budget.html" class="perf-tab"><i class="fas fa-sack-dollar"></i> 과제별 예산</a>
+                <a href="./payroll.html" class="perf-tab active"><i class="fas fa-won-sign"></i> 학생 인건비</a>
+            </div>
+
+            <!-- 초기 데이터(엑셀) 안내 배너 -->
+            <div id="seedBanner" class="seed-banner" style="display:none;">
+                <div>
+                    <i class="fas fa-circle-info"></i>
+                    현재 표시 중인 내용은 <b>엑셀 기준 초기 데이터</b>입니다. 저장하기 전에는 서버에 반영되지 않습니다.
+                </div>
+                <div class="seed-banner-actions">
+                    <button class="tb-btn primary" id="seedSaveBtn"><i class="fas fa-cloud-arrow-up"></i> 이 데이터로 시작</button>
+                    <button class="tb-btn" id="seedDismissBtn">빈 상태로 시작</button>
+                </div>
+            </div>
+
+            <!-- 요약 카드 -->
+            <div id="summaryCards" class="summary-cards"></div>
+
+            <!-- ⚠ 점검 필요 (참여율 한도 초과/임박 자동 추출) -->
+            <section id="alertWrap" class="alert-band"></section>
+
+            <!-- 시각 대시보드 -->
+            <section class="dash-band payroll-band">
+                <div class="dash-card dash-students-card">
+                    <div class="dash-head">
+                        <h3>학생별 참여율 · 총 수령액</h3>
+                        <span class="dash-sub">막대 = 연간 총액(재원 구성) · 세로선 = 1인 기준(100%) · 참여율 높은 순</span>
+                    </div>
+                    <div id="dashStudents" class="dash-stack-list"></div>
+                </div>
+                <div class="dash-card dash-projects-card">
+                    <div class="dash-head">
+                        <h3>과제별 인건비 비중</h3>
+                        <span class="dash-sub">색 = 재원 구분 · 클릭하여 편집</span>
+                    </div>
+                    <div id="dashProjects" class="dash-proj-list"></div>
+                </div>
+            </section>
+
+            <!-- 툴바 -->
+            <div class="perf-toolbar">
+                <div class="toolbar-left">
+                    <label><i class="fas fa-calendar"></i> 연도</label>
+                    <select id="yearSelect"></select>
+                </div>
+                <div class="toolbar-right">
+                    <button class="tb-btn" id="editCapsBtn"><i class="fas fa-sliders"></i> 기준(100%) 편집</button>
+                    <button class="tb-btn primary" id="addProjectBtn"><i class="fas fa-plus"></i> 새 과제</button>
+                </div>
+            </div>
+
+            <!-- 학생별 월별 현황 (실시간 반영) -->
+            <section class="pay-view">
+                <div class="pay-sec-head">
+                    <h2><i class="fas fa-user-group"></i> 학생별 인건비 현황</h2>
+                    <span class="live-tag"><i class="fas fa-bolt"></i> 아래에서 과제를 조정하면 실시간 반영</span>
+                    <span class="head-spacer"></span>
+                    <button class="tb-btn mini" id="toggleMonths"><i class="fas fa-up-right-and-down-left-from-center"></i> 월별 펼치기</button>
+                </div>
+                <div id="studentMatrix" class="matrix-wrap"></div>
+                <p class="pay-hint"><i class="fas fa-lightbulb"></i> 기본은 <b>분기 요약</b>이며 ‘월별 펼치기’로 12개월 상세를 볼 수 있어요. 비율 = 연간 총액 ÷ 1인 기준(100%) · 100% 초과 빨강 / 90%↑ 주황 · 편집 중 바뀐 칸은 파랑.</p>
+            </section>
+
+            <!-- 과제 조정 (인라인) -->
+            <section class="adjust-section">
+                <div class="pay-sec-head">
+                    <h2><i class="fas fa-sliders"></i> 과제 조정</h2>
+                    <span id="dirtyBadge" class="dirty-badge" style="display:none;"><i class="fas fa-circle"></i> 저장되지 않은 변경</span>
+                </div>
+                <p class="pay-hint" style="margin-top:0;"><i class="fas fa-hand-pointer"></i> 과제를 클릭하면 아래에서 바로 수정할 수 있고, 위 표가 즉시 갱신됩니다.</p>
+                <div id="projChips" class="proj-chips"></div>
+
+                <div id="inlineEditor" class="inline-editor" style="display:none;">
+                    <div class="ie-meta">
+                        <div class="form-group"><label for="projName">과제명</label><input type="text" id="projName" placeholder="예: BAS"></div>
+                        <div class="form-group" style="max-width:150px;"><label for="projCategory">구분</label>
+                            <select id="projCategory">
+                                <option value="국가R&amp;D">국가R&amp;D</option>
+                                <option value="비R&amp;D">비R&amp;D</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="max-width:130px;"><label for="projStatus">상태</label>
+                            <select id="projStatus">
+                                <option value="확정">확정</option>
+                                <option value="협의중">협의중</option>
+                                <option value="종료">종료</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label for="projNote">비고</label><input type="text" id="projNote" placeholder="예: 1~12월"></div>
+                    </div>
+
+                    <div class="rows-editor-head">
+                        <label class="targets-label" style="margin:0;">참여 학생 · 월별 지급액 (만원)</label>
+                        <button type="button" class="tb-btn" id="addMemberBtn"><i class="fas fa-user-plus"></i> 학생 추가</button>
+                    </div>
+                    <div class="member-grid-scroll">
+                        <table class="member-grid">
+                            <thead>
+                                <tr>
+                                    <th class="mg-name">이름</th>
+                                    <th>1월</th><th>2월</th><th>3월</th><th>4월</th><th>5월</th><th>6월</th>
+                                    <th>7월</th><th>8월</th><th>9월</th><th>10월</th><th>11월</th><th>12월</th>
+                                    <th class="mg-ext">외부</th>
+                                    <th class="mg-sum">합계</th>
+                                    <th class="mg-note">비고</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="memberRows"></tbody>
+                            <tfoot><tr id="memberFootRow"></tr></tfoot>
+                        </table>
+                    </div>
+                    <datalist id="knownMembers"></datalist>
+
+                    <div class="ie-actions">
+                        <button type="button" class="tb-btn danger" id="deleteProjectBtn"><i class="fas fa-trash"></i> 과제 삭제</button>
+                        <span style="flex:1;"></span>
+                        <button type="button" class="tb-btn" id="cancelEditBtn"><i class="fas fa-rotate-left"></i> 되돌리기</button>
+                        <button type="button" class="tb-btn primary" id="saveProjectBtn"><i class="fas fa-save"></i> 저장</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="./image.png" alt="SILAB" class="footer-logo">
+                    <div>
+                        <span class="footer-lab-name">SILAB</span>
+                        <span class="footer-lab-sub">보안 지능 연구실</span>
+                    </div>
+                </div>
+                <div class="footer-info">
+                    <div class="footer-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>가천대학교 AI소프트웨어학부 스마트보안학과</span>
+                    </div>
+                </div>
+                <div class="footer-copy">© 2025 SILAB · Gachon University</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ===== 기준(100%) 편집 모달 ===== -->
+    <div id="capsFormModal" class="perf-modal">
+        <div class="perf-modal-box">
+            <div class="perf-modal-head">
+                <h3>1인 기준(100%) 편집</h3>
+                <button class="perf-modal-close" data-close="capsFormModal">&times;</button>
+            </div>
+            <form id="capsForm">
+                <p class="target-hint">연간 기준 금액(만원)을 입력하세요. 비율 = 연간 총액 ÷ 기준. (0이면 비율 미표시)</p>
+                <div id="capsFields" class="caps-fields"></div>
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn" data-close="capsFormModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="payroll.js"></script>
+</body>
+</html>

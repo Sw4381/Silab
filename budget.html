@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보안 지능 연구실 - 과제별 예산 현황</title>
+    <link rel="icon" href="./image.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="photo.css">
+    <link rel="stylesheet" href="performance.css">
+    <link rel="stylesheet" href="payroll.css">
+    <link rel="stylesheet" href="budget.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <a href="index.html"><img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고"></a>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="메뉴 열기"><span></span><span></span><span></span></button>
+        <nav class="menu">
+            <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./research.html"><i class="fas fa-flask"></i> Research</a>
+            <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
+            <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
+            <a href="./performance.html" class="nav-perf" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>
+            <a href="./budget.html" class="nav-perf active" style="display:none;"><i class="fas fa-sack-dollar"></i> 예산</a>
+        </nav>
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;"><i class="fas fa-user"></i> <span id="userName"></span></div>
+            <button class="login-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> 로그인</button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+        </div>
+    </header>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fas fa-lock"></i> 연구실 로그인</h2>
+                <div class="form-group"><label for="email">이메일</label><input type="email" id="email" required placeholder="example@gachon.ac.kr"></div>
+                <div class="form-group"><label for="password">비밀번호</label><input type="password" id="password" required></div>
+                <button type="submit" class="login-submit"><i class="fas fa-sign-in-alt"></i> 로그인</button>
+                <div class="login-help">연구실 멤버만 접근 가능합니다.</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 로그아웃 게이트 -->
+        <div id="authGate" class="auth-gate">
+            <i class="fas fa-user-lock"></i>
+            <h2>과제별 예산 현황</h2>
+            <p>이 페이지는 연구실 멤버 로그인 후에만 볼 수 있습니다.</p>
+            <button class="login-btn gate-btn" id="gateLoginBtn"><i class="fas fa-sign-in-alt"></i> 로그인하기</button>
+        </div>
+
+        <!-- 본문 -->
+        <div id="budApp" style="display:none;">
+            <div class="page-hero">
+                <h1><i class="fas fa-sack-dollar"></i> 예산 · 인건비</h1>
+                <p>총사업비를 항목별로 어떻게 배분했는지 한눈에. 연도별로 보거나 ‘전체’에서 전체기간 누계를 봅니다. (단위: 원)</p>
+            </div>
+
+            <!-- 보기 전환 탭 -->
+            <div class="perf-tabs">
+                <a href="./budget.html" class="perf-tab active"><i class="fas fa-sack-dollar"></i> 과제별 예산</a>
+                <a href="./payroll.html" class="perf-tab"><i class="fas fa-won-sign"></i> 학생 인건비</a>
+            </div>
+
+            <div id="seedBanner" class="seed-banner" style="display:none;">
+                <div><i class="fas fa-circle-info"></i> 현재 표시 중인 내용은 <b>엑셀 기준 초기 데이터(2026)</b>입니다. 저장하기 전에는 서버에 반영되지 않습니다.</div>
+                <div class="seed-banner-actions">
+                    <button class="tb-btn primary" id="seedSaveBtn"><i class="fas fa-cloud-arrow-up"></i> 이 데이터로 시작</button>
+                    <button class="tb-btn" id="seedDismissBtn">빈 상태로 시작</button>
+                </div>
+            </div>
+
+            <!-- 툴바: 연도 + 과제 선택 -->
+            <div class="perf-toolbar">
+                <div class="toolbar-left">
+                    <label for="yearSelect"><i class="fas fa-calendar"></i> 연도</label>
+                    <select id="yearSelect"></select>
+                    <label for="projectSelect"><i class="fas fa-folder"></i> 과제</label>
+                    <select id="projectSelect"></select>
+                </div>
+                <div class="toolbar-right">
+                    <button class="tb-btn" id="loadSeedBtn" title="엑셀 기준 데이터를 화면으로 불러옵니다 (저장 전까지 서버 미반영)"><i class="fas fa-rotate"></i> 엑셀값 불러오기</button>
+                    <button class="tb-btn primary" id="addProjectBtn"><i class="fas fa-plus"></i> 과제 추가</button>
+                    <button class="tb-btn" id="editProjectBtn"><i class="fas fa-pen"></i> 수정</button>
+                    <button class="tb-btn danger" id="deleteProjectBtn"><i class="fas fa-trash"></i> 삭제</button>
+                </div>
+            </div>
+
+            <!-- 전체 개요 -->
+            <div id="overviewWrap"></div>
+
+            <!-- 과제 상세 -->
+            <div id="detailWrap" style="display:none;">
+                <div id="summaryCards" class="summary-cards"></div>
+                <div class="matrix-section">
+                    <div class="matrix-head">
+                        <h2><i class="fas fa-coins"></i> 예산 항목 배정</h2>
+                        <div class="matrix-actions">
+                            <button class="tb-btn" id="editProjectBtn2"><i class="fas fa-pen"></i> 이 과제 수정</button>
+                        </div>
+                    </div>
+                    <div id="matrixWrap" class="matrix-wrap"></div>
+                </div>
+
+                <div class="matrix-section">
+                    <div class="matrix-head">
+                        <h2><i class="fas fa-users"></i> 인력구성 (세부)</h2>
+                        <span class="people-period" id="peoplePeriod"></span>
+                    </div>
+                    <div id="peopleWrap" class="matrix-wrap"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="./image.png" alt="SILAB" class="footer-logo">
+                    <div><span class="footer-lab-name">SILAB</span><span class="footer-lab-sub">보안 지능 연구실</span></div>
+                </div>
+                <div class="footer-info">
+                    <div class="footer-info-item"><i class="fas fa-map-marker-alt"></i><span>가천대학교 AI소프트웨어학부 스마트보안학과</span></div>
+                </div>
+                <div class="footer-copy">© 2025 SILAB · Gachon University</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ===== 과제 추가/수정 모달 ===== -->
+    <div id="projectFormModal" class="perf-modal">
+        <div class="perf-modal-box wide">
+            <div class="perf-modal-head">
+                <h3 id="projectFormTitle">새 과제 추가</h3>
+                <button class="perf-modal-close" data-close="projectFormModal">&times;</button>
+            </div>
+            <form id="projectForm">
+                <div class="form-row">
+                    <div class="form-group" style="flex:1.4;"><label for="bName">과제명</label><input type="text" id="bName" required placeholder="예: KISTI"></div>
+                    <div class="form-group" style="max-width:140px;"><label for="bCategory">재원 구분</label>
+                        <select id="bCategory"><option value="국가R&amp;D">국가R&amp;D</option><option value="비R&amp;D">비R&amp;D</option><option value="기타">기타</option></select>
+                    </div>
+                    <div class="form-group" style="max-width:110px;"><label for="bManager">담당자</label><input type="text" id="bManager" placeholder="이름"></div>
+                    <div class="form-group" style="max-width:160px;"><label for="bPeriod">차년도·기간</label><input type="text" id="bPeriod" placeholder="예: 4차 26.1~26.12"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;"><label for="bNote">비고</label><input type="text" id="bNote" placeholder="메모 (현물/자부담 등)"></div>
+                </div>
+                <div class="rows-editor-head">
+                    <label class="targets-label" style="margin:0;">예산 항목 · 배정액 (원)</label>
+                </div>
+                <div id="modalItems" class="modal-items"></div>
+                <div id="modalPreview" class="alloc-summary"></div>
+
+                <div class="rows-editor-head" style="margin-top:18px;">
+                    <label class="targets-label" style="margin:0;">인력구성 (세부)</label>
+                    <button type="button" class="tb-btn" id="addPersonBtn"><i class="fas fa-user-plus"></i> 인원 추가</button>
+                </div>
+                <div class="pe-head">
+                    <span>구분</span><span>이름</span><span>참여율%</span><span>급여기준(월)</span><span>기간(월)</span><span>인건비(원)</span><span></span>
+                </div>
+                <div id="modalPeople" class="people-editor"></div>
+                <div id="modalPeopleSum" class="pe-sum"></div>
+
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn" data-close="projectFormModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="budget.js"></script>
+</body>
+</html>

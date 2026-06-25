@@ -49,7 +49,13 @@ Silab/
 - **projects**: 연구과제/프로젝트 목록 (연도별)
 - **Publication**: 논문 목록 (SCI/KCI 등 구분)
 - **photo**: 워크숍, 학회 등 활동 사진 갤러리
-- **performance**: (로그인 전용) 과제별 연차 실적 요구사항(목표) 입력 + 실적 등록 → 달성/목표 자동 집계 대시보드. 로그아웃 시 내용 비공개, 메뉴(`.nav-perf`)도 숨김. DB 경로: `performance/{과제}/{meta, rows, achievements}`
+- **performance**: (로그인 전용) 과제별 연차 실적 요구사항(목표) 입력 + 실적 등록 → 달성/목표 자동 집계 대시보드. 로그아웃 시 내용 비공개, 메뉴(`.nav-perf`)도 숨김. DB 경로: `performance/{과제}/{meta, rows, achievements}`, 논문/특허 트래커는 `performance/__track__/{papers, patents, meta}`
+- **member-performance** (멤버 실적): (로그인 전용, 읽기 전용) 현재 구성원(`members/{phd,ms,bs}`, 파트타임·졸업생·교수 제외)별로 논문·특허·수상을 종합 집계. **별도 입력 없이** 기존 DB를 재집계:
+    - 논문/수상: `publications/{sci,kci,other}` — `sci`→SCI, `kci`→KCI, `other`→Conference(저널명 한글 포함 시 국내, 아니면 국외). 논문 `award` 필드가 있으면 수상 1건. 저자 귀속은 **정확 일치만** 인정(부분일치 제외): 한글은 이름 완전일치, 영문/이니셜은 멤버 별칭과 정규화 후 완전일치. `authors` 첫 항목이면 1저자.
+    - 저자 표기(별칭): `memberPerfAliases/{memberKey}` = "Lee Seon Woo; S.W. Lee; L.S.W" 형식 문자열. **DB 규칙에 관리자 read/write 허용 필요**(최상위 노드는 기본 read 거부). 페이지 상단 '저자 표기 관리' 버튼으로 편집. SCI 등 영문 저자 논문은 여기에 영문 표기를 등록해야 멤버에 집계됨. 미매칭 논문은 '미배정' 섹션에 표시.
+    - 특허: `performance/__track__/patents` — label 발명자 토큰을 구성원 이름과 매칭(미매칭은 '미배정' 표시).
+    - 실적 점수 = Σ(항목 가중치 × 저자 가중치). 항목: SCI 3.0 / KCI 1.5 / 국제컨퍼 1.5 / 국내컨퍼 1.0 / 특허등록 2.0 / 특허출원 1.0 / 수상 1.0. 저자: 1저자 1.0 / 공저 0.3. 가중치는 `member-performance.js`의 `W`, `AW` 상수에서 수정.
+    - 메뉴는 `.nav-perf` 클래스로 로그인 시에만 노출.
 
 ---
 
