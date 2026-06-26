@@ -32,8 +32,19 @@ const SECTIONS = [
     { key: 'bs',  label: '학부연구생', short: '학부' }
 ];
 
-const W  = { sci: 3.0, kci: 1.5, confIntl: 1.5, confDom: 1.0, patentReg: 2.0, patentApp: 1.0, award: 2.0 };
-const AW = { first: 1.0, co: 0.3 };
+// 실적 점수표 (항목 × 주저자/공동). SCIE는 JIF 백분위로 3단계.
+const SCORE = {
+    confDom:  { first: 1, co: 0 },
+    confIntl: { first: 2, co: 0.5 },
+    kci:      { first: 2, co: 0.5 },
+    sci90:    { first: 8, co: 2 },     // SCIE JIF 백분위 90↑
+    sci75:    { first: 6, co: 1.5 },   // SCIE 75↑
+    sciOther: { first: 4, co: 1 }      // SCIE 그 외(또는 백분위 미입력)
+};
+const PATENT_SCORE = { registered: 2, applied: 1 };   // 특허 등록 2 / 출원 1
+const AWARD_SCORE = 1;                                 // 수상 1인당
+function sciTier(pct) { pct = Number(pct); if (pct >= 90) return 'sci90'; if (pct >= 75) return 'sci75'; return 'sciOther'; }
+function scoreKey(pub) { return pub._cat === 'sci' ? sciTier(pub.percentile) : pub._cat; }
 
 const CATS = [
     { key: 'sci',      label: 'SCI',  cls: 'cat-sci' },
@@ -233,7 +244,7 @@ async function loadData() {
         id, type,
         title: v.title || '', authors: v.authors || '',
         journal: v.journal || '', award: (v.award || '').trim(),
-        url: v.url || '',
+        url: v.url || '', percentile: v.percentile,
         _cat: pubCategory({ type, journal: v.journal }),
         _tokens: parseAuthors(v.authors)
     }));
@@ -280,7 +291,7 @@ function aggregate() {
             b[pub._cat][pos]++;
             b.papersTotal++;
             b.items.pubs.push({ ...pub, isFirst });
-            b.score += W[pub._cat] * AW[pos];
+            b.score += (SCORE[scoreKey(pub)][pos] || 0);
         });
     });
 
@@ -288,8 +299,8 @@ function aggregate() {
         const m = matchPatentMember(patentToken(p.label), state.members);
         if (!m) { unassignedPatents.push(p); return; }
         const b = buckets.get(m.key);
-        if (patentStatusDef(p.status).v === 'registered') { b.patent.reg++; b.score += W.patentReg; }
-        else { b.patent.app++; b.score += W.patentApp; }
+        if (patentStatusDef(p.status).v === 'registered') { b.patent.reg++; b.score += PATENT_SCORE.registered; }
+        else { b.patent.app++; b.score += PATENT_SCORE.applied; }
         b.patentTotal++;
         b.items.patents.push(p);
     });
@@ -306,7 +317,7 @@ function aggregate() {
             b.award[pos]++;
             b.awardTotal++;
             b.items.awards.push({ ...a, isFirst });
-            b.score += W.award * AW[pos];
+            b.score += AWARD_SCORE;
         });
     });
 
@@ -411,7 +422,7 @@ function renderTable(rows) {
             </tr></thead>
             <tbody>${body}</tbody>
         </table>
-        <div class="mp-table-foot">① = 1저자 건수 · 특허 ↑ = 등록 건수 · 1저자 ×1.0 / 공저 ×0.3 가중</div>`;
+        <div class="mp-table-foot">① = 1저자 건수 · 특허 ↑ = 등록 건수 · 점수(주저자/공동): SCIE 90↑ <b>8/2</b> · 75↑ <b>6/1.5</b> · 그외 <b>4/1</b> · KCI·국제 <b>2/0.5</b> · 국내 <b>1/0</b> · 특허 등록2·출원1 · 수상 1</div>`;
 }
 
 function pubItemRow(it) {

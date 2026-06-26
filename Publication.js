@@ -414,6 +414,7 @@ async function insertPublicationAtPosition(publicationData, targetPosition) {
             journal: publicationData.journal,
             url: publicationData.url || '',
             award: publicationData.award || '',
+            percentile: (publicationData.percentile === '' || publicationData.percentile == null) ? '' : Number(publicationData.percentile),
             type: publicationData.type,
             displayOrder: newDisplayOrder,
             createdAt: Date.now()
@@ -647,24 +648,29 @@ function createPublicationElement(publication) {
     li.setAttribute('data-publication-id', publication.id);
     li.setAttribute('data-firebase', 'true');
     li.setAttribute('data-firebase-key', publication.firebaseKey || publication.id);
-    
+    const pctVal = (publication.percentile === '' || publication.percentile == null) ? '' : publication.percentile;
+    li.setAttribute('data-percentile', pctVal);
+
     const deleteId = publication.firebaseKey || publication.id;
-    
+
     // URL 링크 처리
-    const titleContent = publication.url ? 
+    const titleContent = publication.url ?
         `<a href="${publication.url}" target="_blank"><strong>${publication.title}</strong></a>` :
         `<strong>${publication.title}</strong>`;
-    
+
     // 수상 내역 처리
-    const awardContent = publication.award ? 
+    const awardContent = publication.award ?
         ` - <span class="award">${publication.award}</span>` : '';
+    // JIF 백분위 배지 (SCIE만)
+    const pctContent = (publication.type === 'sci' && pctVal !== '') ?
+        ` <span class="jif-badge" title="JCR 최고 카테고리 JIF Percentile">JIF 상위 ${pctVal}%</span>` : '';
     
     li.innerHTML = `
         <span class="publication-id">[${publication.publicationId}]</span>
         <div class="publication-content">
             <p class="publication-title">${titleContent}</p>
             <p class="publication-authors">${publication.authors}</p>
-            <p class="publication-journal">${publication.journal}${awardContent}</p>
+            <p class="publication-journal">${publication.journal}${awardContent}${pctContent}</p>
             <div class="publication-actions" style="display: none;">
                 <button class="edit-publication-btn" onclick="editPublication('${publication.id}', '${publication.type}')" style="display: none;">
                     <i class="fas fa-edit"></i> 수정
@@ -709,6 +715,8 @@ function validateAndCleanPublication(publicationData) {
         return null;
     }
 
+    const pctRaw = publicationData.percentile;
+    const percentile = (pctRaw === '' || pctRaw == null) ? '' : Number(pctRaw);
     return {
         ...publicationData,
         publicationId: publicationId,
@@ -717,6 +725,7 @@ function validateAndCleanPublication(publicationData) {
         journal: journal,
         url: (publicationData.url || '').trim(),
         award: (publicationData.award || '').trim(),
+        percentile: percentile,
         type: type
     };
 }
@@ -781,6 +790,7 @@ async function addPublicationToRealtimeDB(publicationData) {
                 journal: publicationData.journal,
                 url: publicationData.url || '',
                 award: publicationData.award || '',
+                percentile: (publicationData.percentile === '' || publicationData.percentile == null) ? '' : Number(publicationData.percentile),
                 type: publicationData.type,
                 displayOrder: displayOrder,
                 createdAt: Date.now()
@@ -910,6 +920,8 @@ window.editPublication = function(publicationId, publicationType) {
     document.getElementById('editPublicationJournal').value = publicationJournal;
     document.getElementById('editPublicationUrl').value = publicationUrl;
     document.getElementById('editPublicationAward').value = publicationAward;
+    const pctEl = document.getElementById('editPublicationPercentile');
+    if (pctEl) { const dp = publicationElement.getAttribute('data-percentile'); pctEl.value = (dp == null || dp === '') ? '' : dp; }
     
     currentEditingPublication = {
         id: publicationId,
@@ -952,6 +964,7 @@ async function updatePublication() {
         journal: (formData.get('editPublicationJournal') || '').trim(),
         url: (formData.get('editPublicationUrl') || '').trim(),
         award: (formData.get('editPublicationAward') || '').trim(),
+        percentile: ((formData.get('editPublicationPercentile') || '') === '') ? '' : Number(formData.get('editPublicationPercentile')),
         type: (formData.get('editPublicationType') || '').trim()
     };
 
@@ -1340,6 +1353,7 @@ function setupEventListeners() {
                 journal: formData.get('publicationJournal'),
                 url: formData.get('publicationUrl') || '',
                 award: formData.get('publicationAward') || '',
+                percentile: formData.get('publicationPercentile') || '',
                 type: formData.get('publicationType'),
                 insertPosition: insertPosition,
                 specificPosition: specificPosition
