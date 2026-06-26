@@ -700,6 +700,7 @@
     border-radius: 8px 8px 0 0;
 }
 
+.jif-badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; background: #eaf3ff; color: #1769b0; font-size: 0.78em; font-weight: 700; vertical-align: middle; }
 .sci-section { border-left: 2px solid #4facfe; }
 .sci-section::before { background: linear-gradient(90deg, #4facfe, #00c6ff); }
 
