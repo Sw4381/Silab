@@ -19,7 +19,7 @@ const COLOR_MAP = {
 
 // ==================== 인증 ====================
 auth.onAuthStateChanged(user => {
-    currentUser = (user && user.email === ALLOWED_EMAIL) ? user : null;
+    currentUser = (user && ADMIN_EMAILS.indexOf(user.email) >= 0) ? user : null;
     if (user && !currentUser) auth.signOut();
     updateAuthUI();
 });
