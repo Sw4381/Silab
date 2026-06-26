@@ -10,7 +10,7 @@ let currentEditingPublication = null;
 let isMutatingPublication = false;
 
 // ==================== 허용된 사용자 목록 ====================
-var ALLOWED_USERS = [ALLOWED_EMAIL];
+var ALLOWED_USERS = ADMIN_EMAILS;
 
 // ==================== DOM 요소들 ====================
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm;

@@ -373,7 +373,7 @@ function renderAlumniSection(alumni) {
 
 // ==================== 인증 관련 ====================
 async function loginUser(email, password) {
-    if (email !== ALLOWED_EMAIL) {
+    if (ADMIN_EMAILS.indexOf(email) < 0) {
         throw new Error('접근 권한이 없습니다. 연구실 관리자만 사용할 수 있습니다.');
     }
     try {

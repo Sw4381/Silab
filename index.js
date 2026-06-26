@@ -27,7 +27,7 @@ const COLOR_MAP = {
 
 // ==================== 인증 ====================
 auth.onAuthStateChanged(user => {
-    if (user && user.email === ALLOWED_EMAIL) {
+    if (user && ADMIN_EMAILS.indexOf(user.email) >= 0) {
         currentUser = user;
     } else {
         currentUser  = null;
