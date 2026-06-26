@@ -6,12 +6,12 @@
     <title>보안 지능 연구실 - 연구활동비 집행</title>
     <link rel="icon" href="./image.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="common.css?v=5">
-    <link rel="stylesheet" href="photo.css?v=5">
-    <link rel="stylesheet" href="performance.css?v=5">
-    <link rel="stylesheet" href="payroll.css?v=5">
-    <link rel="stylesheet" href="budget.css?v=5">
-    <link rel="stylesheet" href="activity.css?v=5">
+    <link rel="stylesheet" href="common.css?v=6">
+    <link rel="stylesheet" href="photo.css?v=6">
+    <link rel="stylesheet" href="performance.css?v=6">
+    <link rel="stylesheet" href="payroll.css?v=6">
+    <link rel="stylesheet" href="budget.css?v=6">
+    <link rel="stylesheet" href="activity.css?v=6">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -144,8 +144,8 @@
                 <button class="perf-modal-close" data-close="summaryModal">&times;</button>
             </div>
             <form id="summaryForm">
-                <div class="form-group"><label for="summaryText">총평 / 이슈 (여러 줄)</label><textarea id="summaryText" rows="6" placeholder="🚨 ... / ✅ ..."></textarea></div>
-                <div class="form-group"><label for="rollupNotesText">세목별 비고 (JSON: {"세목명":"비고"})</label><textarea id="rollupNotesText" rows="6" placeholder='{"논문 게재료":"..."}'></textarea></div>
+                <div class="form-group"><label for="summaryText">총평 / 이슈 (여러 줄)</label><textarea id="summaryText" rows="5" placeholder="🚨 ... / ✅ ..."></textarea></div>
+                <div class="form-group"><label>세목별 비고 (전체 합계 표에 표시)</label><div id="rollupNotesFields" class="rn-fields"></div></div>
                 <div class="perf-modal-actions">
                     <button type="button" class="tb-btn" data-close="summaryModal">취소</button>
                     <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
@@ -172,8 +172,8 @@
         </div>
     </div>
 
-    <script src="config.js?v=5"></script>
-    <script src="common.js?v=5"></script>
-    <script src="activity.js?v=5"></script>
+    <script src="config.js?v=6"></script>
+    <script src="common.js?v=6"></script>
+    <script src="activity.js?v=6"></script>
 </body>
 </html>
