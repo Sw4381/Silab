@@ -21,8 +21,13 @@
 .exec-bar.sm.rb-over > span { background: var(--color-danger); }
 .exec-bar.sm.rb-zero > span { background: #cfd8e3; }
 
-/* 과제별 상세 */
-.ac-proj { margin-bottom: 22px; }
+/* 과제별 상세 (기본 접힘 — 소계만, 클릭 시 펼침) */
+.ac-proj { margin-bottom: 14px; }
+.ac-mgr { font-weight: 500; color: var(--text-light); font-size: 0.85em; }
+.ac-sum-stat { display: inline-block; margin-left: 10px; font-size: 0.82rem; font-weight: 600; color: var(--text-medium); font-variant-numeric: tabular-nums; }
+.ac-sum-stat b { color: var(--color-primary); }
+details.pay-collapse > summary .ac-updated { color: #9aa7b5; font-weight: 500; font-size: 0.8em; }
+@media (max-width: 640px) { .ac-sum-stat { display: block; margin: 4px 0 0; } }
 .ac-proj-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
 .ac-proj-head h3 { font-size: 1.05rem; color: var(--color-primary); margin: 0; }
 .ac-proj-head .ac-mgr { font-weight: 500; color: var(--text-light); font-size: 0.85em; }
