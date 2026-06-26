@@ -22,7 +22,7 @@ const CATS = [
     { key: 'confIntl', label: '국제', cls: 'cat-ci' },
     { key: 'confDom', label: '국내', cls: 'cat-cd' }
 ];
-const ALLOWED_USERS = [ALLOWED_EMAIL];
+const ALLOWED_USERS = [ADMIN_UID, ROOT_UID];   // UID 기준
 
 // ==================== 전역 상태 ====================
 let auth, database, currentUser = null;
@@ -106,10 +106,10 @@ function sectionShort(secKey) { const s = SECTIONS.find(x => x.key === secKey); 
 
 // ==================== 인증 ====================
 async function loginUser(email, password) {
-    if (!ALLOWED_USERS.includes(email)) throw new Error('접근 권한이 없습니다. 연구실 멤버만 사용할 수 있습니다.');
+    // 접근 권한은 로그인 후 UID(ALLOWED_USERS)로 확인 — 임의 계정 자동생성은 하지 않음
     try { return await auth.signInWithEmailAndPassword(email, password); }
     catch (e) {
-        if (e.code === 'auth/user-not-found') return await auth.createUserWithEmailAndPassword(email, password);
+        if (e.code === 'auth/user-not-found') throw new Error('등록되지 않은 계정입니다.');
         if (e.code === 'auth/wrong-password') throw new Error('비밀번호가 틀렸습니다.');
         if (e.code === 'auth/invalid-email') throw new Error('이메일 형식이 올바르지 않습니다.');
         throw e;
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         auth = firebase.auth(); database = firebase.database();
         auth.onAuthStateChanged(async user => {
-            currentUser = (user && ALLOWED_USERS.includes(user.email)) ? user : null;
+            currentUser = (user && ALLOWED_USERS.includes(user.uid)) ? user : null;
             updateAuthUI();
             if (currentUser) { try { await loadData(); } catch (e) { console.error(e); showAlert('데이터 로드 실패: ' + e.message, 'error'); } }
         });

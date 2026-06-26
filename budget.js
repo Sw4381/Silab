@@ -4,7 +4,7 @@
 // 금액 단위: 원 · 현금 항목 합계 = 총액 (현물/자부담은 별도, 총액 미포함)
 
 // ==================== 상수 ====================
-const ALLOWED_USERS = [ALLOWED_EMAIL];
+const ALLOWED_USERS = [ADMIN_UID, ROOT_UID];   // UID 기준
 const DEFAULT_YEAR = 2026;
 const YEAR_NUMS = [2025, 2026, 2027, 2028, 2029];
 const ALL = 'all';            // 연도: 전체기간 누계
@@ -42,7 +42,7 @@ const SEED = {};  // 공개 저장소 보호: 실데이터는 Firebase에만
 let auth, database, currentUser = null;
 const state = {
     year: DEFAULT_YEAR, projects: {}, payrollByYear: {},
-    currentKey: OVERVIEW, editKey: null, isSeed: false, readOnly: false
+    currentKey: OVERVIEW, editKey: null, isSeed: false, readOnly: false, isRoot: false
 };
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm, userInfo, userName;
 let authGate, budApp, yearSelect, projectSelect, seedBanner;
@@ -148,6 +148,7 @@ function payrollWindowSum(p, budgetYear) {
 function isLinked(p) { return state.year !== ALL && payrollWindowSum(p, state.year) != null; }
 function effAlloc(p) {
     const a = Object.assign({}, p.alloc || {});
+    if (!state.isRoot) { a.student = 0; return a; }   // 학생인건비는 Root 전용 → 일반 관리자 합계에서 제외
     if (state.year !== ALL) { const s = payrollWindowSum(p, state.year); if (s != null) a.student = s; }
     return a;
 }
@@ -193,10 +194,10 @@ function paceBadge(pace) { return `<span class="pace-badge pace-${pace.cls}">${e
 
 // ==================== 인증 ====================
 async function loginUser(email, password) {
-    if (!ALLOWED_USERS.includes(email)) throw new Error('접근 권한이 없습니다. 연구실 멤버만 사용할 수 있습니다.');
+    // 접근 권한은 로그인 후 UID(ALLOWED_USERS)로 확인 — 임의 계정 자동생성은 하지 않음
     try { return await auth.signInWithEmailAndPassword(email, password); }
     catch (e) {
-        if (e.code === 'auth/user-not-found') return await auth.createUserWithEmailAndPassword(email, password);
+        if (e.code === 'auth/user-not-found') throw new Error('등록되지 않은 계정입니다.');
         if (e.code === 'auth/wrong-password') throw new Error('비밀번호가 틀렸습니다.');
         if (e.code === 'auth/invalid-email') throw new Error('이메일 형식이 올바르지 않습니다.');
         throw e;
@@ -210,13 +211,16 @@ function updateAuthUI() {
     if (userName && currentUser) userName.textContent = currentUser.email;
     if (authGate) authGate.style.display = a ? 'none' : 'flex';
     if (budApp) budApp.style.display = a ? 'block' : 'none';
+    const ptab = document.getElementById('budPayrollTab');
+    if (ptab) ptab.style.display = (a && state.isRoot) ? '' : 'none';   // 학생인건비 탭은 Root만
 }
 
 // ==================== 로드/저장 ====================
 async function loadData() {
     // 차년도 기간이 해를 넘어가므로 모든 연도의 인건비를 로드해 둔다
-    const paySnaps = await Promise.all(YEAR_NUMS.map(y => database.ref('payroll/' + y + '/projects').once('value')));
-    state.payrollByYear = {}; YEAR_NUMS.forEach((y, i) => state.payrollByYear[String(y)] = paySnaps[i].val() || {});
+    // payroll 은 Root 전용(DB 규칙). 일반 관리자는 읽기 거부될 수 있으므로 실패해도 빈 값으로 진행.
+    const paySnaps = await Promise.all(YEAR_NUMS.map(y => database.ref('payroll/' + y + '/projects').once('value').then(s => s.val()).catch(() => null)));
+    state.payrollByYear = {}; YEAR_NUMS.forEach((y, i) => state.payrollByYear[String(y)] = paySnaps[i] || {});
     if (state.year === ALL) { await loadAllYears(); return; }
     const snap = await database.ref('budget/' + state.year).once('value');
     const data = snap.val();
@@ -449,6 +453,10 @@ function renderDetail() {
     };
     const rows = LAYOUT.map(row => {
         if (row.type === 'item') {
+            if (row.key === 'student' && !state.isRoot) {
+                const lbl = BITEMS.find(i => i.key === 'student').label;
+                return `<tr><td class="mtx-name">${lbl} <i class="fas fa-lock" title="Root 전용"></i></td><td class="muted">Root 전용</td><td class="muted">–</td><td class="muted">–</td><td></td></tr>`;
+            }
             const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), sv = num(sp[row.key]), linked = it.linked && isLinked(p);
             return `<tr><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}</td>
                 <td>${v ? won(v) : '<span class="muted">–</span>'}</td>${execCells(v, sv)}</tr>`;
@@ -505,6 +513,9 @@ function modalItemsHTML(p) {
     const a = p.alloc || {}, sp = p.spent || {};
     const head = `<div class="mi-row mi-head"><span class="mi-label"></span><span class="mi-col">배정 (원)</span><span class="mi-col">집행 (원)</span></div>`;
     return head + BITEMS.map(it => {
+        if (it.key === 'student' && !state.isRoot) {
+            return `<div class="mi-row" data-k="student"><span class="mi-label">${it.label} <i class="fas fa-lock"></i></span><input class="mi-input" value="Root 전용" readonly><input class="mi-spent" value="" readonly placeholder="-"></div>`;
+        }
         const linked = it.linked && isLinked(p);
         const v = linked ? payrollWindowSum(p, state.year) : num(a[it.key]);
         return `<div class="mi-row" data-k="${it.key}">
@@ -582,8 +593,14 @@ function collectModal() {
     const alloc = {}, spent = {};
     document.querySelectorAll('#modalItems .mi-row[data-k]').forEach(r => {
         const inp = r.querySelector('.mi-input'); if (inp && !inp.readOnly) alloc[r.dataset.k] = num(inp.value);
-        const si = r.querySelector('.mi-spent'); if (si && num(si.value)) spent[r.dataset.k] = num(si.value);
+        const si = r.querySelector('.mi-spent'); if (si && !si.readOnly && num(si.value)) spent[r.dataset.k] = num(si.value);
     });
+    // 비-Root가 수정할 때 Root가 입력한 학생인건비 값을 덮어쓰지 않도록 보존
+    if (!state.isRoot && state.editKey && state.projects[state.editKey]) {
+        const ex = state.projects[state.editKey].alloc || {}, exs = state.projects[state.editKey].spent || {};
+        if (num(ex.student)) alloc.student = num(ex.student);
+        if (num(exs.student)) spent.student = num(exs.student);
+    }
     return {
         name: (g('bName').value.trim()) || '(새 과제)', category: g('bCategory').value,
         manager: g('bManager').value.trim(), period: g('bPeriod').value.trim(), note: g('bNote').value.trim(),
@@ -599,7 +616,7 @@ function recalcModal() {
     const probe = { name: g('bName').value, period: g('bPeriod').value, payrollName: (state.projects[state.editKey] ? state.projects[state.editKey].payrollName : '') };
     const linkSum = state.year !== ALL ? payrollWindowSum(probe, state.year) : null;
     const sr = document.querySelector('#modalItems .mi-row[data-k="student"]');
-    if (sr) {
+    if (sr && state.isRoot) {
         const inp = sr.querySelector('.mi-input'), note = sr.querySelector('.link-ic');
         if (linkSum != null) { inp.readOnly = true; inp.value = linkSum || ''; if (!note) sr.querySelector('.mi-label').insertAdjacentHTML('beforeend', ' <i class="fas fa-link link-ic" title="인건비 페이지 자동연동(차년도 기간 합산)"></i>'); }
         else { inp.readOnly = false; if (note) note.remove(); }
@@ -672,8 +689,9 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) { console.error('Firebase 초기화 실패', e); return; }
 
     auth.onAuthStateChanged(async (user) => {
-        if (user && ALLOWED_USERS.includes(user.email)) currentUser = user;
+        if (user && ALLOWED_USERS.includes(user.uid)) currentUser = user;
         else { currentUser = null; if (user) await auth.signOut(); }
+        state.isRoot = !!(currentUser && currentUser.uid === ROOT_UID);
         updateAuthUI();
         if (currentUser) { try { await loadData(); renderAll(); } catch (e) { console.error(e); showAlert('데이터 로드 실패', 'error'); } }
     });

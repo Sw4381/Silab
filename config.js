@@ -12,4 +12,11 @@ var firebaseConfig = {
 
 var CLOUDINARY_CLOUD_NAME = 'dtgwtdf3q';
 var CLOUDINARY_UPLOAD_PRESET = 'jfwl9ton';
-var ALLOWED_EMAIL = 'kinjecs0@gmail.com';
+var ALLOWED_EMAIL = 'kinjecs0@gmail.com';   // 공개 페이지(멤버/논문 등) 관리자 — 기존 유지
+
+// 재무(예산/인건비)·실적 페이지는 이메일 대신 UID로 식별 (이메일 비노출)
+//   일반 관리자: kinjecs0@gmail.com
+//   Root(학생인건비 전용 상위): admin_kinjecs0@gmail.com
+var ADMIN_UID = 'vXGv4tLnkzUfNbKHMm8c8cGQ4Z03';   // 일반 관리자
+var ROOT_UID  = '3aEjEgu6XTa5DCBIUxt22wjKrnr2';   // Root (학생인건비 전용)
+// ⚠ 학생인건비 실차단은 Firebase DB 규칙에서 payroll 노드를 ROOT_UID 로 잠가야 완성됨
