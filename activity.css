@@ -1,0 +1,55 @@
+/* activity.css - 연구활동비 집행 (budget.css/payroll.css 위에 얹음) */
+
+.ac-table { border-collapse: collapse; width: 100%; font-size: 0.86rem; min-width: 900px; }
+.ac-table th, .ac-table td { padding: 9px 11px; border-bottom: 1px solid #eef2f7; white-space: nowrap; vertical-align: middle; }
+.ac-table thead th { background: #f4f8fc; color: var(--text-medium); font-weight: 700; text-align: right; position: sticky; top: 0; }
+.ac-table th.ac-name, .ac-table th.ac-note { text-align: left; }
+.ac-table .ac-name { text-align: left; font-weight: 600; color: var(--color-primary); }
+.ac-table .ac-num { text-align: right; font-variant-numeric: tabular-nums; }
+.ac-table .ac-plan { color: #8a6d1c; }
+.ac-table .ac-note { text-align: left; color: var(--text-medium); font-size: 0.92em; white-space: normal; min-width: 220px; }
+.ac-table tbody tr:nth-child(even) td { background: #f9fbfd; }
+.ac-table tbody tr:hover td { background: #eef5fc; }
+.ac-table tfoot .foot td { background: #eef3f9; font-weight: 800; color: var(--color-primary); border-top: 2px solid #dbe6f1; }
+
+/* 소진율 바 */
+.ac-rate { text-align: left; white-space: nowrap; min-width: 130px; }
+.ac-rate .exec-bar.sm { width: 78px; }
+.ac-rate .rb-num { font-size: 0.82em; font-weight: 700; margin-left: 7px; font-variant-numeric: tabular-nums; }
+.exec-bar.sm.rb-ok > span { background: #58c27d; }
+.exec-bar.sm.rb-high > span { background: #f0a93b; }
+.exec-bar.sm.rb-over > span { background: var(--color-danger); }
+.exec-bar.sm.rb-zero > span { background: #cfd8e3; }
+
+/* 과제별 상세 */
+.ac-proj { margin-bottom: 22px; }
+.ac-proj-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.ac-proj-head h3 { font-size: 1.05rem; color: var(--color-primary); margin: 0; }
+.ac-proj-head .ac-mgr { font-weight: 500; color: var(--text-light); font-size: 0.85em; }
+.ac-updated { font-size: 0.78rem; color: var(--text-light); }
+.ac-memo { margin-top: 8px; font-size: 0.86rem; color: var(--text-medium); background: #f7fafd; border: 1px solid #e8eef5; border-radius: 10px; padding: 9px 13px; white-space: pre-wrap; }
+.ac-memo i { color: var(--color-accent); margin-right: 6px; }
+
+/* 총평/이슈 */
+.ac-summary { margin: 18px 0 6px; background: #fff8f8; border: 1px solid #f3d7d7; border-radius: 14px; padding: 14px 18px; }
+.ac-summary-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.ac-summary-head h3 { margin: 0; font-size: 1rem; color: var(--color-danger); }
+.ac-summary-head h3 i { margin-right: 6px; }
+.ac-summary-body { font-size: 0.9rem; color: var(--text-medium); line-height: 1.7; }
+
+/* 세목 편집기 */
+.ai-head, .ai-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1.6fr 30px; gap: 7px; align-items: center; }
+.ai-head { font-size: 0.72rem; font-weight: 700; color: var(--text-light); padding: 0 2px 4px; }
+.ai-head span:nth-child(2), .ai-head span:nth-child(3), .ai-head span:nth-child(4) { text-align: right; }
+.act-items { display: flex; flex-direction: column; gap: 6px; max-height: 46vh; overflow-y: auto; }
+.ai-row input { box-sizing: border-box; padding: 7px 9px; border: 1px solid #dde5ee; border-radius: 7px; font-size: 0.88em; width: 100%; }
+.ai-row .ai-budget, .ai-row .ai-spent, .ai-row .ai-planned { text-align: right; font-variant-numeric: tabular-nums; }
+.ai-row input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(79,172,254,.15); }
+.ai-del { border: none; background: #fdeef0; color: var(--color-danger); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; }
+.ai-del:hover { background: var(--color-danger); color: #fff; }
+.perf-modal-actions.split { display: flex; align-items: center; gap: 8px; }
+
+@media (max-width: 700px) {
+    .ai-head { display: none; }
+    .ai-row { grid-template-columns: 1fr 1fr; }
+}

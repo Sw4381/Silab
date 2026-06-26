@@ -164,7 +164,11 @@ function total(p) { return calc(effAlloc(p)).grand; }
 // 배정 = 연구활동비(activity) 배정액 · 집행 = 수기 입력(actSpent) · 잔액 = 배정-집행
 function actStat(p) {
     const budget = num(effAlloc(p).activity);
-    const spent = spentOf(p, 'activity');
+    let spent = spentOf(p, 'activity');
+    const am = state.activityByName || {};
+    const k1 = normalize(p.name), k2 = normalize(p.payrollName || '');
+    if (am[k1] != null) spent = am[k1];          // 연구활동비 집행 탭과 연동(과제명 매칭)
+    else if (k2 && am[k2] != null) spent = am[k2];
     return { budget, spent, remain: budget - spent, rate: pct(spent, budget) };
 }
 // 과제 기간(차년도) 중 현재까지 경과 비율 (전체 연도(ALL)·기간미상이면 null)
@@ -221,6 +225,14 @@ async function loadData() {
     // payroll 은 Root 전용(DB 규칙). 일반 관리자는 읽기 거부될 수 있으므로 실패해도 빈 값으로 진행.
     const paySnaps = await Promise.all(YEAR_NUMS.map(y => database.ref('payroll/' + y + '/projects').once('value').then(s => s.val()).catch(() => null)));
     state.payrollByYear = {}; YEAR_NUMS.forEach((y, i) => state.payrollByYear[String(y)] = paySnaps[i] || {});
+    // 연구활동비 집행(activity) 연동: 과제명 매칭 시 집행액을 가져온다
+    const actSnap = await database.ref('activity/' + (state.year === ALL ? DEFAULT_YEAR : state.year)).once('value').then(s => s.val()).catch(() => null);
+    state.activityByName = {};
+    if (actSnap && actSnap.projects) Object.keys(actSnap.projects).forEach(k => {
+        const ap = actSnap.projects[k]; let items = ap.items; if (items && !Array.isArray(items)) items = Object.values(items);
+        let s = 0; (items || []).forEach(it => s += num(it.spent));
+        state.activityByName[normalize(ap.name)] = s;
+    });
     if (state.year === ALL) { await loadAllYears(); return; }
     const snap = await database.ref('budget/' + state.year).once('value');
     const data = snap.val();
