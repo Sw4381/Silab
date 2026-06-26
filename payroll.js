@@ -4,7 +4,7 @@
 // 금액 단위: 만원
 
 // ==================== 상수 ====================
-const ALLOWED_USERS = [ALLOWED_EMAIL];
+const ALLOWED_USERS = [ROOT_UID];   // 학생인건비는 Root 계정(UID) 전용
 const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 const DEFAULT_YEAR = 2026;
 const YEAR_OPTIONS = [2024, 2025, 2026, 2027];
@@ -163,11 +163,11 @@ function ratioClass(r) { return r > 1.0001 ? 'over' : (r >= 0.9 ? 'high' : (r > 
 
 // ==================== 인증 ====================
 async function loginUser(email, password) {
-    if (!ALLOWED_USERS.includes(email)) throw new Error('접근 권한이 없습니다. 연구실 멤버만 사용할 수 있습니다.');
+    // 접근 권한은 로그인 후 UID(ALLOWED_USERS)로 확인 — 임의 계정 자동생성은 하지 않음
     try {
         return await auth.signInWithEmailAndPassword(email, password);
     } catch (error) {
-        if (error.code === 'auth/user-not-found') return await auth.createUserWithEmailAndPassword(email, password);
+        if (error.code === 'auth/user-not-found') throw new Error('등록되지 않은 계정입니다.');
         if (error.code === 'auth/wrong-password') throw new Error('비밀번호가 틀렸습니다.');
         if (error.code === 'auth/invalid-email') throw new Error('이메일 형식이 올바르지 않습니다.');
         throw error;
@@ -502,7 +502,7 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (err) { console.error('Firebase 초기화 실패', err); return; }
 
     auth.onAuthStateChanged(async (user) => {
-        if (user && ALLOWED_USERS.includes(user.email)) currentUser = user;
+        if (user && ALLOWED_USERS.includes(user.uid)) currentUser = user;
         else { currentUser = null; if (user) await auth.signOut(); }
         updateAuthUI();
         if (currentUser) {

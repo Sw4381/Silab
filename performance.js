@@ -12,7 +12,7 @@ const CATEGORIES = [
     { key: 'swReg',      label: 'SW등록' }
 ];
 const CAT_LABEL = CATEGORIES.reduce((m, c) => (m[c.key] = c.label, m), {});
-const ALLOWED_USERS = [ALLOWED_EMAIL];
+const ALLOWED_USERS = [ADMIN_UID, ROOT_UID];   // UID 기준
 const OVERVIEW = '__all__';   // 과제 선택 드롭다운의 '전체 개요' 값
 const TRACK_KEY = '__track__'; // performance 하위의 논문/특허 트래커 노드
 
@@ -68,14 +68,12 @@ function uid() {
 
 // ==================== 인증 ====================
 async function loginUser(email, password) {
-    if (!ALLOWED_USERS.includes(email)) {
-        throw new Error('접근 권한이 없습니다. 연구실 멤버만 사용할 수 있습니다.');
-    }
+    // 접근 권한은 로그인 후 UID(ALLOWED_USERS)로 확인 — 임의 계정 자동생성은 하지 않음
     try {
         return await auth.signInWithEmailAndPassword(email, password);
     } catch (error) {
         if (error.code === 'auth/user-not-found') {
-            return await auth.createUserWithEmailAndPassword(email, password);
+            throw new Error('등록되지 않은 계정입니다.');
         } else if (error.code === 'auth/wrong-password') {
             throw new Error('비밀번호가 틀렸습니다.');
         } else if (error.code === 'auth/invalid-email') {
@@ -1223,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     auth.onAuthStateChanged(async (user) => {
-        if (user && ALLOWED_USERS.includes(user.email)) {
+        if (user && ALLOWED_USERS.includes(user.uid)) {
             currentUser = user;
         } else {
             currentUser = null;

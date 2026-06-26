@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
             firebase.auth().onAuthStateChanged(function (user) {
-                var ok = !!(user && (typeof ALLOWED_EMAIL === 'undefined' || user.email === ALLOWED_EMAIL));
+                var ok = !!(user && ((typeof ADMIN_UID !== 'undefined' && user.uid === ADMIN_UID) || (typeof ROOT_UID !== 'undefined' && user.uid === ROOT_UID)));
                 localStorage.setItem('silab_auth', ok ? '1' : '0');
                 setPerfNav(ok);
             });
