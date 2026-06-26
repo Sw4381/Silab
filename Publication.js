@@ -661,16 +661,14 @@ function createPublicationElement(publication) {
     // 수상 내역 처리
     const awardContent = publication.award ?
         ` - <span class="award">${publication.award}</span>` : '';
-    // JIF 백분위 배지 (SCIE만)
-    const pctContent = (publication.type === 'sci' && pctVal !== '') ?
-        ` <span class="jif-badge" title="JCR 최고 카테고리 JIF Percentile">JIF 상위 ${pctVal}%</span>` : '';
+    // 주의: JIF 백분위는 공개 목록에 표시하지 않음 (data 속성으로만 보관 → 수정 폼/멤버 실적에서 사용)
     
     li.innerHTML = `
         <span class="publication-id">[${publication.publicationId}]</span>
         <div class="publication-content">
             <p class="publication-title">${titleContent}</p>
             <p class="publication-authors">${publication.authors}</p>
-            <p class="publication-journal">${publication.journal}${awardContent}${pctContent}</p>
+            <p class="publication-journal">${publication.journal}${awardContent}</p>
             <div class="publication-actions" style="display: none;">
                 <button class="edit-publication-btn" onclick="editPublication('${publication.id}', '${publication.type}')" style="display: none;">
                     <i class="fas fa-edit"></i> 수정

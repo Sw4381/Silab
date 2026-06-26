@@ -66,7 +66,8 @@ const state = {
     patents: [],
     awards: [],
     firstOnly: false,
-    sort: 'score'
+    sort: 'score',
+    query: ''
 };
 
 let loginBtn, logoutBtn, loginModal, loginClose, userInfo, userName, authGate, mpApp;
@@ -341,7 +342,9 @@ function sortRows(rows) {
 function render() {
     const { rows, unassignedPatents, unmatchedPubs } = aggregate();
     renderStatCards(rows);
-    const sorted = sortRows(rows);
+    const q = (state.query || '').trim().toLowerCase();
+    const view = q ? rows.filter(r => (r.member.name || '').toLowerCase().includes(q)) : rows;
+    const sorted = sortRows(view);
     renderTable(sorted);
     renderCards(sorted);
     renderUnassigned(unassignedPatents, unmatchedPubs);
@@ -430,9 +433,11 @@ function pubItemRow(it) {
     const titleHtml = it.url
         ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title || '(제목없음)')}</a>`
         : esc(it.title || '(제목없음)');
+    const jif = (it._cat === 'sci' && it.percentile !== '' && it.percentile != null)
+        ? `<span class="mp-jif" title="JIF 백분위(JCR 최고 카테고리)">JIF ${it.percentile}%</span>` : '';
     return `<div class="mp-item ${it.isFirst ? 'is-first' : ''}">
         <span class="mp-cat ${cat ? cat.cls : ''}">${cat ? cat.label : esc(it.type)}</span>
-        ${it.isFirst ? `<span class="mp-first-badge" title="1저자">1저자</span>` : ''}
+        ${it.isFirst ? `<span class="mp-first-badge" title="1저자">1저자</span>` : ''}${jif}
         <span class="mp-item-label">${titleHtml}<span class="mp-venue">${esc(it.journal || '')}</span></span>
         ${it.award ? `<span class="mp-award-badge"><i class="fas fa-trophy"></i> ${esc(it.award)}</span>` : ''}
     </div>`;
@@ -610,6 +615,8 @@ function setupEvents() {
     if (firstChk) firstChk.addEventListener('change', () => { state.firstOnly = firstChk.checked; render(); });
     const sortSel = document.getElementById('mpSortSel');
     if (sortSel) sortSel.addEventListener('change', () => { state.sort = sortSel.value; render(); });
+    const searchInp = document.getElementById('mpSearch');
+    if (searchInp) searchInp.addEventListener('input', () => { state.query = searchInp.value; render(); });
 
     const aliasBtn = document.getElementById('mpAliasBtn');
     if (aliasBtn) aliasBtn.addEventListener('click', openAliasModal);
