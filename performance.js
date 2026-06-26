@@ -1225,7 +1225,8 @@ document.addEventListener('DOMContentLoaded', function () {
             currentUser = user;
         } else {
             currentUser = null;
-            if (user) await auth.signOut(); // 허용되지 않은 계정
+            // 외부(미등록) 계정만 로그아웃 — 다른 페이지 관리자는 세션 유지(이 페이지만 게이트)
+            if (user && [ADMIN_UID, ROOT_UID].indexOf(user.uid) < 0) await auth.signOut();
         }
         updateAuthUI();
         if (currentUser) {

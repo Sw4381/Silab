@@ -503,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     auth.onAuthStateChanged(async (user) => {
         if (user && ALLOWED_USERS.includes(user.uid)) currentUser = user;
-        else { currentUser = null; if (user) await auth.signOut(); }
+        else { currentUser = null; if (user && [ADMIN_UID, ROOT_UID].indexOf(user.uid) < 0) await auth.signOut(); }   // 외부 계정만 로그아웃, 일반 관리자는 세션 유지
         updateAuthUI();
         if (currentUser) {
             try { await loadYear(Number(yearSelect.value)); renderAll(); }

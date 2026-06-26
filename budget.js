@@ -690,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     auth.onAuthStateChanged(async (user) => {
         if (user && ALLOWED_USERS.includes(user.uid)) currentUser = user;
-        else { currentUser = null; if (user) await auth.signOut(); }
+        else { currentUser = null; if (user && [ADMIN_UID, ROOT_UID].indexOf(user.uid) < 0) await auth.signOut(); }   // 외부 계정만 로그아웃
         state.isRoot = !!(currentUser && currentUser.uid === ROOT_UID);
         updateAuthUI();
         if (currentUser) { try { await loadData(); renderAll(); } catch (e) { console.error(e); showAlert('데이터 로드 실패', 'error'); } }
