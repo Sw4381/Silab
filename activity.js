@@ -163,6 +163,7 @@ function renderProjects() {
                 <span class="ac-updated">${p.updated ? '업데이트 ' + esc(p.updated) : ''}</span>
                 <span class="head-spacer"></span>
                 <button class="tb-btn mini ac-edit" data-key="${esc(k)}"><i class="fas fa-pen"></i> 수정</button>
+                <button class="tb-btn mini danger ac-del" data-key="${esc(k)}"><i class="fas fa-trash"></i> 삭제</button>
             </div>
             <div class="matrix-wrap"><table class="ac-table"><thead><tr>
                 <th class="ac-name">세목</th><th class="ac-num">예산액</th><th class="ac-num">집행액</th><th class="ac-num ac-plan">집행예정액</th><th class="ac-num">잔액</th><th class="ac-rate">소진율</th><th class="ac-note">집행 계획 / 비고</th>
@@ -171,6 +172,7 @@ function renderProjects() {
         </section>`;
     }).join('');
     wrap.querySelectorAll('.ac-edit').forEach(b => b.addEventListener('click', () => openProjectForm(b.dataset.key)));
+    wrap.querySelectorAll('.ac-del').forEach(b => b.addEventListener('click', () => removeProject(b.dataset.key)));
 }
 
 function renderSummary() {
@@ -231,13 +233,14 @@ async function saveProjectForm(e) {
     try { await saveAll(); closeModal('actFormModal'); showAlert('저장되었습니다.', 'success'); renderAll(); }
     catch (err) { showAlert('저장 실패: ' + err.message, 'error'); }
 }
-async function deleteActProject() {
-    const p = state.data.projects[state.editKey]; if (!p) return;
-    if (!confirm(`‘${p.name}’ 과제를 삭제할까요?`)) return;
-    delete state.data.projects[state.editKey];
-    try { await saveAll(); closeModal('actFormModal'); showAlert('삭제되었습니다.', 'success'); renderAll(); }
-    catch (err) { showAlert('삭제 실패: ' + err.message, 'error'); }
+async function removeProject(key) {
+    const p = state.data.projects[key]; if (!p) return false;
+    if (!confirm(`‘${p.name}’ 과제를 삭제할까요?`)) return false;
+    delete state.data.projects[key];
+    try { await saveAll(); showAlert('삭제되었습니다.', 'success'); renderAll(); return true; }
+    catch (err) { showAlert('삭제 실패: ' + err.message, 'error'); return false; }
 }
+async function deleteActProject() { if (await removeProject(state.editKey)) closeModal('actFormModal'); }
 
 function editSummary() {
     const cur = state.data.summaryNote || '';
