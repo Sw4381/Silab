@@ -235,7 +235,7 @@ function refreshOverview() {
     const live = liveProjects();
     const rd = filterProjectMap(live, isRnd);
     const svc = filterProjectMap(live, p => !isRnd(p));
-    if (blkAll) blkAll.innerHTML = totalsTableHTML(live);
+    if (blkAll) blkAll.innerHTML = totalsTableHTML(live, true);   // 전체 총액에만 비율(%) 표시
     if (blkRnd) blkRnd.innerHTML = totalsTableHTML(rd);
     if (blkSvc) blkSvc.innerHTML = totalsTableHTML(svc);
     setBlockSum(sumAll, live);
@@ -262,7 +262,7 @@ function setBlockSum(el, projects) {
 }
 
 // 학생별 월별 총액표 (이름 · 월/분기 · 개인 총액). projects 부분집합으로 전체/R&D/용역을 동일 형식으로 렌더.
-function totalsTableHTML(projects) {
+function totalsTableHTML(projects, withRatio) {
     const studs = studentTotals(projects).filter(s => s.total > 0);
     if (!studs.length) return '<div class="pay-empty">해당 항목 인건비가 없습니다.</div>';
     const groups = monthGroups();
@@ -274,22 +274,28 @@ function totalsTableHTML(projects) {
         <th class="sticky-l">이름</th>
         ${groups.map(g => `<th>${g.label}</th>`).join('')}
         <th class="col-total">총액</th>
+        ${withRatio ? '<th class="col-ratio">비율</th>' : ''}
     </tr>`;
     const body = studs.map((s, si) => {
         const cells = groups.map(g => {
             const v = sumIdx(s.m, g.idxs);
             return `<td class="${v ? '' : 'z'}">${v ? fmt(v) : ''}</td>`;
         }).join('');
+        const ratioCell = withRatio
+            ? `<td class="col-ratio">${s.cap ? `<span class="rt rt-${ratioClass(s.ratio)}">${(s.ratio * 100).toFixed(1)}%</span>` : '<span class="z">–</span>'}</td>`
+            : '';
         return `<tr class="${si % 2 ? 's-alt' : ''}">
             <td class="sticky-l name">${escHtmlSafe(s.name)}</td>
             ${cells}
             <td class="col-total"><b>${fmt(s.total)}</b></td>
+            ${ratioCell}
         </tr>`;
     }).join('');
     const foot = `<tr class="foot">
         <td class="sticky-l">합계</td>
         ${colTotals.map(v => `<td>${v ? fmt(v) : ''}</td>`).join('')}
         <td class="col-total"><b>${fmt(grand)}</b></td>
+        ${withRatio ? '<td class="col-ratio"></td>' : ''}
     </tr>`;
     return `<table class="student-table${compact}"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
 }
