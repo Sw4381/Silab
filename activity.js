@@ -243,17 +243,27 @@ async function removeProject(key) {
 }
 async function deleteActProject() { if (await removeProject(state.editKey)) closeModal('actFormModal'); }
 
+// 전체 합계에 쓰이는 세목 이름들(표준 순서)
+function rollupSemokNames() {
+    const names = [];
+    sortedKeys().forEach(k => state.data.projects[k].items.forEach(it => { if (names.indexOf(it.name) < 0) names.push(it.name); }));
+    return semokOrder(names);
+}
 function editSummary() {
-    const cur = state.data.summaryNote || '';
-    document.getElementById('summaryText').value = cur;
-    document.getElementById('rollupNotesText').value = JSON.stringify(state.data.rollupNotes || {}, null, 2);
+    document.getElementById('summaryText').value = state.data.summaryNote || '';
+    const rn = state.data.rollupNotes || {};
+    const names = rollupSemokNames();
+    document.getElementById('rollupNotesFields').innerHTML = names.length
+        ? names.map(n => `<div class="rn-row"><span class="rn-name">${esc(n)}</span><input type="text" data-name="${esc(n)}" value="${esc(rn[n] || '')}" placeholder="비고 (예: SCIE 2건 집행 가능)"></div>`).join('')
+        : '<span class="muted">세목이 없습니다. 과제를 먼저 추가하세요.</span>';
     openModal('summaryModal');
 }
 async function saveSummary(e) {
     e.preventDefault();
     state.data.summaryNote = document.getElementById('summaryText').value;
-    try { state.data.rollupNotes = JSON.parse(document.getElementById('rollupNotesText').value || '{}'); }
-    catch (err) { showAlert('세목 비고 JSON 형식 오류: ' + err.message, 'error'); return; }
+    const rn = {};
+    document.querySelectorAll('#rollupNotesFields input').forEach(inp => { const v = inp.value.trim(); if (v) rn[inp.dataset.name] = v; });
+    state.data.rollupNotes = rn;
     try { await saveAll(); closeModal('summaryModal'); showAlert('저장되었습니다.', 'success'); renderAll(); }
     catch (err) { showAlert('저장 실패: ' + err.message, 'error'); }
 }
