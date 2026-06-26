@@ -157,22 +157,23 @@ function renderProjects() {
             </tr>`;
         }).join('');
         const foot = `<tr class="foot"><td class="ac-name">소계</td><td class="ac-num"><b>${won(t.budget)}</b></td><td class="ac-num"><b>${won(t.spent)}</b></td><td class="ac-num ac-plan"><b>${won(t.planned)}</b></td><td class="ac-num"><b>${won(t.remain)}</b></td><td class="ac-rate">${rateBar(t.rate)}<span class="rb-num">${Math.round(t.rate * 100)}%</span></td><td class="ac-note"></td></tr>`;
-        return `<section class="ac-proj">
-            <div class="ac-proj-head">
-                <h3>${esc(p.name)}${p.manager ? ` <span class="ac-mgr">· ${esc(p.manager)}</span>` : ''}</h3>
-                <span class="ac-updated">${p.updated ? '업데이트 ' + esc(p.updated) : ''}</span>
-                <span class="head-spacer"></span>
+        return `<details class="ac-proj pay-collapse">
+            <summary>
+                <span class="cl-title"><b>${esc(p.name)}</b>${p.manager ? ` <span class="ac-mgr">· ${esc(p.manager)}</span>` : ''}${p.updated ? ` <span class="ac-updated">(${esc(p.updated)})</span>` : ''}
+                    <span class="ac-sum-stat">예산 ${won(t.budget)} · 집행 <b>${won(t.spent)}</b> · 잔액 ${won(t.remain)} · 소진율 ${Math.round(t.rate * 100)}%</span>
+                </span>
                 <button class="tb-btn mini ac-edit" data-key="${esc(k)}"><i class="fas fa-pen"></i> 수정</button>
                 <button class="tb-btn mini danger ac-del" data-key="${esc(k)}"><i class="fas fa-trash"></i> 삭제</button>
-            </div>
+                <i class="fas fa-chevron-down cl-chevron"></i>
+            </summary>
             <div class="matrix-wrap"><table class="ac-table"><thead><tr>
                 <th class="ac-name">세목</th><th class="ac-num">예산액</th><th class="ac-num">집행액</th><th class="ac-num ac-plan">집행예정액</th><th class="ac-num">잔액</th><th class="ac-rate">소진율</th><th class="ac-note">집행 계획 / 비고</th>
             </tr></thead><tbody>${rows}</tbody><tfoot>${foot}</tfoot></table></div>
             ${p.note ? `<div class="ac-memo"><i class="fas fa-quote-left"></i> ${esc(p.note)}</div>` : ''}
-        </section>`;
+        </details>`;
     }).join('');
-    wrap.querySelectorAll('.ac-edit').forEach(b => b.addEventListener('click', () => openProjectForm(b.dataset.key)));
-    wrap.querySelectorAll('.ac-del').forEach(b => b.addEventListener('click', () => removeProject(b.dataset.key)));
+    wrap.querySelectorAll('.ac-edit').forEach(b => b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openProjectForm(b.dataset.key); }));
+    wrap.querySelectorAll('.ac-del').forEach(b => b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); removeProject(b.dataset.key); }));
 }
 
 function renderSummary() {
