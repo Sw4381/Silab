@@ -127,6 +127,12 @@
 .student-table td.z { color: #cdd6e0; }
 .student-table .col-ext { color: #8a6d1c; }
 .student-table .col-total { background: #fafcff; }
+.student-table .col-ratio { text-align: right; }
+.rt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.rt-over { color: var(--color-danger); }
+.rt-high { color: #c47f12; }
+.rt-ok { color: #1f8a4c; }
+.rt-zero { color: #b3bcc8; }
 .student-table tbody tr.s-alt td, .student-table tbody tr.s-alt td.sticky-l { background: #f6f9fc; }
 .student-table tbody tr:hover td, .student-table tbody tr:hover td.sticky-l { background: #eef5fc; }
 .student-table tfoot .foot td { background: #eef3f9; font-weight: 700; color: var(--color-primary); border-top: 2px solid #dbe6f1; position: sticky; bottom: 0; }
