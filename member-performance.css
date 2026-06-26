@@ -28,6 +28,10 @@
 .mp-toolbar select:disabled { opacity: 0.5; cursor: not-allowed; }
 .mp-check { display: inline-flex; align-items: center; gap: 6px; font-weight: 500 !important; cursor: pointer; color: var(--text-medium); }
 .mp-check input { width: 16px; height: 16px; cursor: pointer; }
+.mp-search { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 1px solid #d9e2ec; border-radius: 8px; padding: 6px 12px; }
+.mp-search i { color: var(--text-light); font-size: 0.9em; }
+.mp-search input { border: none; outline: none; font-size: 0.9em; min-width: 150px; background: transparent; color: var(--text-medium); }
+.mp-jif { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 9px; background: #eef4ff; color: #1769b0; font-size: 0.74em; font-weight: 700; }
 
 /* ==================== 가중치 안내 ==================== */
 .mp-weight-note {
