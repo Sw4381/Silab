@@ -6,10 +6,10 @@
     <title>보안 지능 연구실 - 학생 인건비 관리</title>
     <link rel="icon" href="./image.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="common.css?v=20">
-    <link rel="stylesheet" href="photo.css?v=20">
-    <link rel="stylesheet" href="performance.css?v=20">
-    <link rel="stylesheet" href="payroll.css?v=20">
+    <link rel="stylesheet" href="common.css?v=21">
+    <link rel="stylesheet" href="photo.css?v=21">
+    <link rel="stylesheet" href="performance.css?v=21">
+    <link rel="stylesheet" href="payroll.css?v=21">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -188,6 +188,7 @@
                     <div class="rows-editor-head">
                         <label class="targets-label" style="margin:0;">참여 학생 · 월별 지급액 (만원)</label>
                         <span class="head-spacer"></span>
+                        <button type="button" class="tb-btn" id="pasteBtn"><i class="fas fa-paste"></i> 엑셀/CSV 붙여넣기</button>
                         <button type="button" class="tb-btn" id="addReserveBtn"><i class="fas fa-piggy-bank"></i> 여유분 추가</button>
                         <button type="button" class="tb-btn" id="addMemberBtn"><i class="fas fa-user-plus"></i> 학생 추가</button>
                     </div>
@@ -260,9 +261,25 @@
         </div>
     </div>
 
+    <!-- ===== 엑셀/CSV 붙여넣기 모달 ===== -->
+    <div id="pasteModal" class="perf-modal">
+        <div class="perf-modal-box">
+            <div class="perf-modal-head">
+                <h3><i class="fas fa-paste"></i> 엑셀 / CSV 붙여넣기</h3>
+                <button class="perf-modal-close" data-close="pasteModal">&times;</button>
+            </div>
+            <p class="target-hint">엑셀에서 범위를 복사해 그대로 붙여넣으세요. 열 순서: <b>이름 · 1월 · 2월 … 12월</b> (13번째 열은 ‘외부’, 선택). 한 줄에 한 명. CSV(쉼표)도 가능 · 단위: 만원.</p>
+            <textarea id="pasteText" rows="10" placeholder="예)&#10;홍길동	44	44	44	44	44	44	44	44	44	44	44	44&#10;김철수	30	30	30 ...&#10;여유분	120"></textarea>
+            <div class="perf-modal-actions">
+                <button type="button" class="tb-btn" data-close="pasteModal">취소</button>
+                <button type="button" class="tb-btn primary" id="applyPasteBtn"><i class="fas fa-check"></i> 붙여넣기 적용</button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
-    <script src="config.js?v=20"></script>
-    <script src="common.js?v=20"></script>
-    <script src="payroll.js?v=20"></script>
+    <script src="config.js?v=21"></script>
+    <script src="common.js?v=21"></script>
+    <script src="payroll.js?v=21"></script>
 </body>
 </html>
