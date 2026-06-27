@@ -223,8 +223,20 @@ details.pay-collapse .matrix-wrap { border: none; border-radius: 0; box-shadow: 
 .member-grid input:hover { border-color: #c4d3e6; background: #fff; }
 .member-grid input:focus { outline: none; border-color: var(--color-accent); background: #fff; box-shadow: 0 0 0 2px rgba(79, 172, 254, .2); }
 .member-grid input::placeholder { color: #c2ccd8; }
-.member-grid input.mg-nameinput, .member-grid input.mg-noteinput { text-align: left; }
+.member-grid input.mg-nameinput { text-align: left; }
 .member-grid input.mg-nameinput { font-weight: 600; color: var(--color-primary); }
+/* 비고: 여러 줄 입력(줄바꿈) + 자동 높이 */
+.member-grid textarea.mg-noteinput {
+    width: 100%; box-sizing: border-box; padding: 6px 7px; margin: 0; display: block;
+    font-size: 1em; font-family: inherit; line-height: 1.35; text-align: left; color: #2a3645;
+    border: 1px solid #e3e9f0; border-radius: 6px; background: rgba(255, 255, 255, .55);
+    resize: vertical; min-height: 30px; overflow: hidden; white-space: pre-wrap;
+    transition: border-color .12s, box-shadow .12s, background .12s;
+}
+.member-grid textarea.mg-noteinput:hover { border-color: #c4d3e6; background: #fff; }
+.member-grid textarea.mg-noteinput:focus { outline: none; border-color: var(--color-accent); background: #fff; box-shadow: 0 0 0 2px rgba(79, 172, 254, .2); }
+.member-grid textarea.mg-noteinput::placeholder { color: #c2ccd8; }
+.member-grid .mg-note { min-width: 170px; vertical-align: top; }
 /* 인원별 행 구분 (줄무늬 + 호버) */
 .member-grid tbody tr:nth-child(even) td { background: #f3f7fc; }
 .member-grid tbody tr:hover td { background: #e9f2fc; }

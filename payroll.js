@@ -426,7 +426,7 @@ function memberRowHTML(r) {
             <td class="mg-name"><input type="text" class="mg-nameinput" value="${escHtmlSafe(r.name || '여유분')}" placeholder="여유분"></td>
             <td colspan="13" class="mg-lumpcell"><input type="number" step="any" class="mg-lump" value="${r.lump || ''}" placeholder="금액 (만원)"></td>
             <td class="mg-sum">0</td>
-            <td class="mg-note"><input type="text" class="mg-noteinput" value="${escHtmlSafe(r.note)}" placeholder="비고 (사유)"></td>
+            <td class="mg-note"><textarea class="mg-noteinput" rows="1" placeholder="비고 (사유)">${escHtmlSafe(r.note)}</textarea></td>
             <td><button type="button" class="mg-del" title="행 삭제"><i class="fas fa-xmark"></i></button></td>
         </tr>`;
     }
@@ -437,7 +437,7 @@ function memberRowHTML(r) {
         ${monthInputs}
         <td class="mg-ext"><input type="number" step="any" class="mg-extinput" value="${r.ext || ''}"></td>
         <td class="mg-sum">0</td>
-        <td class="mg-note"><input type="text" class="mg-noteinput" value="${escHtmlSafe(r.note)}" placeholder="비고"></td>
+        <td class="mg-note"><textarea class="mg-noteinput" rows="1" placeholder="비고">${escHtmlSafe(r.note)}</textarea></td>
         <td><button type="button" class="mg-del" title="행 삭제"><i class="fas fa-xmark"></i></button></td>
     </tr>`;
 }
@@ -459,8 +459,13 @@ function recalcMemberGrid() {
         + `<td class="mg-ext">${extSum ? fmt(extSum) : ''}</td><td class="mg-sum"><b>${fmt(grand)}</b></td><td></td><td></td>`;
 }
 function wireMemberRow(tr) {
-    tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', onEditorInput));
+    tr.querySelectorAll('input, textarea').forEach(inp => inp.addEventListener('input', onEditorInput));
     tr.querySelector('.mg-del').addEventListener('click', () => { tr.remove(); onEditorInput(); });
+    const note = tr.querySelector('.mg-noteinput');
+    if (note && note.tagName === 'TEXTAREA') {
+        const grow = () => { note.style.height = 'auto'; note.style.height = (note.scrollHeight + 2) + 'px'; };
+        note.addEventListener('input', grow); setTimeout(grow, 0);
+    }
     const nm = tr.querySelector('.mg-nameinput');
     if (nm) nm.addEventListener('input', () => {
         const wantReserve = /여유|잔여/.test(nm.value);
