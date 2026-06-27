@@ -403,6 +403,7 @@ function setEditorMode(editing) {
     show('cancelEditBtn', editing);
     show('addMemberBtn', editing);
     show('addReserveBtn', editing);
+    show('pasteBtn', editing);
     show('deleteProjectBtn', editing && !state.isNew);
 }
 function cancelEdit() {
@@ -492,6 +493,36 @@ function wireMemberRow(tr) {
         const nr = tmp.firstElementChild; tr.replaceWith(nr); wireMemberRow(nr); onEditorInput();
         const ni = nr.querySelector('.mg-nameinput'); ni.focus(); ni.setSelectionRange(ni.value.length, ni.value.length);
     });
+}
+// 엑셀/CSV 붙여넣기 → 행 일괄 추가
+function openPasteModal() {
+    const t = document.getElementById('pasteText'); if (t) t.value = '';
+    openModal('pasteModal');
+}
+function applyPaste() {
+    const txt = document.getElementById('pasteText').value || '';
+    const lines = txt.split(/\r?\n/).filter(l => l.trim());
+    if (!lines.length) { showAlert('붙여넣을 내용이 없습니다.', 'warning'); return; }
+    let added = 0;
+    lines.forEach(line => {
+        let cells = (line.indexOf('\t') >= 0 ? line.split('\t') : line.split(',')).map(c => c.trim());
+        const name = cells[0]; if (!name) return;
+        const nums = cells.slice(1).map(c => num(c));
+        if (/여유|잔여/.test(name)) {
+            addMemberRow({ name, m: Array(12).fill(0), ext: 0, lump: nums.reduce((a, b) => a + b, 0), note: '' });
+        } else {
+            const m = Array.from({ length: 12 }, (_, i) => num(nums[i] || 0));
+            addMemberRow({ name, m, ext: num(nums[12] || 0), lump: 0, note: '' });
+        }
+        added++;
+    });
+    // 이름 없는 빈 기본행 제거
+    document.querySelectorAll('#memberRows .mg-row').forEach(tr => {
+        const nm = tr.querySelector('.mg-nameinput'); if (nm && !nm.value.trim()) tr.remove();
+    });
+    onEditorInput();
+    closeModal('pasteModal');
+    showAlert(added + '행을 붙여넣었습니다.', 'success');
 }
 function addMemberRow(r) {
     const tbody = document.getElementById('memberRows');
@@ -624,6 +655,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('deleteProjectBtn').addEventListener('click', deleteProject);
     document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
     document.getElementById('enterEditBtn').addEventListener('click', () => setEditorMode(true));
+    document.getElementById('pasteBtn').addEventListener('click', openPasteModal);
+    document.getElementById('applyPasteBtn').addEventListener('click', applyPaste);
     document.getElementById('capsForm').addEventListener('submit', saveCaps);
 
     // 공통 모달 닫기
