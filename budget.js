@@ -15,8 +15,8 @@ const CATEGORIES = ['국가R&D', '비R&D', '기타'];
 const BITEMS = [
     { key: 'inHouseCash', label: '내부인건비(현금)', grp: 'labor' },
     { key: 'inHouseInKind', label: '내부인건비(현물)', grp: 'inkind' },   // 현물·자부담 — 총 과제비(총액) 제외
-    { key: 'external', label: '외부인건비', grp: 'labor', linked: true },   // 인건비 소계 포함 · 인건비 페이지 외부 칸 연동
-    { key: 'student', label: '학생인건비(통합)', grp: 'labor', linked: true },
+    { key: 'external', label: '외부인건비', grp: 'labor' },   // 인건비 소계 포함 (직접 입력/붙여넣기, 비면 payroll 외부 칸으로 채움)
+    { key: 'student', label: '학생인건비(통합)', grp: 'labor' },   // 직접 입력/붙여넣기, 비면 payroll 월별로 채움
     { key: 'equipCash', label: '기자재(현금)', grp: 'direct' },
     { key: 'material', label: '재료비', grp: 'direct' },
     { key: 'activity', label: '연구활동비', grp: 'direct' },
@@ -164,10 +164,10 @@ function payrollWindowExt(p, budgetYear) {
 function isLinked(p) { return state.year !== ALL && payrollWindowSum(p, state.year) != null; }
 function effAlloc(p) {
     const a = Object.assign({}, p.alloc || {});
-    // Root는 인건비 페이지에서 실시간 합산, 일반 관리자는 과제에 저장된 학생인건비 합계 값을 표시
+    // 저장값(직접 입력/붙여넣기)이 있으면 그대로, 비어있을 때만 인건비 페이지 값으로 채움(Root)
     if (state.isRoot && state.year !== ALL) {
-        const s = payrollWindowSum(p, state.year); if (s != null) a.student = s;       // 학생인건비(통합) = 월별+여유분
-        const e = payrollWindowExt(p, state.year); if (e != null) a.external = e;       // 외부인건비 = 외부 칸 합
+        if (!num(a.student)) { const s = payrollWindowSum(p, state.year); if (s != null) a.student = s; }   // 학생인건비(통합)=월별+여유분
+        if (!num(a.external)) { const e = payrollWindowExt(p, state.year); if (e != null) a.external = e; }  // 외부인건비=외부 칸 합
     }
     return a;
 }
@@ -542,16 +542,19 @@ function loadSeedView() {
 function modalItemsHTML(p) {
     const a = p.alloc || {}, sp = p.spent || {};
     const head = `<div class="mi-row mi-head"><span class="mi-label"></span><span class="mi-col">배정 (원)</span><span class="mi-col">집행 (원)</span></div>`;
-    const linkVal = key => key === 'external' ? payrollWindowExt(p, state.year) : payrollWindowSum(p, state.year);
+    const linkable = { student: payrollWindowSum, external: payrollWindowExt };
     return head + BITEMS.map(it => {
-        if (it.linked && !state.isRoot) {   // 연동 항목(학생·외부)은 일반 관리자에겐 저장값 읽기전용
-            return `<div class="mi-row" data-k="${it.key}"><span class="mi-label">${it.label} <i class="fas fa-link link-ic" title="인건비 페이지 자동 연동"></i></span><input class="mi-input" value="${silabMoneyFmt(a[it.key])}" readonly><input class="mi-spent" value="${silabMoneyFmt((sp || {})[it.key])}" readonly placeholder="집행"></div>`;
+        // 학생인건비(통합)은 일반 관리자에겐 저장값 읽기전용(인원 세부는 Root 전용)
+        if (it.key === 'student' && !state.isRoot) {
+            return `<div class="mi-row" data-k="student"><span class="mi-label">${it.label}</span><input class="mi-input" value="${silabMoneyFmt(a.student)}" readonly><input class="mi-spent" value="${silabMoneyFmt((sp || {}).student)}" readonly placeholder="집행"></div>`;
         }
-        const linked = it.linked && isLinked(p);
-        const v = linked ? linkVal(it.key) : num(a[it.key]);
+        let v = num(a[it.key]), fromLink = false;
+        if (!v && linkable[it.key] && state.isRoot && state.year !== ALL) {   // 비어있으면 인건비 페이지 값으로 채워 표시(편집 가능)
+            const lv = linkable[it.key](p, state.year); if (lv != null) { v = lv; fromLink = (lv > 0); }
+        }
         return `<div class="mi-row" data-k="${it.key}">
-            <span class="mi-label">${it.label}${linked ? ' <i class="fas fa-link link-ic"></i>' : ''}</span>
-            <input type="text" inputmode="numeric" class="mi-input js-money" value="${silabMoneyFmt(v)}"${linked ? ' readonly' : ''}>
+            <span class="mi-label">${it.label}${fromLink ? ' <i class="fas fa-link link-ic" title="인건비 페이지에서 채움(수정 가능)"></i>' : ''}</span>
+            <input type="text" inputmode="numeric" class="mi-input js-money" value="${silabMoneyFmt(v)}">
             <input type="text" inputmode="numeric" class="mi-spent js-money" value="${silabMoneyFmt(num(sp[it.key]))}" placeholder="집행"></div>`;
     }).join('');
 }
@@ -692,7 +695,7 @@ function collectModal() {
         const inp = r.querySelector('.mi-input');
         if (inp) {
             if (!inp.readOnly) alloc[r.dataset.k] = num(inp.value);
-            else if (r.dataset.k === 'student' || r.dataset.k === 'external') alloc[r.dataset.k] = num(inp.value);   // 연동된 학생/외부 인건비 값을 저장(일반 관리자도 열람)
+            else if (r.dataset.k === 'student') alloc.student = num(inp.value);   // 일반 관리자 읽기전용 학생인건비 값 보존
         }
         const si = r.querySelector('.mi-spent'); if (si && num(si.value)) spent[r.dataset.k] = num(si.value);
     });
@@ -707,17 +710,6 @@ function collectModal() {
 }
 function recalcModal() {
     const g = id => document.getElementById(id);
-    // 같은 이름의 인건비 과제가 있으면 학생인건비 자동연동(읽기전용) — 차년도 기간 기준
-    const probe = { name: g('bName').value, period: g('bPeriod').value, payrollName: (state.projects[state.editKey] ? state.projects[state.editKey].payrollName : '') };
-    const linkSum = state.year !== ALL ? payrollWindowSum(probe, state.year) : null;
-    const linkExt = state.year !== ALL ? payrollWindowExt(probe, state.year) : null;
-    [['student', linkSum], ['external', linkExt]].forEach(([key, val]) => {
-        const sr = document.querySelector('#modalItems .mi-row[data-k="' + key + '"]');
-        if (!sr || !state.isRoot) return;
-        const inp = sr.querySelector('.mi-input'), note = sr.querySelector('.link-ic');
-        if (val != null) { inp.readOnly = true; inp.value = silabMoneyFmt(val); if (!note) sr.querySelector('.mi-label').insertAdjacentHTML('beforeend', ' <i class="fas fa-link link-ic" title="인건비 페이지 자동연동"></i>'); }
-        else { inp.readOnly = false; if (note) note.remove(); }
-    });
     const m = {}, sp = {};
     document.querySelectorAll('#modalItems .mi-row[data-k]').forEach(r => {
         m[r.dataset.k] = num(r.querySelector('.mi-input').value);
