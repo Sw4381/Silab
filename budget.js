@@ -14,7 +14,7 @@ const CATEGORIES = ['국가R&D', '비R&D', '기타'];
 // 예산 항목 (현금 기준 — 합계가 총액과 일치)
 const BITEMS = [
     { key: 'inHouseCash', label: '내부인건비(현금)', grp: 'labor' },
-    { key: 'inHouseInKind', label: '내부인건비(현물)', grp: 'labor' },   // 현물·자부담 — 총액 포함
+    { key: 'inHouseInKind', label: '내부인건비(현물)', grp: 'inkind' },   // 현물·자부담 — 총 과제비(총액) 제외
     { key: 'external', label: '외부인건비', grp: 'labor', linked: true },   // 인건비 소계 포함 · 인건비 페이지 외부 칸 연동
     { key: 'student', label: '학생인건비(통합)', grp: 'labor', linked: true },
     { key: 'equipCash', label: '기자재(현금)', grp: 'direct' },
@@ -486,8 +486,9 @@ function renderDetail() {
     const rows = LAYOUT.map(row => {
         if (row.type === 'item') {
             const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), sv = num(sp[row.key]), linked = it.linked && isLinked(p);
-            const exclTag = row.key === 'vat' ? ' <span class="mtx-inkind">총액 미포함</span>' : '';
-            return `<tr${row.key === 'vat' ? ' class="mtx-inkind-row"' : ''}><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}${exclTag}</td>
+            const offTotal = (row.key === 'vat' || row.key === 'inHouseInKind');
+            const exclTag = offTotal ? ' <span class="mtx-inkind">총액 미포함</span>' : '';
+            return `<tr${offTotal ? ' class="mtx-inkind-row"' : ''}><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}${exclTag}</td>
                 <td>${v ? won(v) : '<span class="muted">–</span>'}</td>${execCells(v, sv)}</tr>`;
         }
         const val = c[row.calc], sval = cs[row.calc], cls = row.type === 'total' ? 'mtx-total' : 'mtx-sub';
@@ -726,7 +727,7 @@ function recalcModal() {
     g('modalPreview').innerHTML = `<div class="as-text">인건비 소계 <b>${won(c.labor)}</b> · 직접비 총계 <b>${won(c.direct)}</b> · <span class="hi">총액 <b>${won(c.grand)}</b>원</span> · 집행 합계 <b>${won(cs.grand)}</b></div>`;
     // 인력 합계 vs 예산(학생·외부 인건비) 대조
     const ppl = collectPeople();
-    const ps = ppl.filter(e => e.grp === 'student' && !e.note).reduce((a, e) => a + num(e.amount), 0);
+    const ps = ppl.filter(e => e.grp === 'student').reduce((a, e) => a + num(e.amount), 0);   // 잔여(note)도 합 포함
     const pi = ppl.filter(e => e.grp === 'internal').reduce((a, e) => a + num(e.amount), 0);
     const budStu = num(m.external) + num(m.student) + num(m.inHouseCash);
     const sumEl = g('modalPeopleSum');
