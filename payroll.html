@@ -6,10 +6,10 @@
     <title>보안 지능 연구실 - 학생 인건비 관리</title>
     <link rel="icon" href="./image.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="common.css?v=19">
-    <link rel="stylesheet" href="photo.css?v=19">
-    <link rel="stylesheet" href="performance.css?v=19">
-    <link rel="stylesheet" href="payroll.css?v=19">
+    <link rel="stylesheet" href="common.css?v=20">
+    <link rel="stylesheet" href="photo.css?v=20">
+    <link rel="stylesheet" href="performance.css?v=20">
+    <link rel="stylesheet" href="payroll.css?v=20">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -162,7 +162,7 @@
                     <h2><i class="fas fa-pen-to-square"></i> 과제별 입력</h2>
                     <span id="dirtyBadge" class="dirty-badge" style="display:none;"><i class="fas fa-circle"></i> 저장되지 않은 변경</span>
                 </div>
-                <p class="pay-hint" style="margin-top:0;"><i class="fas fa-hand-pointer"></i> 과제를 클릭하면 아래에서 바로 수정하고, 위 표가 즉시 갱신됩니다. 과제 순서는 교수님 지정 순서로 자동 정렬됩니다.</p>
+                <p class="pay-hint" style="margin-top:0;"><i class="fas fa-hand-pointer"></i> 과제를 클릭하면 내용을 보고, <b>‘수정’</b>을 눌러야 편집됩니다. 저장하면 위 표가 갱신됩니다. 과제 순서는 교수님 지정 순서로 자동 정렬됩니다.</p>
                 <div id="projChips" class="proj-chips"></div>
 
                 <div id="inlineEditor" class="inline-editor" style="display:none;">
@@ -213,6 +213,7 @@
                     <div class="ie-actions">
                         <button type="button" class="tb-btn danger" id="deleteProjectBtn"><i class="fas fa-trash"></i> 과제 삭제</button>
                         <span style="flex:1;"></span>
+                        <button type="button" class="tb-btn primary" id="enterEditBtn"><i class="fas fa-pen"></i> 수정</button>
                         <button type="button" class="tb-btn" id="cancelEditBtn"><i class="fas fa-rotate-left"></i> 되돌리기</button>
                         <button type="button" class="tb-btn primary" id="saveProjectBtn"><i class="fas fa-save"></i> 저장</button>
                     </div>
@@ -260,8 +261,8 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="config.js?v=19"></script>
-    <script src="common.js?v=19"></script>
-    <script src="payroll.js?v=19"></script>
+    <script src="config.js?v=20"></script>
+    <script src="common.js?v=20"></script>
+    <script src="payroll.js?v=20"></script>
 </body>
 </html>

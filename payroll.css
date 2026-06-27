@@ -198,6 +198,15 @@ details.pay-collapse .matrix-wrap { border: none; border-radius: 0; box-shadow: 
 
 /* ===== 인라인 편집기 ===== */
 .inline-editor { background: #fff; border: 1px solid #e1e9f2; border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(0, 60, 120, .06); }
+/* 보기(읽기전용) 모드: 입력칸을 평범한 텍스트처럼 */
+.inline-editor.view-mode input:disabled,
+.inline-editor.view-mode textarea:disabled,
+.inline-editor.view-mode select:disabled {
+    background: transparent !important; border-color: transparent !important; box-shadow: none !important;
+    color: #2a3645; opacity: 1; -webkit-text-fill-color: #2a3645; cursor: default; resize: none;
+}
+.inline-editor.view-mode .mg-del { display: none; }
+.inline-editor.view-mode .member-grid tbody tr:hover td { background: #f3f7fc; }
 .ie-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
 .ie-meta .form-group { flex: 1; min-width: 140px; margin: 0; }
 .ie-meta label { display: block; font-size: 0.8em; font-weight: 600; color: var(--text-medium); margin-bottom: 5px; }
