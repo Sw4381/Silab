@@ -527,14 +527,14 @@ function modalItemsHTML(p) {
     const head = `<div class="mi-row mi-head"><span class="mi-label"></span><span class="mi-col">배정 (원)</span><span class="mi-col">집행 (원)</span></div>`;
     return head + BITEMS.map(it => {
         if (it.key === 'student' && !state.isRoot) {
-            return `<div class="mi-row" data-k="student"><span class="mi-label">${it.label} <i class="fas fa-link link-ic" title="학생인건비 합계(인건비 페이지 자동 연동)"></i></span><input class="mi-input" value="${num(a.student) || ''}" readonly><input class="mi-spent" value="${num((sp || {}).student) || ''}" readonly placeholder="집행"></div>`;
+            return `<div class="mi-row" data-k="student"><span class="mi-label">${it.label} <i class="fas fa-link link-ic" title="학생인건비 합계(인건비 페이지 자동 연동)"></i></span><input class="mi-input" value="${silabMoneyFmt(a.student)}" readonly><input class="mi-spent" value="${silabMoneyFmt((sp || {}).student)}" readonly placeholder="집행"></div>`;
         }
         const linked = it.linked && isLinked(p);
         const v = linked ? payrollWindowSum(p, state.year) : num(a[it.key]);
         return `<div class="mi-row" data-k="${it.key}">
             <span class="mi-label">${it.label}${linked ? ' <i class="fas fa-link link-ic"></i>' : ''}</span>
-            <input type="text" inputmode="numeric" class="mi-input" value="${v || ''}"${linked ? ' readonly' : ''}>
-            <input type="text" inputmode="numeric" class="mi-spent" value="${num(sp[it.key]) || ''}" placeholder="집행"></div>`;
+            <input type="text" inputmode="numeric" class="mi-input js-money" value="${silabMoneyFmt(v)}"${linked ? ' readonly' : ''}>
+            <input type="text" inputmode="numeric" class="mi-spent js-money" value="${silabMoneyFmt(num(sp[it.key]))}" placeholder="집행"></div>`;
     }).join('');
 }
 // ---- 인력구성 편집 ----
@@ -546,13 +546,13 @@ function personRowHTML(e) {
     const mid = jat
         ? `<input class="pe-memo" type="text" value="${escHtmlSafe(e.memo || '')}" placeholder="잔여 사유 (예: 연구수당 이슈로 hold)">`
         : `<input class="pe-rate" type="number" step="any" value="${e.rate != null ? (Math.round(e.rate * 1000) / 10) : ''}" placeholder="%">
-           <input class="pe-base" type="text" inputmode="numeric" value="${e.base || ''}" placeholder="급여기준">
+           <input class="pe-base js-money" type="text" inputmode="numeric" value="${silabMoneyFmt(e.base)}" placeholder="급여기준">
            <input class="pe-months" type="number" step="any" value="${e.months != null ? e.months : ''}" placeholder="개월">`;
     return `<div class="pe-row${jat ? ' pe-jat' : ''}">
         <select class="pe-grp">${sel(e.grp)}</select>
         <input class="pe-name" type="text" value="${escHtmlSafe(e.name || '')}" placeholder="이름">
         ${mid}
-        <input class="pe-amount" type="text" inputmode="numeric" value="${e.amount || ''}" placeholder="인건비">
+        <input class="pe-amount js-money" type="text" inputmode="numeric" value="${silabMoneyFmt(e.amount)}" placeholder="인건비">
         <button type="button" class="pe-del" title="삭제"><i class="fas fa-xmark"></i></button>
     </div>`;
 }
@@ -629,7 +629,7 @@ function recalcModal() {
     const sr = document.querySelector('#modalItems .mi-row[data-k="student"]');
     if (sr && state.isRoot) {
         const inp = sr.querySelector('.mi-input'), note = sr.querySelector('.link-ic');
-        if (linkSum != null) { inp.readOnly = true; inp.value = linkSum || ''; if (!note) sr.querySelector('.mi-label').insertAdjacentHTML('beforeend', ' <i class="fas fa-link link-ic" title="인건비 페이지 자동연동(차년도 기간 합산)"></i>'); }
+        if (linkSum != null) { inp.readOnly = true; inp.value = silabMoneyFmt(linkSum); if (!note) sr.querySelector('.mi-label').insertAdjacentHTML('beforeend', ' <i class="fas fa-link link-ic" title="인건비 페이지 자동연동(차년도 기간 합산)"></i>'); }
         else { inp.readOnly = false; if (note) note.remove(); }
     }
     const m = {}, sp = {};

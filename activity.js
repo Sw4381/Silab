@@ -189,9 +189,9 @@ function itemRowHTML(it) {
     it = it || { name: '', budget: '', spent: '', planned: '', note: '' };
     return `<div class="ai-row">
         <input class="ai-name" type="text" value="${esc(it.name)}" placeholder="세목">
-        <input class="ai-budget" type="text" inputmode="numeric" value="${it.budget || ''}" placeholder="예산">
-        <input class="ai-spent" type="text" inputmode="numeric" value="${it.spent || ''}" placeholder="집행">
-        <input class="ai-planned" type="text" inputmode="numeric" value="${it.planned || ''}" placeholder="집행예정">
+        <input class="ai-budget js-money" type="text" inputmode="numeric" value="${silabMoneyFmt(it.budget)}" placeholder="예산">
+        <input class="ai-spent js-money" type="text" inputmode="numeric" value="${silabMoneyFmt(it.spent)}" placeholder="집행">
+        <input class="ai-planned js-money" type="text" inputmode="numeric" value="${silabMoneyFmt(it.planned)}" placeholder="집행예정">
         <input class="ai-note" type="text" value="${esc(it.note)}" placeholder="비고">
         <button type="button" class="ai-del" title="삭제"><i class="fas fa-xmark"></i></button>
     </div>`;
