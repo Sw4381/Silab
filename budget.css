@@ -150,6 +150,7 @@ details.pay-collapse > summary .tb-btn + .cl-chevron, details.pay-collapse > sum
 .bud-matrix .mtx-neg { color: var(--color-danger); }
 .bud-matrix .mtx-inkind-row td { background: #fbfaf5; color: var(--text-medium); }
 .mtx-inkind { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 9px; background: #f0ece0; color: #8a7a4a; font-size: 0.72em; font-weight: 700; }
+.excl-tag.jat { background: #eaf3ff; color: #1769b0; }
 .targets-hint { font-size: 0.74rem; color: var(--text-light); }
 
 /* 배분율 요약 (모달 미리보기) */
