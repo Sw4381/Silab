@@ -14,7 +14,7 @@ const CATEGORIES = ['국가R&D', '비R&D', '기타'];
 // 예산 항목 (현금 기준 — 합계가 총액과 일치)
 const BITEMS = [
     { key: 'inHouseCash', label: '내부인건비(현금)', grp: 'labor' },
-    { key: 'inHouseInKind', label: '내부인건비(현물)', grp: 'inkind' },   // 현물·자부담 — 총액 미포함
+    { key: 'inHouseInKind', label: '내부인건비(현물)', grp: 'labor' },   // 현물·자부담 — 총액 포함
     { key: 'external', label: '외부인건비', grp: 'labor' },
     { key: 'student', label: '학생인건비(통합)', grp: 'labor', linked: true },
     { key: 'equipCash', label: '기자재(현금)', grp: 'direct' },
@@ -470,8 +470,7 @@ function renderDetail() {
     const rows = LAYOUT.map(row => {
         if (row.type === 'item') {
             const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), sv = num(sp[row.key]), linked = it.linked && isLinked(p);
-            const inkindTag = it.grp === 'inkind' ? ' <span class="mtx-inkind">현물·총액 미포함</span>' : '';
-            return `<tr${it.grp === 'inkind' ? ' class="mtx-inkind-row"' : ''}><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}${inkindTag}</td>
+            return `<tr><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}</td>
                 <td>${v ? won(v) : '<span class="muted">–</span>'}</td>${execCells(v, sv)}</tr>`;
         }
         const val = c[row.calc], sval = cs[row.calc], cls = row.type === 'total' ? 'mtx-total' : 'mtx-sub';
