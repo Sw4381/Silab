@@ -160,7 +160,7 @@ function sumKeys(m, keys) { return keys.reduce((a, k) => a + num(m[k]), 0); }
 function calc(m) {
     const labor = sumKeys(m, LABOR_KEYS);
     const direct = labor + sumKeys(m, DIRECT_KEYS);
-    return { labor, direct, grand: direct + num(m.indirect) + num(m.vat) };
+    return { labor, direct, grand: direct + num(m.vat) };   // 간접비는 총액 제외
 }
 function total(p) { return calc(effAlloc(p)).grand; }
 
@@ -384,7 +384,8 @@ function renderOverview() {
 
     const cards = byAmt.map(k => {
         const p = state.projects[k], x = compParts(p);
-        const seg = (v, cls) => v > 0 ? `<span class="cmp-seg ${cls}" style="width:${(v / Math.max(1, x.grand) * 100).toFixed(1)}%"></span>` : '';
+        const barTotal = Math.max(1, x.labor + x.directOnly + x.io);
+        const seg = (v, cls) => v > 0 ? `<span class="cmp-seg ${cls}" style="width:${(v / barTotal * 100).toFixed(1)}%"></span>` : '';
         const catCls = p.category === '국가R&D' ? 'c-nat' : (p.category === '비R&D' ? 'c-non' : 'c-etc');
         return `<div class="ov-card card" data-key="${escHtmlSafe(k)}">
             <div class="ov-card-head">
@@ -470,7 +471,8 @@ function renderDetail() {
     const rows = LAYOUT.map(row => {
         if (row.type === 'item') {
             const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), sv = num(sp[row.key]), linked = it.linked && isLinked(p);
-            return `<tr><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}</td>
+            const exclTag = row.key === 'indirect' ? ' <span class="mtx-inkind">총액 미포함</span>' : '';
+            return `<tr${row.key === 'indirect' ? ' class="mtx-inkind-row"' : ''}><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}${exclTag}</td>
                 <td>${v ? won(v) : '<span class="muted">–</span>'}</td>${execCells(v, sv)}</tr>`;
         }
         const val = c[row.calc], sval = cs[row.calc], cls = row.type === 'total' ? 'mtx-total' : 'mtx-sub';
