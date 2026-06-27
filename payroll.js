@@ -414,7 +414,7 @@ function memberRowHTML(r) {
     r = r || { name: '', m: Array(12).fill(0), ext: 0, note: '' };
     const monthInputs = Array.from({ length: 12 }, (_, i) =>
         `<td><input type="number" step="any" class="mg-m" data-mi="${i}" value="${r.m[i] || ''}"></td>`).join('');
-    return `<tr class="mg-row">
+    return `<tr class="mg-row${/여유|잔여/.test(r.name || '') ? ' mg-reserve' : ''}">
         <td class="mg-name"><input type="text" class="mg-nameinput" list="knownMembers" value="${escHtmlSafe(r.name)}" placeholder="이름"></td>
         ${monthInputs}
         <td class="mg-ext"><input type="number" step="any" class="mg-extinput" value="${r.ext || ''}"></td>
@@ -439,6 +439,8 @@ function recalcMemberGrid() {
 function wireMemberRow(tr) {
     tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', onEditorInput));
     tr.querySelector('.mg-del').addEventListener('click', () => { tr.remove(); onEditorInput(); });
+    const nm = tr.querySelector('.mg-nameinput');
+    if (nm) nm.addEventListener('input', () => tr.classList.toggle('mg-reserve', /여유|잔여/.test(nm.value)));
 }
 function addMemberRow(r) {
     const tbody = document.getElementById('memberRows');
@@ -566,6 +568,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 인라인 편집기
     document.getElementById('addMemberBtn').addEventListener('click', () => { addMemberRow(); onEditorInput(); });
+    document.getElementById('addReserveBtn').addEventListener('click', () => { const tr = addMemberRow({ name: '여유분', m: Array(12).fill(0), ext: 0, note: '' }); onEditorInput(); const n = tr.querySelector('.mg-noteinput'); if (n) n.focus(); });
     document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
     document.getElementById('deleteProjectBtn').addEventListener('click', deleteProject);
     document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
