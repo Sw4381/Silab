@@ -212,10 +212,19 @@ details.pay-collapse .matrix-wrap { border: none; border-radius: 0; box-shadow: 
 /* ===== 멤버 그리드 ===== */
 .member-grid-scroll { overflow-x: auto; border: 1px solid #e8eef5; border-radius: 10px; margin-bottom: 6px; }
 .member-grid { border-collapse: collapse; width: 100%; font-size: 0.8em; min-width: 1000px; }
-.member-grid th, .member-grid td { padding: 4px 5px; border-bottom: 1px solid #eef2f7; text-align: center; }
+.member-grid th, .member-grid td { padding: 5px 6px; border-bottom: 1px solid #eef2f7; text-align: center; }
 .member-grid thead th { background: #f4f8fc; color: var(--text-medium); font-weight: 700; position: sticky; top: 0; }
-.member-grid input { width: 100%; box-sizing: border-box; padding: 5px 4px !important; font-size: 1em !important; text-align: right; margin: 0 !important; }
+.member-grid input {
+    width: 100%; box-sizing: border-box; padding: 6px 7px !important; font-size: 1em !important;
+    text-align: right; margin: 0 !important;
+    border: 1px solid #e3e9f0; border-radius: 6px; background: #f8fafc; color: #2a3645;
+    transition: border-color .12s, box-shadow .12s, background .12s;
+}
+.member-grid input:hover { border-color: #c4d3e6; background: #fff; }
+.member-grid input:focus { outline: none; border-color: var(--color-accent); background: #fff; box-shadow: 0 0 0 2px rgba(79, 172, 254, .2); }
+.member-grid input::placeholder { color: #c2ccd8; }
 .member-grid input.mg-nameinput, .member-grid input.mg-noteinput { text-align: left; }
+.member-grid input.mg-nameinput { font-weight: 600; color: var(--color-primary); }
 .member-grid .mg-name { min-width: 90px; }
 .member-grid .mg-m, .member-grid .mg-ext { min-width: 54px; }
 .member-grid td.mg-sum { font-weight: 700; color: var(--color-primary); min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; }
