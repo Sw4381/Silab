@@ -6,10 +6,10 @@
     <title>보안 지능 연구실 - 학생 인건비 관리</title>
     <link rel="icon" href="./image.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="common.css?v=28">
-    <link rel="stylesheet" href="photo.css?v=28">
-    <link rel="stylesheet" href="performance.css?v=28">
-    <link rel="stylesheet" href="payroll.css?v=28">
+    <link rel="stylesheet" href="common.css?v=29">
+    <link rel="stylesheet" href="photo.css?v=29">
+    <link rel="stylesheet" href="performance.css?v=29">
+    <link rel="stylesheet" href="payroll.css?v=29">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -192,13 +192,14 @@
                         <button type="button" class="tb-btn" id="addReserveBtn"><i class="fas fa-piggy-bank"></i> 여유분 추가</button>
                         <button type="button" class="tb-btn" id="addMemberBtn"><i class="fas fa-user-plus"></i> 학생 추가</button>
                     </div>
+                    <p class="targets-hint" style="margin:2px 0 8px;"><i class="fas fa-circle-info"></i> 연구재단처럼 사업연도가 해를 넘기는 경우: <b>월 머리글을 클릭</b>하면 그 달을 <b>내년(차기연도)</b>으로 표시합니다. 내년 분은 <b>학생 인건비 탭 총합에서 제외</b>되지만 <b>과제 세부 인건비에는 포함</b>됩니다.</p>
                     <div class="member-grid-scroll">
                         <table class="member-grid">
                             <thead>
                                 <tr>
                                     <th class="mg-name">이름</th>
-                                    <th>1월</th><th>2월</th><th>3월</th><th>4월</th><th>5월</th><th>6월</th>
-                                    <th>7월</th><th>8월</th><th>9월</th><th>10월</th><th>11월</th><th>12월</th>
+                                    <th class="mg-mhead" data-mi="0" title="클릭: 내년(차기연도) 표시">1월</th><th class="mg-mhead" data-mi="1" title="클릭: 내년(차기연도) 표시">2월</th><th class="mg-mhead" data-mi="2" title="클릭: 내년(차기연도) 표시">3월</th><th class="mg-mhead" data-mi="3" title="클릭: 내년(차기연도) 표시">4월</th><th class="mg-mhead" data-mi="4" title="클릭: 내년(차기연도) 표시">5월</th><th class="mg-mhead" data-mi="5" title="클릭: 내년(차기연도) 표시">6월</th>
+                                    <th class="mg-mhead" data-mi="6" title="클릭: 내년(차기연도) 표시">7월</th><th class="mg-mhead" data-mi="7" title="클릭: 내년(차기연도) 표시">8월</th><th class="mg-mhead" data-mi="8" title="클릭: 내년(차기연도) 표시">9월</th><th class="mg-mhead" data-mi="9" title="클릭: 내년(차기연도) 표시">10월</th><th class="mg-mhead" data-mi="10" title="클릭: 내년(차기연도) 표시">11월</th><th class="mg-mhead" data-mi="11" title="클릭: 내년(차기연도) 표시">12월</th>
                                     <th class="mg-ext">외부</th>
                                     <th class="mg-sum">합계</th>
                                     <th class="mg-note">비고</th>
@@ -209,6 +210,7 @@
                             <tfoot><tr id="memberFootRow"></tr></tfoot>
                         </table>
                     </div>
+                    <p id="mgNyNote" class="mg-ny-note"></p>
                     <datalist id="knownMembers"></datalist>
 
                     <div class="ie-actions">
@@ -278,8 +280,8 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="config.js?v=28"></script>
-    <script src="common.js?v=28"></script>
-    <script src="payroll.js?v=28"></script>
+    <script src="config.js?v=29"></script>
+    <script src="common.js?v=29"></script>
+    <script src="payroll.js?v=29"></script>
 </body>
 </html>
