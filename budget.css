@@ -152,6 +152,8 @@ details.pay-collapse > summary .tb-btn + .cl-chevron, details.pay-collapse > sum
 .mtx-inkind { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 9px; background: #f0ece0; color: #8a7a4a; font-size: 0.72em; font-weight: 700; }
 .excl-tag.jat { background: #eaf3ff; color: #1769b0; }
 .targets-hint { font-size: 0.74rem; color: var(--text-light); }
+#peoplePasteText { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #d9e2ec; border-radius: 8px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.86em; line-height: 1.5; white-space: pre; overflow: auto; }
+#peoplePasteText:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(79,172,254,.15); }
 
 /* 배분율 요약 (모달 미리보기) */
 .alloc-summary { margin-top: 6px; }
