@@ -387,9 +387,23 @@ function openEditor(key, isNew) {
     if (p && p.rows.length) p.rows.forEach(r => addMemberRow(deepClone(r)));
     if (!tbody.children.length) addMemberRow();
     recalcMemberGrid();
+    setEditorMode(!!isNew);   // 신규는 편집, 기존 선택은 읽기전용(보기) 모드
     renderChips();
     refreshOverview();
     inlineEditor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+// 보기 모드 ↔ 편집 모드 전환 (편집 모드에서만 입력/버튼 활성)
+function setEditorMode(editing) {
+    state.editing = editing;
+    inlineEditor.querySelectorAll('input, textarea, select').forEach(el => { el.disabled = !editing; });
+    inlineEditor.classList.toggle('view-mode', !editing);
+    const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+    show('enterEditBtn', !editing && !state.isNew);
+    show('saveProjectBtn', editing);
+    show('cancelEditBtn', editing);
+    show('addMemberBtn', editing);
+    show('addReserveBtn', editing);
+    show('deleteProjectBtn', editing && !state.isNew);
 }
 function cancelEdit() {
     if (state.isNew) { state.editKey = null; state.isNew = false; state.dirty = false; renderAll(); }
@@ -405,6 +419,7 @@ async function saveProject() {
         state.isNew = false; state.dirty = false;
         showAlert('저장되었습니다.', 'success');
         renderAll();
+        if (state.editKey && state.projects[state.editKey]) setEditorMode(false);   // 저장 후 보기 모드로
     } catch (err) { showAlert('저장 실패: ' + err.message, 'error'); }
 }
 async function deleteProject() {
@@ -608,6 +623,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
     document.getElementById('deleteProjectBtn').addEventListener('click', deleteProject);
     document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
+    document.getElementById('enterEditBtn').addEventListener('click', () => setEditorMode(true));
     document.getElementById('capsForm').addEventListener('submit', saveCaps);
 
     // 공통 모달 닫기
