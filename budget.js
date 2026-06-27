@@ -486,7 +486,7 @@ function renderDetail() {
     const rows = LAYOUT.map(row => {
         if (row.type === 'item') {
             const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), sv = num(sp[row.key]), linked = it.linked && isLinked(p);
-            const offTotal = (row.key === 'vat' || row.key === 'inHouseInKind');
+            const offTotal = (row.key === 'inHouseInKind');
             const exclTag = offTotal ? ' <span class="mtx-inkind">총액 미포함</span>' : '';
             return `<tr${offTotal ? ' class="mtx-inkind-row"' : ''}><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}${exclTag}</td>
                 <td>${v ? won(v) : '<span class="muted">–</span>'}</td>${execCells(v, sv)}</tr>`;
