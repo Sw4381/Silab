@@ -109,6 +109,7 @@ function normalizeProject(p) {
         status: STATUSES.includes(p.status) ? p.status : '확정',
         note: String(p.note || ''),
         order: num(p.order),
+        nyMonths: Array.isArray(p.nyMonths) ? p.nyMonths.map(Number).filter(i => i >= 0 && i < 12) : [],   // 차기연도(내년)로 표시한 월 인덱스
         rows
     };
 }
@@ -141,15 +142,20 @@ function studentTotals(projects) {
     Object.keys(state.caps || {}).forEach(push);
     Object.values(projects).forEach(p => (p.rows || []).forEach(r => push(r.name)));
     const map = {};
-    order.forEach(n => map[n] = { name: n, m: Array(12).fill(0), ext: 0, lump: 0, total: 0 });
-    Object.values(projects).forEach(p => (p.rows || []).forEach(r => {
-        const t = map[r.name]; if (!t) return;
-        for (let i = 0; i < 12; i++) t.m[i] += num(r.m[i]);
-        t.ext += num(r.ext);
-        t.lump += num(r.lump);
-    }));
+    order.forEach(n => map[n] = { name: n, m: Array(12).fill(0), nyM: Array(12).fill(0), ext: 0, lump: 0, ny: 0, total: 0 });
+    Object.values(projects).forEach(p => {
+        const nySet = new Set((p.nyMonths || []).map(Number));   // 이 과제에서 내년(차기연도)로 표시한 월
+        (p.rows || []).forEach(r => {
+            const t = map[r.name]; if (!t) return;
+            for (let i = 0; i < 12; i++) { const v = num(r.m[i]); t.m[i] += v; if (nySet.has(i)) t.nyM[i] += v; }
+            t.ext += num(r.ext);
+            t.lump += num(r.lump);
+        });
+    });
     return order.map(n => {
-        const s = map[n]; s.total = s.m.reduce((a, b) => a + b, 0) + num(s.lump) + num(s.ext);   // 월별 + 여유분 + 외부(외부인건비)
+        const s = map[n];
+        s.ny = s.nyM.reduce((a, b) => a + b, 0);                                                    // 내년 분(올해 총합 제외)
+        s.total = s.m.reduce((a, b) => a + b, 0) - s.ny + num(s.lump) + num(s.ext);                 // 올해분(월별−내년) + 여유분 + 외부
         s.cap = num(state.caps[n]); s.ratio = s.cap ? s.total / s.cap : 0;
         return s;
     });
@@ -159,7 +165,12 @@ function projectMonthlyTotals(p) {
     (p.rows || []).forEach(r => { for (let i = 0; i < 12; i++) m[i] += num(r.m[i]); });
     return m;
 }
-function projectTotal(p) { return projectMonthlyTotals(p).reduce((a, b) => a + b, 0) + (p.rows || []).reduce((a, r) => a + num(r.lump) + num(r.ext), 0); }
+function projectTotal(p) {   // 학생 인건비 탭 기준: 내년(차기연도) 월 제외
+    const ny = new Set((p.nyMonths || []).map(Number));
+    let s = 0;
+    (p.rows || []).forEach(r => { for (let i = 0; i < 12; i++) if (!ny.has(i)) s += num(r.m[i]); s += num(r.lump) + num(r.ext); });
+    return s;
+}
 function projectHeadcount(p) { return (p.rows || []).filter(r => r.m.some(x => num(x) > 0) || num(r.ext) > 0).length; }
 function ratioClass(r) { return r > 1.0001 ? 'over' : (r >= 0.9 ? 'high' : (r > 0 ? 'ok' : 'zero')); }
 
@@ -265,26 +276,30 @@ function setBlockSum(el, projects) {
 
 // 학생별 월별 총액표 (이름 · 월/분기 · 개인 총액). projects 부분집합으로 전체/R&D/용역을 동일 형식으로 렌더.
 function totalsTableHTML(projects, withRatio) {
-    const studs = studentTotals(projects).filter(s => s.total > 0);
+    const studs = studentTotals(projects).filter(s => s.total > 0 || s.ny > 0);
     if (!studs.length) return '<div class="pay-empty">해당 항목 인건비가 없습니다.</div>';
     const groups = monthGroups();
     const compact = state.monthsExpanded ? '' : ' compact';
-    const colTotals = groups.map(() => 0); let grand = 0, extTotal = 0;
-    studs.forEach(s => { groups.forEach((g, gi) => colTotals[gi] += sumIdx(s.m, g.idxs)); grand += s.total; extTotal += num(s.ext); });
+    const colTotals = groups.map(() => 0); let grand = 0, extTotal = 0, nyTotal = 0;
+    studs.forEach(s => { groups.forEach((g, gi) => colTotals[gi] += sumIdx(s.m, g.idxs)); grand += s.total; extTotal += num(s.ext); nyTotal += num(s.ny); });
     const hasExt = extTotal > 0;   // 외부인건비 있을 때만 외부 칼럼 표시
+    const hasNy = nyTotal > 0;     // 내년(차기연도) 분 있을 때만 내년 칼럼 표시
 
     const head = `<tr>
         <th class="sticky-l">이름</th>
         ${groups.map(g => `<th>${g.label}</th>`).join('')}
+        ${hasNy ? '<th class="col-ny" title="내년(차기연도) 분 — 올해 총합 제외">내년</th>' : ''}
         ${hasExt ? '<th class="col-ext">외부</th>' : ''}
         <th class="col-total">총액</th>
         ${withRatio ? '<th class="col-ratio">비율</th>' : ''}
     </tr>`;
     const body = studs.map((s, si) => {
         const cells = groups.map(g => {
-            const v = sumIdx(s.m, g.idxs);
-            return `<td class="${v ? '' : 'z'}">${v ? fmt(v) : ''}</td>`;
+            const v = sumIdx(s.m, g.idxs), nyv = sumIdx(s.nyM, g.idxs);
+            const cls = v ? (nyv >= v ? 'ny-cell' : (nyv > 0 ? 'ny-part' : '')) : 'z';
+            return `<td class="${cls}">${v ? fmt(v) : ''}</td>`;
         }).join('');
+        const nyCell = hasNy ? `<td class="col-ny">${num(s.ny) ? fmt(s.ny) : ''}</td>` : '';
         const extCell = hasExt ? `<td class="col-ext">${num(s.ext) ? fmt(s.ext) : ''}</td>` : '';
         const ratioCell = withRatio
             ? `<td class="col-ratio">${s.cap ? `<span class="rt rt-${ratioClass(s.ratio)}">${(s.ratio * 100).toFixed(1)}%</span>` : '<span class="z">–</span>'}</td>`
@@ -292,6 +307,7 @@ function totalsTableHTML(projects, withRatio) {
         return `<tr class="${si % 2 ? 's-alt' : ''}">
             <td class="sticky-l name">${escHtmlSafe(s.name)}</td>
             ${cells}
+            ${nyCell}
             ${extCell}
             <td class="col-total"><b>${fmt(s.total)}</b></td>
             ${ratioCell}
@@ -300,11 +316,13 @@ function totalsTableHTML(projects, withRatio) {
     const foot = `<tr class="foot">
         <td class="sticky-l">합계</td>
         ${colTotals.map(v => `<td>${v ? fmt(v) : ''}</td>`).join('')}
+        ${hasNy ? `<td class="col-ny">${nyTotal ? fmt(nyTotal) : ''}</td>` : ''}
         ${hasExt ? `<td class="col-ext">${extTotal ? fmt(extTotal) : ''}</td>` : ''}
         <td class="col-total"><b>${fmt(grand)}</b></td>
         ${withRatio ? '<td class="col-ratio"></td>' : ''}
     </tr>`;
-    return `<table class="student-table${compact}"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+    const nyNote = hasNy ? `<div class="ny-note"><i class="fas fa-circle-info"></i> ‘내년(차기연도)’ 분 ${fmt(nyTotal)}만원은 <b>올해 총액에서 제외</b>되었습니다 (과제 세부 인건비에는 포함). 회색 칸이 내년 분입니다.</div>` : '';
+    return nyNote + `<table class="student-table${compact}"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
 }
 
 // ==================== 과제 칩 ====================
@@ -334,6 +352,22 @@ function renderChips() {
 }
 
 // ==================== 인라인 과제 편집 ====================
+// 월 머리글의 내년(차기연도) 표시 적용/수집
+function setNyHeaders(nyMonths) {
+    const set = new Set((nyMonths || []).map(Number));
+    document.querySelectorAll('.member-grid th.mg-mhead').forEach(th => th.classList.toggle('ny', set.has(Number(th.dataset.mi))));
+}
+function collectNyMonths() {
+    const out = [];
+    document.querySelectorAll('.member-grid th.mg-mhead.ny').forEach(th => out.push(Number(th.dataset.mi)));
+    return out.sort((a, b) => a - b);
+}
+function toggleNyHeader(th) {
+    if (!state.editing) return;
+    th.classList.toggle('ny');
+    onEditorInput();
+    recalcMemberGrid();
+}
 function collectEditor() {
     const rows = [];
     document.querySelectorAll('#memberRows .mg-row').forEach(tr => {
@@ -354,6 +388,7 @@ function collectEditor() {
         status: document.getElementById('projStatus').value,
         note: document.getElementById('projNote').value.trim(),
         order: existing ? existing.order : Object.keys(state.projects).length,
+        nyMonths: collectNyMonths(),
         rows
     };
 }
@@ -391,6 +426,7 @@ function openEditor(key, isNew) {
     tbody.innerHTML = '';
     if (p && p.rows.length) p.rows.forEach(r => addMemberRow(deepClone(r)));
     if (!tbody.children.length) addMemberRow();
+    setNyHeaders(p ? p.nyMonths : []);
     recalcMemberGrid();
     setEditorMode(!!isNew);   // 신규는 편집, 기존 선택은 읽기전용(보기) 모드
     renderChips();
@@ -463,21 +499,29 @@ function memberRowHTML(r) {
     </tr>`;
 }
 function recalcMemberGrid() {
-    const foot = Array(12).fill(0); let extSum = 0, grand = 0;
+    const nySet = new Set(collectNyMonths());
+    const foot = Array(12).fill(0); let extSum = 0, grand = 0, nySum = 0;
     document.querySelectorAll('#memberRows .mg-row').forEach(tr => {
         let rowSum = 0;
         const lumpInp = tr.querySelector('.mg-lump');
         if (lumpInp) { rowSum = num(lumpInp.value); }   // 여유분: 월별 합산 없음
         else {
-            tr.querySelectorAll('.mg-m').forEach(inp => { const v = num(inp.value); rowSum += v; foot[Number(inp.dataset.mi)] += v; });
+            tr.querySelectorAll('.mg-m').forEach(inp => {
+                const v = num(inp.value), mi = Number(inp.dataset.mi);
+                rowSum += v; foot[mi] += v;
+                if (nySet.has(mi)) nySum += v;
+                if (inp.parentElement) inp.parentElement.classList.toggle('ny-cell', nySet.has(mi));   // 내년 칸 음영
+            });
             const ext = tr.querySelector('.mg-extinput'); if (ext) { const ev = num(ext.value); extSum += ev; rowSum += ev; }   // 외부도 개인 합계에 포함
         }
         tr.querySelector('.mg-sum').textContent = fmt(rowSum);
         grand += rowSum;
     });
     const footRow = document.getElementById('memberFootRow');
-    footRow.innerHTML = `<td class="mg-name">월별 합계</td>${foot.map(v => `<td>${v ? fmt(v) : ''}</td>`).join('')}`
+    footRow.innerHTML = `<td class="mg-name">월별 합계</td>${foot.map((v, i) => `<td class="${nySet.has(i) ? 'ny-cell' : ''}">${v ? fmt(v) : ''}</td>`).join('')}`
         + `<td class="mg-ext">${extSum ? fmt(extSum) : ''}</td><td class="mg-sum"><b>${fmt(grand)}</b></td><td></td><td></td>`;
+    const note = document.getElementById('mgNyNote');
+    if (note) note.textContent = nySum ? `내년(차기연도) ${fmt(nySum)}만원 포함 — 올해 탭 총합에는 ${fmt(grand - nySum)}만원만 반영(과제 세부 인건비는 전체 ${fmt(grand)}만원).` : '';
 }
 function wireMemberRow(tr) {
     tr.querySelectorAll('input, textarea').forEach(inp => inp.addEventListener('input', onEditorInput));
@@ -654,6 +698,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 인라인 편집기
+    document.querySelectorAll('.member-grid th.mg-mhead').forEach(th => th.addEventListener('click', () => toggleNyHeader(th)));
     document.getElementById('addMemberBtn').addEventListener('click', () => { addMemberRow(); onEditorInput(); });
     document.getElementById('addReserveBtn').addEventListener('click', () => { const tr = addMemberRow({ name: '여유분', m: Array(12).fill(0), ext: 0, note: '' }); onEditorInput(); const n = tr.querySelector('.mg-noteinput'); if (n) n.focus(); });
     document.getElementById('saveProjectBtn').addEventListener('click', saveProject);

@@ -127,6 +127,12 @@
 .student-table td.z { color: #cdd6e0; }
 .student-table .col-ext { color: #8a6d1c; }
 .student-table .col-total { background: #fafcff; }
+/* 내년(차기연도) 분: 올해 총합 제외 — 회색 음영 */
+.student-table .col-ny { color: #8a93a3; background: #f3f5f8; }
+.student-table td.ny-cell { color: #97a0ad; background: #f3f5f8; text-decoration: line-through; }
+.student-table td.ny-part { background: #fbf7ee; }
+.ny-note { font-size: 0.82em; color: #8a6d1c; background: #fdf8ec; border: 1px solid #f0e4c4; border-radius: 8px; padding: 6px 10px; margin: 0 0 8px; }
+.ny-note i { margin-right: 5px; }
 .student-table .col-ratio { text-align: right; }
 .rt { font-weight: 700; font-variant-numeric: tabular-nums; }
 .rt-over { color: var(--color-danger); }
@@ -223,6 +229,14 @@ details.pay-collapse .matrix-wrap { border: none; border-radius: 0; box-shadow: 
 .member-grid { border-collapse: collapse; width: 100%; font-size: 0.8em; min-width: 1000px; }
 .member-grid th, .member-grid td { padding: 5px 6px; border-bottom: 1px solid #eef2f7; text-align: center; }
 .member-grid thead th { background: #f4f8fc; color: var(--text-medium); font-weight: 700; position: sticky; top: 0; }
+/* 내년(차기연도) 월 머리글: 클릭 토글 */
+.inline-editor:not(.view-mode) .member-grid th.mg-mhead { cursor: pointer; }
+.inline-editor:not(.view-mode) .member-grid th.mg-mhead:hover { background: #e9eef5; }
+.member-grid th.mg-mhead.ny { background: #e7ebf1; color: #6b7686; }
+.member-grid th.mg-mhead.ny::after { content: '\00a0내년'; font-size: 0.82em; color: #8a6d1c; }
+.member-grid td.ny-cell { background: #f3f5f8; }
+.member-grid td.ny-cell input { color: #97a0ad; }
+.mg-ny-note { font-size: 0.82em; color: #8a6d1c; margin: 2px 0 8px; min-height: 1em; }
 .member-grid input {
     width: 100%; box-sizing: border-box; padding: 6px 7px !important; font-size: 1em !important;
     text-align: right; margin: 0 !important;

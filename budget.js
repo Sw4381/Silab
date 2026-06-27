@@ -137,27 +137,23 @@ function periodMonths(period, fallbackYear) {
     while ((y < ey || (y === ey && mo <= em)) && guard < 60) { out.push({ year: y, m: mo - 1 }); mo++; if (mo > 12) { mo = 1; y++; } guard++; }
     return out;
 }
-// 매칭 과제가 하나도 없으면 null(연동 안 함 → 예산 입력값 유지)
+// 매칭 과제가 없으면 null(연동 안 함 → 예산 입력값 유지)
+// 과제 세부 인건비는 해당 연도 인건비 과제의 '전체 월'(내년/차기연도 표시 월 포함) + 여유분을 합산
 function payrollWindowSum(p, budgetYear) {
     const target = normalize(p.payrollName || p.name); if (!target) return null;
-    let total = 0, matched = false; const lumpProjs = new Set();
-    periodMonths(p.period, budgetYear).forEach(({ year, m }) => {
-        const pr = findPayrollProjectInYear(year, target);
-        if (pr) { matched = true; lumpProjs.add(pr); (pr.rows || []).forEach(r => total += num((r.m || [])[m])); }
-    });
-    lumpProjs.forEach(pr => (pr.rows || []).forEach(r => total += num(r.lump)));   // 여유분(월별 없는 단일 금액) 1회 합산
-    return matched ? Math.round(total * 10000) : null;   // 만원 → 원
+    const pr = findPayrollProjectInYear(budgetYear, target);
+    if (!pr) return null;
+    let total = 0;
+    (pr.rows || []).forEach(r => { (r.m || []).forEach(v => total += num(v)); total += num(r.lump); });   // 내년 월 포함 전체 + 여유분
+    return Math.round(total * 10000);   // 만원 → 원
 }
-// 외부인건비(외부 칸) 합 — 매칭 인건비 과제의 ext 합 (과제당 1회)
+// 외부인건비(외부 칸) 합
 function payrollWindowExt(p, budgetYear) {
     const target = normalize(p.payrollName || p.name); if (!target) return null;
-    let total = 0, matched = false; const projs = new Set();
-    periodMonths(p.period, budgetYear).forEach(({ year }) => {
-        const pr = findPayrollProjectInYear(year, target);
-        if (pr) { matched = true; projs.add(pr); }
-    });
-    projs.forEach(pr => (pr.rows || []).forEach(r => total += num(r.ext)));
-    return matched ? Math.round(total * 10000) : null;
+    const pr = findPayrollProjectInYear(budgetYear, target);
+    if (!pr) return null;
+    let total = 0; (pr.rows || []).forEach(r => total += num(r.ext));
+    return Math.round(total * 10000);
 }
 
 // ==================== 계산 ====================
