@@ -159,7 +159,7 @@ function sumKeys(m, keys) { return keys.reduce((a, k) => a + num(m[k]), 0); }
 function calc(m) {
     const labor = sumKeys(m, LABOR_KEYS);
     const direct = labor + sumKeys(m, DIRECT_KEYS);
-    return { labor, direct, grand: direct + num(m.vat) };   // 간접비는 총액 제외
+    return { labor, direct, grand: direct + num(m.indirect) };   // 총액 = 직접비 총계 + 간접비 (부가세 제외)
 }
 function total(p) { return calc(effAlloc(p)).grand; }
 
@@ -470,8 +470,8 @@ function renderDetail() {
     const rows = LAYOUT.map(row => {
         if (row.type === 'item') {
             const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), sv = num(sp[row.key]), linked = it.linked && isLinked(p);
-            const exclTag = row.key === 'indirect' ? ' <span class="mtx-inkind">총액 미포함</span>' : '';
-            return `<tr${row.key === 'indirect' ? ' class="mtx-inkind-row"' : ''}><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}${exclTag}</td>
+            const exclTag = row.key === 'vat' ? ' <span class="mtx-inkind">총액 미포함</span>' : '';
+            return `<tr${row.key === 'vat' ? ' class="mtx-inkind-row"' : ''}><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}${exclTag}</td>
                 <td>${v ? won(v) : '<span class="muted">–</span>'}</td>${execCells(v, sv)}</tr>`;
         }
         const val = c[row.calc], sval = cs[row.calc], cls = row.type === 'total' ? 'mtx-total' : 'mtx-sub';
