@@ -15,7 +15,7 @@ const CATEGORIES = ['국가R&D', '비R&D', '기타'];
 const BITEMS = [
     { key: 'inHouseCash', label: '내부인건비(현금)', grp: 'labor' },
     { key: 'inHouseInKind', label: '내부인건비(현물)', grp: 'labor' },   // 현물·자부담 — 총액 포함
-    { key: 'external', label: '외부인건비', grp: 'direct' },   // 인건비 소계 제외 · 직접비 총계 포함
+    { key: 'external', label: '외부인건비', grp: 'labor' },   // 인건비 소계 포함
     { key: 'student', label: '학생인건비(통합)', grp: 'labor', linked: true },
     { key: 'equipCash', label: '기자재(현금)', grp: 'direct' },
     { key: 'material', label: '재료비', grp: 'direct' },
@@ -29,9 +29,10 @@ const DIRECT_KEYS = BITEMS.filter(i => i.grp === 'direct').map(i => i.key);
 const LAYOUT = [
     { type: 'item', key: 'inHouseCash' },
     { type: 'item', key: 'inHouseInKind' },
+    { type: 'item', key: 'external' },
     { type: 'item', key: 'student' },
     { type: 'sub', label: '인건비 소계', calc: 'labor' },
-    ...BITEMS.filter(i => i.grp === 'direct').map(i => ({ type: 'item', key: i.key })),   // 외부인건비 포함
+    ...BITEMS.filter(i => i.grp === 'direct').map(i => ({ type: 'item', key: i.key })),
     { type: 'sub', label: '직접비 총계', calc: 'direct' },
     { type: 'item', key: 'indirect' },
     { type: 'item', key: 'vat' },
