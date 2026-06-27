@@ -148,8 +148,8 @@ function payrollWindowSum(p, budgetYear) {
 function isLinked(p) { return state.year !== ALL && payrollWindowSum(p, state.year) != null; }
 function effAlloc(p) {
     const a = Object.assign({}, p.alloc || {});
-    if (!state.isRoot) { a.student = 0; return a; }   // 학생인건비는 Root 전용 → 일반 관리자 합계에서 제외
-    if (state.year !== ALL) { const s = payrollWindowSum(p, state.year); if (s != null) a.student = s; }
+    // Root는 인건비 페이지에서 실시간 합산, 일반 관리자는 과제에 저장된 학생인건비 합계 값을 표시
+    if (state.isRoot && state.year !== ALL) { const s = payrollWindowSum(p, state.year); if (s != null) a.student = s; }
     return a;
 }
 function sumKeys(m, keys) { return keys.reduce((a, k) => a + num(m[k]), 0); }
@@ -465,10 +465,6 @@ function renderDetail() {
     };
     const rows = LAYOUT.map(row => {
         if (row.type === 'item') {
-            if (row.key === 'student' && !state.isRoot) {
-                const lbl = BITEMS.find(i => i.key === 'student').label;
-                return `<tr><td class="mtx-name">${lbl} <i class="fas fa-lock" title="Root 전용"></i></td><td class="muted">Root 전용</td><td class="muted">–</td><td class="muted">–</td><td></td></tr>`;
-            }
             const it = BITEMS.find(i => i.key === row.key), v = num(a[row.key]), sv = num(sp[row.key]), linked = it.linked && isLinked(p);
             return `<tr><td class="mtx-name">${it.label}${linked ? ' <i class="fas fa-link link-ic" title="인건비 연동"></i>' : ''}</td>
                 <td>${v ? won(v) : '<span class="muted">–</span>'}</td>${execCells(v, sv)}</tr>`;
@@ -526,7 +522,7 @@ function modalItemsHTML(p) {
     const head = `<div class="mi-row mi-head"><span class="mi-label"></span><span class="mi-col">배정 (원)</span><span class="mi-col">집행 (원)</span></div>`;
     return head + BITEMS.map(it => {
         if (it.key === 'student' && !state.isRoot) {
-            return `<div class="mi-row" data-k="student"><span class="mi-label">${it.label} <i class="fas fa-lock"></i></span><input class="mi-input" value="Root 전용" readonly><input class="mi-spent" value="" readonly placeholder="-"></div>`;
+            return `<div class="mi-row" data-k="student"><span class="mi-label">${it.label} <i class="fas fa-link link-ic" title="학생인건비 합계(인건비 페이지 자동 연동)"></i></span><input class="mi-input" value="${num(a.student) || ''}" readonly><input class="mi-spent" value="${num((sp || {}).student) || ''}" readonly placeholder="집행"></div>`;
         }
         const linked = it.linked && isLinked(p);
         const v = linked ? payrollWindowSum(p, state.year) : num(a[it.key]);
@@ -604,15 +600,13 @@ function collectModal() {
     const g = id => document.getElementById(id);
     const alloc = {}, spent = {};
     document.querySelectorAll('#modalItems .mi-row[data-k]').forEach(r => {
-        const inp = r.querySelector('.mi-input'); if (inp && !inp.readOnly) alloc[r.dataset.k] = num(inp.value);
-        const si = r.querySelector('.mi-spent'); if (si && !si.readOnly && num(si.value)) spent[r.dataset.k] = num(si.value);
+        const inp = r.querySelector('.mi-input');
+        if (inp) {
+            if (!inp.readOnly) alloc[r.dataset.k] = num(inp.value);
+            else if (r.dataset.k === 'student') alloc.student = num(inp.value);   // 연동된 학생인건비 합계를 과제에 저장(일반 관리자도 열람 가능)
+        }
+        const si = r.querySelector('.mi-spent'); if (si && num(si.value)) spent[r.dataset.k] = num(si.value);
     });
-    // 비-Root가 수정할 때 Root가 입력한 학생인건비 값을 덮어쓰지 않도록 보존
-    if (!state.isRoot && state.editKey && state.projects[state.editKey]) {
-        const ex = state.projects[state.editKey].alloc || {}, exs = state.projects[state.editKey].spent || {};
-        if (num(ex.student)) alloc.student = num(ex.student);
-        if (num(exs.student)) spent.student = num(exs.student);
-    }
     return {
         name: (g('bName').value.trim()) || '(새 과제)', category: g('bCategory').value,
         manager: g('bManager').value.trim(), period: g('bPeriod').value.trim(), note: g('bNote').value.trim(),
