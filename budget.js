@@ -15,7 +15,7 @@ const CATEGORIES = ['국가R&D', '비R&D', '기타'];
 const BITEMS = [
     { key: 'inHouseCash', label: '내부인건비(현금)', grp: 'labor' },
     { key: 'inHouseInKind', label: '내부인건비(현물)', grp: 'labor' },   // 현물·자부담 — 총액 포함
-    { key: 'external', label: '외부인건비', grp: 'labor' },   // 인건비 소계 포함
+    { key: 'external', label: '외부인건비', grp: 'labor', linked: true },   // 인건비 소계 포함 · 인건비 페이지 외부 칸 연동
     { key: 'student', label: '학생인건비(통합)', grp: 'labor', linked: true },
     { key: 'equipCash', label: '기자재(현금)', grp: 'direct' },
     { key: 'material', label: '재료비', grp: 'direct' },
@@ -148,13 +148,27 @@ function payrollWindowSum(p, budgetYear) {
     lumpProjs.forEach(pr => (pr.rows || []).forEach(r => total += num(r.lump)));   // 여유분(월별 없는 단일 금액) 1회 합산
     return matched ? Math.round(total * 10000) : null;   // 만원 → 원
 }
+// 외부인건비(외부 칸) 합 — 매칭 인건비 과제의 ext 합 (과제당 1회)
+function payrollWindowExt(p, budgetYear) {
+    const target = normalize(p.payrollName || p.name); if (!target) return null;
+    let total = 0, matched = false; const projs = new Set();
+    periodMonths(p.period, budgetYear).forEach(({ year }) => {
+        const pr = findPayrollProjectInYear(year, target);
+        if (pr) { matched = true; projs.add(pr); }
+    });
+    projs.forEach(pr => (pr.rows || []).forEach(r => total += num(r.ext)));
+    return matched ? Math.round(total * 10000) : null;
+}
 
 // ==================== 계산 ====================
 function isLinked(p) { return state.year !== ALL && payrollWindowSum(p, state.year) != null; }
 function effAlloc(p) {
     const a = Object.assign({}, p.alloc || {});
     // Root는 인건비 페이지에서 실시간 합산, 일반 관리자는 과제에 저장된 학생인건비 합계 값을 표시
-    if (state.isRoot && state.year !== ALL) { const s = payrollWindowSum(p, state.year); if (s != null) a.student = s; }
+    if (state.isRoot && state.year !== ALL) {
+        const s = payrollWindowSum(p, state.year); if (s != null) a.student = s;       // 학생인건비(통합) = 월별+여유분
+        const e = payrollWindowExt(p, state.year); if (e != null) a.external = e;       // 외부인건비 = 외부 칸 합
+    }
     return a;
 }
 function sumKeys(m, keys) { return keys.reduce((a, k) => a + num(m[k]), 0); }
@@ -527,12 +541,13 @@ function loadSeedView() {
 function modalItemsHTML(p) {
     const a = p.alloc || {}, sp = p.spent || {};
     const head = `<div class="mi-row mi-head"><span class="mi-label"></span><span class="mi-col">배정 (원)</span><span class="mi-col">집행 (원)</span></div>`;
+    const linkVal = key => key === 'external' ? payrollWindowExt(p, state.year) : payrollWindowSum(p, state.year);
     return head + BITEMS.map(it => {
-        if (it.key === 'student' && !state.isRoot) {
-            return `<div class="mi-row" data-k="student"><span class="mi-label">${it.label} <i class="fas fa-link link-ic" title="학생인건비 합계(인건비 페이지 자동 연동)"></i></span><input class="mi-input" value="${silabMoneyFmt(a.student)}" readonly><input class="mi-spent" value="${silabMoneyFmt((sp || {}).student)}" readonly placeholder="집행"></div>`;
+        if (it.linked && !state.isRoot) {   // 연동 항목(학생·외부)은 일반 관리자에겐 저장값 읽기전용
+            return `<div class="mi-row" data-k="${it.key}"><span class="mi-label">${it.label} <i class="fas fa-link link-ic" title="인건비 페이지 자동 연동"></i></span><input class="mi-input" value="${silabMoneyFmt(a[it.key])}" readonly><input class="mi-spent" value="${silabMoneyFmt((sp || {})[it.key])}" readonly placeholder="집행"></div>`;
         }
         const linked = it.linked && isLinked(p);
-        const v = linked ? payrollWindowSum(p, state.year) : num(a[it.key]);
+        const v = linked ? linkVal(it.key) : num(a[it.key]);
         return `<div class="mi-row" data-k="${it.key}">
             <span class="mi-label">${it.label}${linked ? ' <i class="fas fa-link link-ic"></i>' : ''}</span>
             <input type="text" inputmode="numeric" class="mi-input js-money" value="${silabMoneyFmt(v)}"${linked ? ' readonly' : ''}>
@@ -676,7 +691,7 @@ function collectModal() {
         const inp = r.querySelector('.mi-input');
         if (inp) {
             if (!inp.readOnly) alloc[r.dataset.k] = num(inp.value);
-            else if (r.dataset.k === 'student') alloc.student = num(inp.value);   // 연동된 학생인건비 합계를 과제에 저장(일반 관리자도 열람 가능)
+            else if (r.dataset.k === 'student' || r.dataset.k === 'external') alloc[r.dataset.k] = num(inp.value);   // 연동된 학생/외부 인건비 값을 저장(일반 관리자도 열람)
         }
         const si = r.querySelector('.mi-spent'); if (si && num(si.value)) spent[r.dataset.k] = num(si.value);
     });
@@ -694,12 +709,14 @@ function recalcModal() {
     // 같은 이름의 인건비 과제가 있으면 학생인건비 자동연동(읽기전용) — 차년도 기간 기준
     const probe = { name: g('bName').value, period: g('bPeriod').value, payrollName: (state.projects[state.editKey] ? state.projects[state.editKey].payrollName : '') };
     const linkSum = state.year !== ALL ? payrollWindowSum(probe, state.year) : null;
-    const sr = document.querySelector('#modalItems .mi-row[data-k="student"]');
-    if (sr && state.isRoot) {
+    const linkExt = state.year !== ALL ? payrollWindowExt(probe, state.year) : null;
+    [['student', linkSum], ['external', linkExt]].forEach(([key, val]) => {
+        const sr = document.querySelector('#modalItems .mi-row[data-k="' + key + '"]');
+        if (!sr || !state.isRoot) return;
         const inp = sr.querySelector('.mi-input'), note = sr.querySelector('.link-ic');
-        if (linkSum != null) { inp.readOnly = true; inp.value = silabMoneyFmt(linkSum); if (!note) sr.querySelector('.mi-label').insertAdjacentHTML('beforeend', ' <i class="fas fa-link link-ic" title="인건비 페이지 자동연동(차년도 기간 합산)"></i>'); }
+        if (val != null) { inp.readOnly = true; inp.value = silabMoneyFmt(val); if (!note) sr.querySelector('.mi-label').insertAdjacentHTML('beforeend', ' <i class="fas fa-link link-ic" title="인건비 페이지 자동연동"></i>'); }
         else { inp.readOnly = false; if (note) note.remove(); }
-    }
+    });
     const m = {}, sp = {};
     document.querySelectorAll('#modalItems .mi-row[data-k]').forEach(r => {
         m[r.dataset.k] = num(r.querySelector('.mi-input').value);

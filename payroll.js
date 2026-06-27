@@ -149,7 +149,7 @@ function studentTotals(projects) {
         t.lump += num(r.lump);
     }));
     return order.map(n => {
-        const s = map[n]; s.total = s.m.reduce((a, b) => a + b, 0) + num(s.lump);   // 여유분(lump) 합계 포함
+        const s = map[n]; s.total = s.m.reduce((a, b) => a + b, 0) + num(s.lump) + num(s.ext);   // 월별 + 여유분 + 외부(외부인건비)
         s.cap = num(state.caps[n]); s.ratio = s.cap ? s.total / s.cap : 0;
         return s;
     });
@@ -159,7 +159,7 @@ function projectMonthlyTotals(p) {
     (p.rows || []).forEach(r => { for (let i = 0; i < 12; i++) m[i] += num(r.m[i]); });
     return m;
 }
-function projectTotal(p) { return projectMonthlyTotals(p).reduce((a, b) => a + b, 0) + (p.rows || []).reduce((a, r) => a + num(r.lump), 0); }
+function projectTotal(p) { return projectMonthlyTotals(p).reduce((a, b) => a + b, 0) + (p.rows || []).reduce((a, r) => a + num(r.lump) + num(r.ext), 0); }
 function projectHeadcount(p) { return (p.rows || []).filter(r => r.m.some(x => num(x) > 0) || num(r.ext) > 0).length; }
 function ratioClass(r) { return r > 1.0001 ? 'over' : (r >= 0.9 ? 'high' : (r > 0 ? 'ok' : 'zero')); }
 
@@ -269,12 +269,14 @@ function totalsTableHTML(projects, withRatio) {
     if (!studs.length) return '<div class="pay-empty">해당 항목 인건비가 없습니다.</div>';
     const groups = monthGroups();
     const compact = state.monthsExpanded ? '' : ' compact';
-    const colTotals = groups.map(() => 0); let grand = 0;
-    studs.forEach(s => { groups.forEach((g, gi) => colTotals[gi] += sumIdx(s.m, g.idxs)); grand += s.total; });
+    const colTotals = groups.map(() => 0); let grand = 0, extTotal = 0;
+    studs.forEach(s => { groups.forEach((g, gi) => colTotals[gi] += sumIdx(s.m, g.idxs)); grand += s.total; extTotal += num(s.ext); });
+    const hasExt = extTotal > 0;   // 외부인건비 있을 때만 외부 칼럼 표시
 
     const head = `<tr>
         <th class="sticky-l">이름</th>
         ${groups.map(g => `<th>${g.label}</th>`).join('')}
+        ${hasExt ? '<th class="col-ext">외부</th>' : ''}
         <th class="col-total">총액</th>
         ${withRatio ? '<th class="col-ratio">비율</th>' : ''}
     </tr>`;
@@ -283,12 +285,14 @@ function totalsTableHTML(projects, withRatio) {
             const v = sumIdx(s.m, g.idxs);
             return `<td class="${v ? '' : 'z'}">${v ? fmt(v) : ''}</td>`;
         }).join('');
+        const extCell = hasExt ? `<td class="col-ext">${num(s.ext) ? fmt(s.ext) : ''}</td>` : '';
         const ratioCell = withRatio
             ? `<td class="col-ratio">${s.cap ? `<span class="rt rt-${ratioClass(s.ratio)}">${(s.ratio * 100).toFixed(1)}%</span>` : '<span class="z">–</span>'}</td>`
             : '';
         return `<tr class="${si % 2 ? 's-alt' : ''}">
             <td class="sticky-l name">${escHtmlSafe(s.name)}</td>
             ${cells}
+            ${extCell}
             <td class="col-total"><b>${fmt(s.total)}</b></td>
             ${ratioCell}
         </tr>`;
@@ -296,6 +300,7 @@ function totalsTableHTML(projects, withRatio) {
     const foot = `<tr class="foot">
         <td class="sticky-l">합계</td>
         ${colTotals.map(v => `<td>${v ? fmt(v) : ''}</td>`).join('')}
+        ${hasExt ? `<td class="col-ext">${extTotal ? fmt(extTotal) : ''}</td>` : ''}
         <td class="col-total"><b>${fmt(grand)}</b></td>
         ${withRatio ? '<td class="col-ratio"></td>' : ''}
     </tr>`;
@@ -465,7 +470,7 @@ function recalcMemberGrid() {
         if (lumpInp) { rowSum = num(lumpInp.value); }   // 여유분: 월별 합산 없음
         else {
             tr.querySelectorAll('.mg-m').forEach(inp => { const v = num(inp.value); rowSum += v; foot[Number(inp.dataset.mi)] += v; });
-            const ext = tr.querySelector('.mg-extinput'); if (ext) extSum += num(ext.value);
+            const ext = tr.querySelector('.mg-extinput'); if (ext) { const ev = num(ext.value); extSum += ev; rowSum += ev; }   // 외부도 개인 합계에 포함
         }
         tr.querySelector('.mg-sum').textContent = fmt(rowSum);
         grand += rowSum;
