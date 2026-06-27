@@ -11,6 +11,25 @@ function escHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+// 금액 입력: 천 단위 콤마 표시 (class="js-money" 인 input 자동 포맷)
+function silabMoneyFmt(v) {
+    var r = String(v == null ? '' : v).replace(/[^\d]/g, '');
+    if (!r) return '';
+    var n = Number(r);
+    return n ? n.toLocaleString('ko-KR') : '';
+}
+document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t || !t.classList || !t.classList.contains('js-money')) return;
+    var sel = t.selectionStart;
+    var before = t.value.slice(0, sel).replace(/[^\d]/g, '').length;   // 커서 앞 숫자 개수
+    var digits = t.value.replace(/[^\d]/g, '');
+    t.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
+    var pos = 0, count = 0;
+    while (pos < t.value.length && count < before) { var c = t.value.charCodeAt(pos); if (c >= 48 && c <= 57) count++; pos++; }
+    try { t.setSelectionRange(pos, pos); } catch (_) { }
+});
+
 // 교수님 지정 과제 순서 (학생인건비·예산 공통). 이름이 대체로 일치하면 이 순서로 정렬된다.
 var SILAB_CANON = ['KISTI', 'BAS', '연구재단(개인)', '연구재단(집단)', 'K-Hero', '서교수님', '해외파견', '개인정보(용역)', 'Z3soft(용역)', '선박(용역)'];
 function silabCanonNorm(s) { return String(s == null ? '' : s).toLowerCase().replace(/[\s()（）_\-~,.·]/g, ''); }
