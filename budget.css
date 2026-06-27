@@ -69,8 +69,10 @@
 .exec-bar.sm { height: 8px; width: 84px; display: inline-block; vertical-align: middle; }
 .exec-pace-note { font-size: 0.8em; color: var(--text-light); margin-top: 8px; }
 .exec-pace-note b { color: var(--text-medium); }
-.exec-issue { margin-top: 12px; font-size: 0.9em; color: var(--text-medium); background: #f7fafd; border: 1px solid #e8eef5; border-radius: 10px; padding: 10px 14px; }
+.exec-issue { margin-top: 12px; font-size: 0.9em; color: var(--text-medium); background: #f7fafd; border: 1px solid #e8eef5; border-radius: 10px; padding: 10px 14px; white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
 .exec-issue i { color: var(--color-accent); margin-right: 6px; }
+/* 집행 이슈/메모 입력칸: 여러 줄 + 세로 리사이즈 */
+textarea.actnote-input { width: 100%; min-height: 110px; resize: vertical; line-height: 1.6; font-family: inherit; font-size: 0.95em; padding: 10px 12px; box-sizing: border-box; }
 
 /* 페이스 배지 */
 .pace-badge { font-size: 0.78em; font-weight: 700; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
@@ -86,7 +88,7 @@
 .exec-table .ex-barcell { white-space: nowrap; text-align: left; }
 .exec-table .ex-rate { font-size: 0.82em; font-weight: 700; margin-left: 7px; font-variant-numeric: tabular-nums; }
 .exec-table .ex-pace { text-align: center; }
-.exec-table .ex-note { text-align: left; color: var(--text-medium); font-size: 0.92em; white-space: normal; min-width: 180px; }
+.exec-table .ex-note { text-align: left; color: var(--text-medium); font-size: 0.92em; white-space: pre-wrap; word-break: break-word; min-width: 180px; }
 .exec-overview .matrix-wrap { margin-top: 14px; box-shadow: none; border: 1px solid #e8eef5; }
 
 /* 접이 블록 안의 '이 과제 수정' 버튼 자리 */
