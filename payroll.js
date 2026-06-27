@@ -100,6 +100,7 @@ function normalizeProject(p) {
         name: String(r.name || '').trim(),
         m: fix12(r.m),
         ext: num(r.ext),
+        lump: num(r.lump),   // 여유분 등 월별 없는 단일 금액
         note: String(r.note || '')
     }));
     return {
@@ -140,14 +141,15 @@ function studentTotals(projects) {
     Object.keys(state.caps || {}).forEach(push);
     Object.values(projects).forEach(p => (p.rows || []).forEach(r => push(r.name)));
     const map = {};
-    order.forEach(n => map[n] = { name: n, m: Array(12).fill(0), ext: 0, total: 0 });
+    order.forEach(n => map[n] = { name: n, m: Array(12).fill(0), ext: 0, lump: 0, total: 0 });
     Object.values(projects).forEach(p => (p.rows || []).forEach(r => {
         const t = map[r.name]; if (!t) return;
         for (let i = 0; i < 12; i++) t.m[i] += num(r.m[i]);
         t.ext += num(r.ext);
+        t.lump += num(r.lump);
     }));
     return order.map(n => {
-        const s = map[n]; s.total = s.m.reduce((a, b) => a + b, 0);
+        const s = map[n]; s.total = s.m.reduce((a, b) => a + b, 0) + num(s.lump);   // 여유분(lump) 합계 포함
         s.cap = num(state.caps[n]); s.ratio = s.cap ? s.total / s.cap : 0;
         return s;
     });
@@ -157,7 +159,7 @@ function projectMonthlyTotals(p) {
     (p.rows || []).forEach(r => { for (let i = 0; i < 12; i++) m[i] += num(r.m[i]); });
     return m;
 }
-function projectTotal(p) { return projectMonthlyTotals(p).reduce((a, b) => a + b, 0); }
+function projectTotal(p) { return projectMonthlyTotals(p).reduce((a, b) => a + b, 0) + (p.rows || []).reduce((a, r) => a + num(r.lump), 0); }
 function projectHeadcount(p) { return (p.rows || []).filter(r => r.m.some(x => num(x) > 0) || num(r.ext) > 0).length; }
 function ratioClass(r) { return r > 1.0001 ? 'over' : (r >= 0.9 ? 'high' : (r > 0 ? 'ok' : 'zero')); }
 
@@ -332,8 +334,13 @@ function collectEditor() {
     document.querySelectorAll('#memberRows .mg-row').forEach(tr => {
         const nm = tr.querySelector('.mg-nameinput').value.trim();
         if (!nm) return;
+        const lumpInp = tr.querySelector('.mg-lump');
+        if (lumpInp) {   // 여유분 행
+            rows.push({ name: nm, m: Array(12).fill(0), ext: 0, lump: num(lumpInp.value), note: tr.querySelector('.mg-noteinput').value.trim() });
+            return;
+        }
         const m = Array.from(tr.querySelectorAll('.mg-m')).map(inp => num(inp.value));
-        rows.push({ name: nm, m, ext: num(tr.querySelector('.mg-extinput').value), note: tr.querySelector('.mg-noteinput').value.trim() });
+        rows.push({ name: nm, m, ext: num(tr.querySelector('.mg-extinput').value), lump: 0, note: tr.querySelector('.mg-noteinput').value.trim() });
     });
     const existing = state.projects[state.editKey];
     return {
@@ -411,10 +418,21 @@ async function deleteProject() {
 }
 
 function memberRowHTML(r) {
-    r = r || { name: '', m: Array(12).fill(0), ext: 0, note: '' };
+    r = r || { name: '', m: Array(12).fill(0), ext: 0, lump: 0, note: '' };
+    const reserve = /여유|잔여/.test(r.name || '') || num(r.lump) > 0;
+    if (reserve) {
+        // 여유분: 월별 없이 금액 1칸 + 비고
+        return `<tr class="mg-row mg-reserve">
+            <td class="mg-name"><input type="text" class="mg-nameinput" value="${escHtmlSafe(r.name || '여유분')}" placeholder="여유분"></td>
+            <td colspan="13" class="mg-lumpcell"><input type="number" step="any" class="mg-lump" value="${r.lump || ''}" placeholder="금액 (만원)"></td>
+            <td class="mg-sum">0</td>
+            <td class="mg-note"><input type="text" class="mg-noteinput" value="${escHtmlSafe(r.note)}" placeholder="비고 (사유)"></td>
+            <td><button type="button" class="mg-del" title="행 삭제"><i class="fas fa-xmark"></i></button></td>
+        </tr>`;
+    }
     const monthInputs = Array.from({ length: 12 }, (_, i) =>
         `<td><input type="number" step="any" class="mg-m" data-mi="${i}" value="${r.m[i] || ''}"></td>`).join('');
-    return `<tr class="mg-row${/여유|잔여/.test(r.name || '') ? ' mg-reserve' : ''}">
+    return `<tr class="mg-row">
         <td class="mg-name"><input type="text" class="mg-nameinput" list="knownMembers" value="${escHtmlSafe(r.name)}" placeholder="이름"></td>
         ${monthInputs}
         <td class="mg-ext"><input type="number" step="any" class="mg-extinput" value="${r.ext || ''}"></td>
@@ -427,8 +445,12 @@ function recalcMemberGrid() {
     const foot = Array(12).fill(0); let extSum = 0, grand = 0;
     document.querySelectorAll('#memberRows .mg-row').forEach(tr => {
         let rowSum = 0;
-        tr.querySelectorAll('.mg-m').forEach(inp => { const v = num(inp.value); rowSum += v; foot[Number(inp.dataset.mi)] += v; });
-        extSum += num(tr.querySelector('.mg-extinput').value);
+        const lumpInp = tr.querySelector('.mg-lump');
+        if (lumpInp) { rowSum = num(lumpInp.value); }   // 여유분: 월별 합산 없음
+        else {
+            tr.querySelectorAll('.mg-m').forEach(inp => { const v = num(inp.value); rowSum += v; foot[Number(inp.dataset.mi)] += v; });
+            const ext = tr.querySelector('.mg-extinput'); if (ext) extSum += num(ext.value);
+        }
         tr.querySelector('.mg-sum').textContent = fmt(rowSum);
         grand += rowSum;
     });
@@ -440,7 +462,16 @@ function wireMemberRow(tr) {
     tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', onEditorInput));
     tr.querySelector('.mg-del').addEventListener('click', () => { tr.remove(); onEditorInput(); });
     const nm = tr.querySelector('.mg-nameinput');
-    if (nm) nm.addEventListener('input', () => tr.classList.toggle('mg-reserve', /여유|잔여/.test(nm.value)));
+    if (nm) nm.addEventListener('input', () => {
+        const wantReserve = /여유|잔여/.test(nm.value);
+        const isReserve = !!tr.querySelector('.mg-lump');
+        if (wantReserve === isReserve) return;   // 레이아웃 전환 필요 없음
+        const note = (tr.querySelector('.mg-noteinput') || {}).value || '';
+        const cur = { name: nm.value, note, lump: 0, m: Array(12).fill(0), ext: 0 };
+        const tmp = document.createElement('tbody'); tmp.innerHTML = memberRowHTML(cur);
+        const nr = tmp.firstElementChild; tr.replaceWith(nr); wireMemberRow(nr); onEditorInput();
+        const ni = nr.querySelector('.mg-nameinput'); ni.focus(); ni.setSelectionRange(ni.value.length, ni.value.length);
+    });
 }
 function addMemberRow(r) {
     const tbody = document.getElementById('memberRows');

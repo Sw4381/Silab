@@ -140,11 +140,12 @@ function periodMonths(period, fallbackYear) {
 // 매칭 과제가 하나도 없으면 null(연동 안 함 → 예산 입력값 유지)
 function payrollWindowSum(p, budgetYear) {
     const target = normalize(p.payrollName || p.name); if (!target) return null;
-    let total = 0, matched = false;
+    let total = 0, matched = false; const lumpProjs = new Set();
     periodMonths(p.period, budgetYear).forEach(({ year, m }) => {
         const pr = findPayrollProjectInYear(year, target);
-        if (pr) { matched = true; (pr.rows || []).forEach(r => total += num((r.m || [])[m])); }
+        if (pr) { matched = true; lumpProjs.add(pr); (pr.rows || []).forEach(r => total += num((r.m || [])[m])); }
     });
+    lumpProjs.forEach(pr => (pr.rows || []).forEach(r => total += num(r.lump)));   // 여유분(월별 없는 단일 금액) 1회 합산
     return matched ? Math.round(total * 10000) : null;   // 만원 → 원
 }
 
