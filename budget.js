@@ -592,28 +592,71 @@ function addPersonRow(e) {
     wirePersonRow(row);
     return row;
 }
-// 인력구성 엑셀/CSV 붙여넣기
+// 엑셀 양식 붙여넣기 (예산 항목 + 인력구성 자동 인식)
 function openPeoplePaste() { const t = document.getElementById('peoplePasteText'); if (t) t.value = ''; openModal('peoplePasteModal'); }
+const SUM_RE = /총사업비|소계|총계|총액|합계|연구실안전/;
+const ITEM_RE = /내부인건비|외부인건비|학생인건비|기자재|재료비|연구활동비|연구수당|간접비|부가세/;
+// (그룹, 세부) → BITEM 키
+function matchBItemKey(group, label) {
+    const g = group || '', l = label || '', t = l || g;
+    if (SUM_RE.test(t)) return null;
+    if (g.includes('내부인건비')) { if (l.includes('현물')) return 'inHouseInKind'; if (l.includes('현금')) return 'inHouseCash'; }
+    if (g.includes('기자재') || l.includes('기자재')) { if (l.includes('현금')) return 'equipCash'; if (l.includes('현물')) return null; }
+    if (t.includes('외부인건비')) return 'external';
+    if (t.includes('학생인건비')) return 'student';
+    if (t.includes('재료비')) return 'material';
+    if (t.includes('연구활동비')) return 'activity';
+    if (t.includes('연구수당')) return 'stipend';
+    if (t.includes('부가세')) return 'vat';
+    if (t.includes('간접비')) return 'indirect';
+    return null;
+}
+function lastNum(cells) { for (let j = cells.length - 1; j >= 0; j--) { if (/\d/.test(cells[j])) return num(cells[j]); } return null; }
+function parseItemsInto(lines) {
+    let curGroup = '', set = 0;
+    lines.forEach(line => {
+        const c = (line.indexOf('\t') >= 0 ? line.split('\t') : line.split(',')).map(s => s.trim());
+        if (c[0]) curGroup = c[0];
+        const key = matchBItemKey(curGroup, c[1] || c[0]);
+        if (!key) return;
+        const amt = lastNum(c); if (amt == null) return;
+        const inp = document.querySelector('#modalItems .mi-row[data-k="' + key + '"] .mi-input');
+        if (inp && !inp.readOnly) { inp.value = silabMoneyFmt(amt); set++; }
+    });
+    return set;
+}
+function parsePeopleInto(lines) {
+    let section = 'internal', added = 0;
+    lines.forEach(line => {
+        const c = (line.indexOf('\t') >= 0 ? line.split('\t') : line.split(',')).map(s => s.trim());
+        const joined = c.join(' ');
+        // 예산 항목/합산 줄 skip (섹션 전환 없음)
+        if (ITEM_RE.test(joined) || /현물|현금|소계|총계|총사업비|총액|직접비|연구실안전/.test(joined)) return;
+        if (/합계/.test(joined)) { section = 'student'; return; }                // 인력 '합계' = 내부/학생 구분선
+        if (/이름/.test(c[0]) || c.indexOf('참여율') >= 0) return;               // 헤더
+        let name = '', rest = [];
+        c.forEach(cell => { if (!cell) return; if (!name && !/^[\d,.\s%()-]+$/.test(cell)) name = cell; else rest.push(cell); });
+        if (!name) return;
+        const nums = rest.map(x => num(x));
+        if (/잔여/.test(name)) { addPersonRow({ grp: 'student', name, amount: nums.length ? nums[nums.length - 1] : 0 }); added++; return; }
+        const grp = (/내부|교수|현물|자부담/.test(name) || section === 'internal') ? 'internal' : 'student';
+        const e = { grp, name, amount: num(nums[3] != null ? nums[3] : (nums[nums.length - 1] || 0)) };
+        if (nums[0] != null) e.rate = num(nums[0]) / 100;
+        if (nums[1] != null) e.base = num(nums[1]);
+        if (nums[2] != null) e.months = num(nums[2]);
+        addPersonRow(e); added++;
+    });
+    return added;
+}
 function applyPeoplePaste() {
     const txt = document.getElementById('peoplePasteText').value || '';
     const lines = txt.split(/\r?\n/).filter(l => l.trim());
     if (!lines.length) { showAlert('붙여넣을 내용이 없습니다.', 'warning'); return; }
-    let added = 0;
-    lines.forEach(line => {
-        let c = (line.indexOf('\t') >= 0 ? line.split('\t') : line.split(',')).map(s => s.trim());
-        let grp = 'student', i = 0;
-        if (/내부|교수|현물|자부담/.test(c[0])) { grp = 'internal'; i = 1; }
-        const name = c[i]; if (!name) return;
-        if (/교수/.test(name)) grp = 'internal';
-        const e = { grp, name, amount: num(c[i + 4]) };
-        if (c[i + 1] !== undefined && c[i + 1] !== '') e.rate = num(c[i + 1]) / 100;
-        if (c[i + 2] !== undefined && c[i + 2] !== '') e.base = num(c[i + 2]);
-        if (c[i + 3] !== undefined && c[i + 3] !== '') e.months = num(c[i + 3]);
-        addPersonRow(e); added++;
-    });
+    const items = parseItemsInto(lines);
+    const people = parsePeopleInto(lines);
     recalcModal();
     closeModal('peoplePasteModal');
-    showAlert(added + '명 붙여넣었습니다.', 'success');
+    showAlert('예산 항목 ' + items + '개 · 인력 ' + people + '명 붙여넣었습니다.', 'success');
 }
 function renderModalPeople(people) {
     const wrap = document.getElementById('modalPeople'); wrap.innerHTML = '';
@@ -767,6 +810,7 @@ document.addEventListener('DOMContentLoaded', function () {
     g('deleteProjectBtn').addEventListener('click', deleteProject);
     g('addPersonBtn').addEventListener('click', () => { addPersonRow({ grp: 'student' }); recalcModal(); });
     g('peoplePasteBtn').addEventListener('click', openPeoplePaste);
+    g('budgetPasteBtn').addEventListener('click', openPeoplePaste);
     g('applyPeoplePasteBtn').addEventListener('click', applyPeoplePaste);
     g('projectForm').addEventListener('submit', saveProject);
 
