@@ -217,7 +217,7 @@ details.pay-collapse .matrix-wrap { border: none; border-radius: 0; box-shadow: 
 .member-grid input {
     width: 100%; box-sizing: border-box; padding: 6px 7px !important; font-size: 1em !important;
     text-align: right; margin: 0 !important;
-    border: 1px solid #e3e9f0; border-radius: 6px; background: #f8fafc; color: #2a3645;
+    border: 1px solid #e3e9f0; border-radius: 6px; background: rgba(255, 255, 255, .55); color: #2a3645;
     transition: border-color .12s, box-shadow .12s, background .12s;
 }
 .member-grid input:hover { border-color: #c4d3e6; background: #fff; }
@@ -225,6 +225,13 @@ details.pay-collapse .matrix-wrap { border: none; border-radius: 0; box-shadow: 
 .member-grid input::placeholder { color: #c2ccd8; }
 .member-grid input.mg-nameinput, .member-grid input.mg-noteinput { text-align: left; }
 .member-grid input.mg-nameinput { font-weight: 600; color: var(--color-primary); }
+/* 인원별 행 구분 (줄무늬 + 호버) */
+.member-grid tbody tr:nth-child(even) td { background: #f3f7fc; }
+.member-grid tbody tr:hover td { background: #e9f2fc; }
+.member-grid tbody tr { border-bottom: 2px solid #e8eef5; }
+/* 여유분 행 강조 */
+.member-grid tbody tr.mg-reserve td { background: #fff8ec; }
+.member-grid tbody tr.mg-reserve .mg-nameinput { color: #b5722a; }
 .member-grid .mg-name { min-width: 90px; }
 .member-grid .mg-m, .member-grid .mg-ext { min-width: 54px; }
 .member-grid td.mg-sum { font-weight: 700; color: var(--color-primary); min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; }
