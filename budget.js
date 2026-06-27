@@ -592,6 +592,29 @@ function addPersonRow(e) {
     wirePersonRow(row);
     return row;
 }
+// 인력구성 엑셀/CSV 붙여넣기
+function openPeoplePaste() { const t = document.getElementById('peoplePasteText'); if (t) t.value = ''; openModal('peoplePasteModal'); }
+function applyPeoplePaste() {
+    const txt = document.getElementById('peoplePasteText').value || '';
+    const lines = txt.split(/\r?\n/).filter(l => l.trim());
+    if (!lines.length) { showAlert('붙여넣을 내용이 없습니다.', 'warning'); return; }
+    let added = 0;
+    lines.forEach(line => {
+        let c = (line.indexOf('\t') >= 0 ? line.split('\t') : line.split(',')).map(s => s.trim());
+        let grp = 'student', i = 0;
+        if (/내부|교수|현물|자부담/.test(c[0])) { grp = 'internal'; i = 1; }
+        const name = c[i]; if (!name) return;
+        if (/교수/.test(name)) grp = 'internal';
+        const e = { grp, name, amount: num(c[i + 4]) };
+        if (c[i + 1] !== undefined && c[i + 1] !== '') e.rate = num(c[i + 1]) / 100;
+        if (c[i + 2] !== undefined && c[i + 2] !== '') e.base = num(c[i + 2]);
+        if (c[i + 3] !== undefined && c[i + 3] !== '') e.months = num(c[i + 3]);
+        addPersonRow(e); added++;
+    });
+    recalcModal();
+    closeModal('peoplePasteModal');
+    showAlert(added + '명 붙여넣었습니다.', 'success');
+}
 function renderModalPeople(people) {
     const wrap = document.getElementById('modalPeople'); wrap.innerHTML = '';
     (people || []).forEach(e => addPersonRow(e));
@@ -743,6 +766,8 @@ document.addEventListener('DOMContentLoaded', function () {
     g('editProjectBtn2').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); editCur(); });
     g('deleteProjectBtn').addEventListener('click', deleteProject);
     g('addPersonBtn').addEventListener('click', () => { addPersonRow({ grp: 'student' }); recalcModal(); });
+    g('peoplePasteBtn').addEventListener('click', openPeoplePaste);
+    g('applyPeoplePasteBtn').addEventListener('click', applyPeoplePaste);
     g('projectForm').addEventListener('submit', saveProject);
 
     g('seedSaveBtn').addEventListener('click', async () => { try { await saveAll(); showAlert('초기 데이터를 저장했습니다.', 'success'); renderAll(); } catch (e) { showAlert('저장 실패: ' + e.message, 'error'); } });
