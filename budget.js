@@ -494,13 +494,13 @@ function renderPeople(p) {
         body += `<tr class="pgrp"><td colspan="5">${label}</td></tr>`;
         let sub = 0, prev = null, pidx = -1;
         rows.forEach(e => {
-            if (!e.excl && !e.note) sub += num(e.amount);           // 별도(excl)·잔여(note)는 합계 미포함
+            if (!e.excl) sub += num(e.amount);                      // 잔여(note)는 합계 포함 · 별도(excl)만 제외
             const isNew = e.name !== prev; if (isNew) pidx++;       // 사람이 바뀌면 구분선 + 줄무늬 토글
             prev = e.name;
-            const cls = [isNew ? 'p-sep' : 'p-cont', pidx % 2 ? 'p-alt' : '', (e.excl || e.note) ? 'pexcl' : ''].filter(Boolean).join(' ');
+            const cls = [isNew ? 'p-sep' : 'p-cont', pidx % 2 ? 'p-alt' : '', e.excl ? 'pexcl' : ''].filter(Boolean).join(' ');
             const nameCell = isNew ? escHtmlSafe(e.name) : '';      // 같은 사람 연속 줄은 이름 생략(묶여 보이게)
             const amtCell = e.excl ? `${won(e.amount)} <span class="excl-tag" title="예산 합계 미포함">별도</span>` : won(e.amount);
-            if (e.note) body += `<tr class="pnote ${cls}"><td class="mtx-name">${escHtmlSafe(e.name)}</td><td colspan="3" class="pmemo">${e.memo ? escHtmlSafe(e.memo) : '<span class="muted">사유 미입력</span>'}</td><td>${won(e.amount)} <span class="excl-tag" title="합계 미포함(보류/이월)">합계제외</span></td></tr>`;
+            if (e.note) body += `<tr class="pnote ${cls}"><td class="mtx-name">${escHtmlSafe(e.name)}</td><td colspan="3" class="pmemo">${e.memo ? escHtmlSafe(e.memo) : '<span class="muted">사유 미입력</span>'}</td><td>${won(e.amount)} <span class="excl-tag jat" title="합계 포함(잔여)">잔여</span></td></tr>`;
             else body += `<tr class="${cls}"><td class="mtx-name">${nameCell}</td><td>${ratePct(e.rate)}</td><td>${e.base ? won(e.base) : ''}</td><td>${e.months != null ? e.months : ''}</td><td>${amtCell}</td></tr>`;
         });
         body += `<tr class="mtx-sub"><td class="mtx-name">${label.split(' ')[0]} 합계</td><td></td><td></td><td></td><td>${won(sub)}</td></tr>`;
