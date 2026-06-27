@@ -276,30 +276,27 @@ function setBlockSum(el, projects) {
 
 // 학생별 월별 총액표 (이름 · 월/분기 · 개인 총액). projects 부분집합으로 전체/R&D/용역을 동일 형식으로 렌더.
 function totalsTableHTML(projects, withRatio) {
-    const studs = studentTotals(projects).filter(s => s.total > 0 || s.ny > 0);
+    const studs = studentTotals(projects).filter(s => s.total > 0);
     if (!studs.length) return '<div class="pay-empty">해당 항목 인건비가 없습니다.</div>';
     const groups = monthGroups();
     const compact = state.monthsExpanded ? '' : ' compact';
-    const colTotals = groups.map(() => 0); let grand = 0, extTotal = 0, nyTotal = 0;
-    studs.forEach(s => { groups.forEach((g, gi) => colTotals[gi] += sumIdx(s.m, g.idxs)); grand += s.total; extTotal += num(s.ext); nyTotal += num(s.ny); });
+    // 총합 표는 '올해분'만 표시 — 내년(차기연도) 월은 빼고 보여준다(표시는 과제별 입력에만)
+    const colTotals = groups.map(() => 0); let grand = 0, extTotal = 0;
+    studs.forEach(s => { groups.forEach((g, gi) => colTotals[gi] += (sumIdx(s.m, g.idxs) - sumIdx(s.nyM, g.idxs))); grand += s.total; extTotal += num(s.ext); });
     const hasExt = extTotal > 0;   // 외부인건비 있을 때만 외부 칼럼 표시
-    const hasNy = nyTotal > 0;     // 내년(차기연도) 분 있을 때만 내년 칼럼 표시
 
     const head = `<tr>
         <th class="sticky-l">이름</th>
         ${groups.map(g => `<th>${g.label}</th>`).join('')}
-        ${hasNy ? '<th class="col-ny" title="내년(차기연도) 분 — 올해 총합 제외">내년</th>' : ''}
         ${hasExt ? '<th class="col-ext">외부</th>' : ''}
         <th class="col-total">총액</th>
         ${withRatio ? '<th class="col-ratio">비율</th>' : ''}
     </tr>`;
     const body = studs.map((s, si) => {
         const cells = groups.map(g => {
-            const v = sumIdx(s.m, g.idxs), nyv = sumIdx(s.nyM, g.idxs);
-            const cls = v ? (nyv >= v ? 'ny-cell' : (nyv > 0 ? 'ny-part' : '')) : 'z';
-            return `<td class="${cls}">${v ? fmt(v) : ''}</td>`;
+            const v = sumIdx(s.m, g.idxs) - sumIdx(s.nyM, g.idxs);   // 올해분만
+            return `<td class="${v ? '' : 'z'}">${v ? fmt(v) : ''}</td>`;
         }).join('');
-        const nyCell = hasNy ? `<td class="col-ny">${num(s.ny) ? fmt(s.ny) : ''}</td>` : '';
         const extCell = hasExt ? `<td class="col-ext">${num(s.ext) ? fmt(s.ext) : ''}</td>` : '';
         const ratioCell = withRatio
             ? `<td class="col-ratio">${s.cap ? `<span class="rt rt-${ratioClass(s.ratio)}">${(s.ratio * 100).toFixed(1)}%</span>` : '<span class="z">–</span>'}</td>`
@@ -307,7 +304,6 @@ function totalsTableHTML(projects, withRatio) {
         return `<tr class="${si % 2 ? 's-alt' : ''}">
             <td class="sticky-l name">${escHtmlSafe(s.name)}</td>
             ${cells}
-            ${nyCell}
             ${extCell}
             <td class="col-total"><b>${fmt(s.total)}</b></td>
             ${ratioCell}
@@ -316,13 +312,11 @@ function totalsTableHTML(projects, withRatio) {
     const foot = `<tr class="foot">
         <td class="sticky-l">합계</td>
         ${colTotals.map(v => `<td>${v ? fmt(v) : ''}</td>`).join('')}
-        ${hasNy ? `<td class="col-ny">${nyTotal ? fmt(nyTotal) : ''}</td>` : ''}
         ${hasExt ? `<td class="col-ext">${extTotal ? fmt(extTotal) : ''}</td>` : ''}
         <td class="col-total"><b>${fmt(grand)}</b></td>
         ${withRatio ? '<td class="col-ratio"></td>' : ''}
     </tr>`;
-    const nyNote = hasNy ? `<div class="ny-note"><i class="fas fa-circle-info"></i> ‘내년(차기연도)’ 분 ${fmt(nyTotal)}만원은 <b>올해 총액에서 제외</b>되었습니다 (과제 세부 인건비에는 포함). 회색 칸이 내년 분입니다.</div>` : '';
-    return nyNote + `<table class="student-table${compact}"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+    return `<table class="student-table${compact}"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
 }
 
 // ==================== 과제 칩 ====================
