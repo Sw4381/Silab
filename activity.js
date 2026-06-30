@@ -333,5 +333,5 @@ document.addEventListener('DOMContentLoaded', function () {
     g('importForm').addEventListener('submit', doImport);
 
     document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeModal(b.dataset.close)));
-    document.querySelectorAll('.perf-modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+    // 편집/입력 모달(.perf-modal)은 바깥 클릭으로 닫지 않음 (입력 중 실수 닫힘 방지) — 닫기/취소/저장 버튼으로만 닫힘
 });

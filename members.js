@@ -818,7 +818,7 @@ function setupEventListeners() {
     if (memberModalClose) memberModalClose.addEventListener('click', closeModal);
     if (memberModal) {
         memberModal.addEventListener('click', (e) => {
-            if (e.target === memberModal) closeModal();
+            /* 편집 모달: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) */
         });
     }
 
@@ -845,7 +845,7 @@ function setupEventListeners() {
     if (alumniModalClose) alumniModalClose.addEventListener('click', closeAlumniModal);
     if (alumniModal) {
         alumniModal.addEventListener('click', (e) => {
-            if (e.target === alumniModal) closeAlumniModal();
+            /* 편집 모달: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) */
         });
     }
 
@@ -859,7 +859,7 @@ function setupEventListeners() {
     });
     if (professorModal) {
         professorModal.addEventListener('click', (e) => {
-            if (e.target === professorModal) professorModal.style.display = 'none';
+            /* 편집 모달: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) */
         });
     }
     if (professorForm) professorForm.addEventListener('submit', saveProfessor);

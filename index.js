@@ -842,8 +842,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('slideAddModal').style.display = 'none';
     });
     document.getElementById('slideAddModal').addEventListener('click', e => {
-        if (e.target === document.getElementById('slideAddModal'))
-            document.getElementById('slideAddModal').style.display = 'none';
+        /* 편집 모달: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) */
     });
     document.getElementById('slideAddForm').addEventListener('submit', addSlideSubmit);
 
@@ -853,10 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAndRenderSlides();
     });
     document.getElementById('slideReorderModal').addEventListener('click', e => {
-        if (e.target === document.getElementById('slideReorderModal')) {
-            document.getElementById('slideReorderModal').style.display = 'none';
-            loadAndRenderSlides();
-        }
+        /* 편집 모달: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) */
     });
     document.getElementById('slideReorderSaveBtn').addEventListener('click', saveSlideOrder);
 
@@ -865,8 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cardModal').style.display = 'none';
     });
     document.getElementById('cardModal').addEventListener('click', e => {
-        if (e.target === document.getElementById('cardModal'))
-            document.getElementById('cardModal').style.display = 'none';
+        /* 편집 모달: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) */
     });
     document.getElementById('cardForm').addEventListener('submit', saveResearchCard);
 
@@ -878,8 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('contactModal').style.display = 'none';
     });
     document.getElementById('contactModal').addEventListener('click', e => {
-        if (e.target === document.getElementById('contactModal'))
-            document.getElementById('contactModal').style.display = 'none';
+        /* 입력 폼: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) */
     });
     document.getElementById('contactForm').addEventListener('submit', submitContact);
 
