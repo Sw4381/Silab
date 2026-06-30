@@ -560,7 +560,7 @@ function setupEventListeners() {
     }
     if (researchModal2) {
         researchModal2.addEventListener('click', (e) => {
-            if (e.target === researchModal2) researchModal2.style.display = 'none';
+            /* 편집 모달: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) — 취소/저장 버튼으로만 닫힘 */
         });
     }
 
@@ -595,8 +595,8 @@ function setupEventListeners() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeResearchModal();
-            if (researchModal2) researchModal2.style.display = 'none';
             if (loginModal) loginModal.style.display = 'none';
+            // 편집 모달(researchModal2)은 ESC로 닫지 않음 (입력 중 실수 닫힘 방지)
         }
     });
 }

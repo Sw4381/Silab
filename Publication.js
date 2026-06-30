@@ -12,6 +12,23 @@ let isMutatingPublication = false;
 // ==================== 허용된 사용자 목록 ====================
 var ALLOWED_USERS = ADMIN_EMAILS;
 
+// ==================== 프로젝트 페이지 자동 매핑 ====================
+// 논문에 별도 'projectUrl' 값을 넣지 않아도, 제목이 아래 항목을 포함하면
+// 목록에 'project page' 링크가 자동으로 표시된다. (DB에 projectUrl 을 넣으면 그 값이 우선)
+// 새 논문 페이지를 만들면 여기에 { match, url } 한 줄만 추가하면 된다.
+var PROJECT_PAGE_MAP = [
+    { match: 'enhancing incident response through effective ttps', url: 'project.html?id=ttps' }
+];
+
+function resolveProjectPageUrl(title) {
+    var t = String(title || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!t) return '';
+    for (var i = 0; i < PROJECT_PAGE_MAP.length; i++) {
+        if (t.indexOf(PROJECT_PAGE_MAP[i].match) >= 0) return PROJECT_PAGE_MAP[i].url;
+    }
+    return '';
+}
+
 // ==================== DOM 요소들 ====================
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
 let userInfo, userName, adminPanel, addPublicationBtn, addPublicationForm;
@@ -413,6 +430,8 @@ async function insertPublicationAtPosition(publicationData, targetPosition) {
             authors: publicationData.authors,
             journal: publicationData.journal,
             url: publicationData.url || '',
+            projectUrl: publicationData.projectUrl || '',
+            summary: publicationData.summary || '',
             award: publicationData.award || '',
             percentile: (publicationData.percentile === '' || publicationData.percentile == null) ? '' : Number(publicationData.percentile),
             type: publicationData.type,
@@ -653,6 +672,16 @@ function createPublicationElement(publication) {
 
     const deleteId = publication.firebaseKey || publication.id;
 
+    // 프로젝트 페이지 / 요약 (선택 입력) — 편집 시 다시 읽을 수 있도록 data 속성에도 보관
+    // projectUrl 값이 비어 있어도, 아래 제목 매핑에 해당하면 자동으로 project page 링크가 표시됨
+    let projectUrl = publication.projectUrl || '';
+    if (!projectUrl) {
+        projectUrl = resolveProjectPageUrl(publication.title);
+    }
+    const summary = publication.summary || '';
+    li.setAttribute('data-project-url', projectUrl);
+    li.setAttribute('data-summary', summary);
+
     // URL 링크 처리
     const titleContent = publication.url ?
         `<a href="${publication.url}" target="_blank"><strong>${publication.title}</strong></a>` :
@@ -662,13 +691,23 @@ function createPublicationElement(publication) {
     const awardContent = publication.award ?
         ` - <span class="award">${publication.award}</span>` : '';
     // 주의: JIF 백분위는 공개 목록에 표시하지 않음 (data 속성으로만 보관 → 수정 폼/멤버 실적에서 사용)
-    
+
+    // project page 링크 줄 (paper 원문은 제목 클릭으로 이동하므로 별도 표시하지 않음)
+    const linksContent = projectUrl ?
+        `<p class="publication-links"><a href="${projectUrl}" target="_blank" rel="noopener" class="pub-link"><i class="fas fa-external-link-alt"></i> project page</a></p>` : '';
+
+    // 논문 요약 줄
+    const summaryContent = summary ?
+        `<p class="publication-summary">${summary}</p>` : '';
+
     li.innerHTML = `
         <span class="publication-id">[${publication.publicationId}]</span>
         <div class="publication-content">
             <p class="publication-title">${titleContent}</p>
             <p class="publication-authors">${publication.authors}</p>
             <p class="publication-journal">${publication.journal}${awardContent}</p>
+            ${linksContent}
+            ${summaryContent}
             <div class="publication-actions" style="display: none;">
                 <button class="edit-publication-btn" onclick="editPublication('${publication.id}', '${publication.type}')" style="display: none;">
                     <i class="fas fa-edit"></i> 수정
@@ -722,6 +761,8 @@ function validateAndCleanPublication(publicationData) {
         authors: authors,
         journal: journal,
         url: (publicationData.url || '').trim(),
+        projectUrl: (publicationData.projectUrl || '').trim(),
+        summary: (publicationData.summary || '').trim(),
         award: (publicationData.award || '').trim(),
         percentile: percentile,
         type: type
@@ -787,6 +828,8 @@ async function addPublicationToRealtimeDB(publicationData) {
                 authors: publicationData.authors,
                 journal: publicationData.journal,
                 url: publicationData.url || '',
+                projectUrl: publicationData.projectUrl || '',
+                summary: publicationData.summary || '',
                 award: publicationData.award || '',
                 percentile: (publicationData.percentile === '' || publicationData.percentile == null) ? '' : Number(publicationData.percentile),
                 type: publicationData.type,
@@ -918,6 +961,10 @@ window.editPublication = function(publicationId, publicationType) {
     document.getElementById('editPublicationJournal').value = publicationJournal;
     document.getElementById('editPublicationUrl').value = publicationUrl;
     document.getElementById('editPublicationAward').value = publicationAward;
+    const projUrlEl = document.getElementById('editPublicationProjectUrl');
+    if (projUrlEl) projUrlEl.value = publicationElement.getAttribute('data-project-url') || '';
+    const summaryEl = document.getElementById('editPublicationSummary');
+    if (summaryEl) summaryEl.value = publicationElement.getAttribute('data-summary') || '';
     const pctEl = document.getElementById('editPublicationPercentile');
     if (pctEl) { const dp = publicationElement.getAttribute('data-percentile'); pctEl.value = (dp == null || dp === '') ? '' : dp; }
     
@@ -961,6 +1008,8 @@ async function updatePublication() {
         authors: (formData.get('editPublicationAuthors') || '').trim(),
         journal: (formData.get('editPublicationJournal') || '').trim(),
         url: (formData.get('editPublicationUrl') || '').trim(),
+        projectUrl: (formData.get('editPublicationProjectUrl') || '').trim(),
+        summary: (formData.get('editPublicationSummary') || '').trim(),
         award: (formData.get('editPublicationAward') || '').trim(),
         percentile: ((formData.get('editPublicationPercentile') || '') === '') ? '' : Number(formData.get('editPublicationPercentile')),
         type: (formData.get('editPublicationType') || '').trim()
@@ -1350,6 +1399,8 @@ function setupEventListeners() {
                 authors: formData.get('publicationAuthors'),
                 journal: formData.get('publicationJournal'),
                 url: formData.get('publicationUrl') || '',
+                projectUrl: formData.get('publicationProjectUrl') || '',
+                summary: formData.get('publicationSummary') || '',
                 award: formData.get('publicationAward') || '',
                 percentile: formData.get('publicationPercentile') || '',
                 type: formData.get('publicationType'),

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!--
+    논문 프로젝트(요약) 페이지 - Firebase 기반, 로그인 시 편집 가능 / 열람은 누구나
+    URL 예: project.html?id=ttps   (논문마다 id 를 다르게 주면 별도 페이지가 됩니다)
+    Publications 관리자 패널 → 해당 논문 '프로젝트 페이지 URL' 칸에 project.html?id=ttps 입력.
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project - 보안 지능 연구실</title>
+    <link rel="icon" href="./image.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="common.css?v=30">
+    <link rel="stylesheet" href="project.css?v=34">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <a href="index.html">
+                <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+            </a>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="menu">
+            <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./research.html"><i class="fas fa-flask"></i> Research</a>
+            <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
+            <a href="./Publication.html" class="active"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
+            <a href="./performance.html" class="nav-perf" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>
+            <a href="./budget.html" class="nav-perf" style="display:none;"><i class="fas fa-coins"></i> 예산</a>        </nav>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i>
+                로그아웃
+            </button>
+        </div>
+    </header>
+
+    <!-- Firebase 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fab fa-firefox"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">연구실 멤버만 접근 가능합니다.</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="project-page">
+
+            <a href="./Publication.html" class="project-back">
+                <i class="fas fa-arrow-left"></i> Publications 목록으로
+            </a>
+
+            <!-- 관리자 편집 바 (로그인 시에만 표시) -->
+            <div id="projectAdminBar" class="project-admin-bar" style="display:none;">
+                <button class="admin-btn" id="projectEditBtn"><i class="fas fa-edit"></i> 이 페이지 편집</button>
+            </div>
+
+            <!-- 본문 (JS 렌더링) -->
+            <div id="projectContent"></div>
+
+        </div>
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="./image.png" alt="SILAB" class="footer-logo">
+                    <div>
+                        <span class="footer-lab-name">SILAB</span>
+                        <span class="footer-lab-sub">보안 지능 연구실</span>
+                    </div>
+                </div>
+                <div class="footer-info">
+                    <div class="footer-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>가천대학교 AI소프트웨어학부 스마트보안학과</span>
+                    </div>
+                </div>
+                <div class="footer-copy">© 2025 SILAB · Gachon University</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ===== 편집 모달 ===== -->
+    <div id="projectEditModal" class="project-edit-modal">
+        <div class="project-edit-box">
+            <h3 id="projectEditTitle"><i class="fas fa-edit"></i> 프로젝트 페이지 편집</h3>
+            <form id="projectForm">
+                <div class="form-group">
+                    <label>게재 정보 (상단 뱃지) — 예: IEEE Access · 2025 (SCIE)</label>
+                    <input type="text" id="pf-venue">
+                </div>
+                <div class="form-group">
+                    <label>논문 제목 *</label>
+                    <input type="text" id="pf-title" required>
+                </div>
+                <div class="form-group">
+                    <label>저자 — 예: Tae-Hyun Han, Sang-Yeon Hwang, Tae-Jin Lee*</label>
+                    <input type="text" id="pf-authors">
+                </div>
+                <div class="form-group">
+                    <label>소속 / 서지 정보 (여러 줄 가능)</label>
+                    <textarea id="pf-affil" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>논문 원문(Paper) URL — 비우면 'Paper' 버튼 숨김</label>
+                    <input type="url" id="pf-paperUrl" placeholder="https://doi.org/...">
+                </div>
+                <!-- 본문 블록 편집기: 소제목·본문·목록·그림·결과수치를 원하는 순서로 배치 -->
+                <div class="form-group">
+                    <label>본문 구성 — 블록을 추가하고 <b>↑ ↓</b>로 순서를 바꾸세요. 그림은 원하는 글 사이 어디든 넣을 수 있습니다.</label>
+                    <div id="blockList"></div>
+                    <div class="block-add-bar">
+                        <span>블록 추가:</span>
+                        <button type="button" class="block-add-btn" data-type="heading"><i class="fas fa-heading"></i> 소제목</button>
+                        <button type="button" class="block-add-btn" data-type="text"><i class="fas fa-align-left"></i> 본문</button>
+                        <button type="button" class="block-add-btn" data-type="list"><i class="fas fa-list-ul"></i> 목록</button>
+                        <button type="button" class="block-add-btn" data-type="figure"><i class="fas fa-image"></i> 그림</button>
+                        <button type="button" class="block-add-btn" data-type="metrics"><i class="fas fa-chart-simple"></i> 결과수치</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>BibTeX</label>
+                    <textarea id="pf-bibtex" rows="6" style="font-family:monospace;"></textarea>
+                </div>
+
+                <div id="projectUploadHint" style="display:none;color:#1769b0;font-size:0.85em;margin-bottom:10px;">
+                    <i class="fas fa-spinner fa-spin"></i> 이미지 업로드 및 저장 중...
+                </div>
+
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+                    <button type="button" class="cancel-btn" id="projectEditCancel">취소</button>
+                    <button type="submit" class="submit-btn" id="projectSaveBtn"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js?v=30"></script>
+    <script src="common.js?v=30"></script>
+    <script src="project.js?v=34"></script>
+</body>
+</html>

@@ -630,7 +630,7 @@ function setupEvents() {
         });
     });
     const aliasModal = document.getElementById('aliasModal');
-    if (aliasModal) aliasModal.addEventListener('click', e => { if (e.target === aliasModal) aliasModal.classList.remove('open'); });
+    // 별칭 편집 모달: 바깥 클릭 닫힘 비활성화 (입력 중 실수 닫힘 방지) — 닫기 버튼으로만 닫힘
 }
 
 // ==================== 초기화 ====================
