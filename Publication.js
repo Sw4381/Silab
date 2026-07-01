@@ -694,7 +694,7 @@ function createPublicationElement(publication) {
 
     // project page 링크 줄 (paper 원문은 제목 클릭으로 이동하므로 별도 표시하지 않음)
     const linksContent = projectUrl ?
-        `<p class="publication-links"><a href="${projectUrl}" target="_blank" rel="noopener" class="pub-link"><i class="fas fa-external-link-alt"></i> project page</a></p>` : '';
+        `<p class="publication-links"><a href="${projectUrl}" target="_blank" rel="noopener" class="pub-link">[project page]</a></p>` : '';
 
     // 논문 요약 줄
     const summaryContent = summary ?

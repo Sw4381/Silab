@@ -50,6 +50,56 @@ function setPerfNav(show) {
     });
 }
 
+// 유휴(무활동) 자동 로그아웃 — 활동 없이 30분 경과 시 자동 로그아웃 (보안)
+// 마지막 활동 시각을 localStorage 에 저장하고, 탭이 닫혀 있던 경우에도 재접속 시 초과분을 판정한다.
+function setupIdleLogout() {
+    var IDLE_MS = 30 * 60 * 1000;      // 30분
+    var KEY = 'silab_last_activity';
+    var lastWrite = 0;
+
+    function mark() {
+        var now = Date.now();
+        if (now - lastWrite < 20000) return;   // 20초에 한 번만 기록(과도한 쓰기 방지)
+        lastWrite = now;
+        try { localStorage.setItem(KEY, String(now)); } catch (e) {}
+    }
+    function idleExceeded() {
+        var last = Number(localStorage.getItem(KEY) || 0);
+        return last > 0 && (Date.now() - last > IDLE_MS);
+    }
+    function idleToast() {
+        var d = document.createElement('div');
+        d.textContent = '30분간 활동이 없어 자동 로그아웃되었습니다.';
+        d.style.cssText = 'position:fixed;top:20px;right:20px;z-index:4000;background:#fff3cd;color:#856404;border:1px solid #ffeaa7;padding:12px 16px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.2);font-size:14px;';
+        document.body.appendChild(d);
+        setTimeout(function () { d.remove(); }, 5000);
+    }
+    function logoutIdle() {
+        try { localStorage.setItem('silab_auth', '0'); localStorage.removeItem(KEY); } catch (e) {}
+        try { firebase.auth().signOut(); } catch (e) {}
+        idleToast();
+    }
+    function check() {
+        try {
+            if (!firebase.apps.length) return;
+            if (firebase.auth().currentUser && idleExceeded()) logoutIdle();
+        } catch (e) {}
+    }
+
+    ['click', 'keydown', 'mousemove', 'wheel', 'scroll', 'touchstart'].forEach(function (ev) {
+        window.addEventListener(ev, mark, { passive: true });
+    });
+
+    // 로그인 확인되면: 이미 30분 초과 상태면 즉시 로그아웃, 아니면 이번 방문을 활동으로 기록
+    firebase.auth().onAuthStateChanged(function (user) {
+        if (!user) return;
+        if (idleExceeded()) logoutIdle();
+        else { lastWrite = 0; mark(); }
+    });
+
+    setInterval(check, 30 * 1000);   // 30초마다 유휴 확인
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // 현재 페이지 자동 활성화 (탭으로 묶인 서브페이지는 부모 메뉴를 활성화)
     var currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -71,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.setItem('silab_auth', ok ? '1' : '0');
                 setPerfNav(ok);
             });
+            setupIdleLogout();   // 30분 무활동 자동 로그아웃
         } catch (e) { /* firebase 미로드 페이지는 캐시값 유지 */ }
     }
 
