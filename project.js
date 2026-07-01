@@ -225,7 +225,6 @@ function renderContent(data) {
 
     const links = [];
     if (data.paperUrl) links.push(`<a href="${escHtml(data.paperUrl)}" target="_blank" rel="noopener"><i class="fas fa-file-alt"></i> Paper</a>`);
-    if (data.bibtex) links.push(`<a href="#bibtex"><i class="fas fa-quote-right"></i> BibTeX</a>`);
     links.push(`<a href="./Publication.html"><i class="fas fa-list"></i> 전체 논문 목록</a>`);
 
     let html = `
@@ -256,13 +255,6 @@ function renderContent(data) {
         }
     });
     closeSection();
-
-    if (data.bibtex && data.bibtex.trim()) {
-        html += `<section class="project-section">
-            <h2><i class="fas fa-quote-right"></i> 인용 (BibTeX)</h2>
-            <pre class="project-bibtex" id="bibtex">${escHtml(data.bibtex)}</pre>
-        </section>`;
-    }
 
     root.innerHTML = html;
 }
@@ -348,7 +340,6 @@ function openEditModal() {
         document.getElementById('pf-authors').value = d.authors || '';
         document.getElementById('pf-affil').value = d.affil || '';
         document.getElementById('pf-paperUrl').value = d.paperUrl || '';
-        document.getElementById('pf-bibtex').value = d.bibtex || '';
 
         const list = document.getElementById('blockList');
         list.innerHTML = '';
@@ -411,7 +402,6 @@ async function saveProject(e) {
             authors: document.getElementById('pf-authors').value.trim(),
             affil: document.getElementById('pf-affil').value.trim(),
             paperUrl: document.getElementById('pf-paperUrl').value.trim(),
-            bibtex: document.getElementById('pf-bibtex').value.trim(),
             blocks: blocks,
             updatedAt: Date.now()
         };
