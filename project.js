@@ -44,23 +44,9 @@ const DEFAULT_CONTENT = {
             ] },
             { type: 'heading', text: '제안 방법 (Proposed Approach)' },
             { type: 'text', text:
-                '전체 설계는 (1) 침해대응 데이터로부터 공격 활동을 임베딩하고, (2) 기법 클러스터를 형성하여 공격 패턴 행렬을 구성한 뒤, (3) 이를 활용해 다음 행위 예측 및 공격 그룹 식별을 수행하는 흐름으로 구성된다.' },
-            { type: 'heading', text: '주요 결과 (Results)' },
-            { type: 'metrics', items: [
-                { value: '91.73%', label: '공격자 다음 행위 예측 정확도 (next-action prediction)' },
-                { value: '93.49%', label: '공격 그룹 식별 정확도 (attack-group identification)' }
-            ] }
+                '전체 설계는 (1) 침해대응 데이터로부터 공격 활동을 임베딩하고, (2) 기법 클러스터를 형성하여 공격 패턴 행렬을 구성한 뒤, (3) 이를 활용해 다음 행위 예측 및 공격 그룹 식별을 수행하는 흐름으로 구성된다.' }
         ],
-        bibtex:
-            '@article{han2025ttps,\n'
-          + '  title   = {Enhancing Incident Response Through Effective TTPs Analysis: A Design Approach},\n'
-          + '  author  = {Han, Tae-Hyun and Hwang, Sang-Yeon and Lee, Tae-Jin},\n'
-          + '  journal = {IEEE Access},\n'
-          + '  volume  = {13},\n'
-          + '  pages   = {217799--217810},\n'
-          + '  year    = {2025},\n'
-          + '  doi     = {10.1109/ACCESS.2025.3645226}\n'
-          + '}'
+        bibtex: ''
     }
 };
 
