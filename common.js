@@ -50,54 +50,90 @@ function setPerfNav(show) {
     });
 }
 
-// 유휴(무활동) 자동 로그아웃 — 활동 없이 30분 경과 시 자동 로그아웃 (보안)
-// 마지막 활동 시각을 localStorage 에 저장하고, 탭이 닫혀 있던 경우에도 재접속 시 초과분을 판정한다.
-function setupIdleLogout() {
-    var IDLE_MS = 30 * 60 * 1000;      // 30분
-    var KEY = 'silab_last_activity';
-    var lastWrite = 0;
+// 세션 만료 자동 로그아웃 — 로그인 후 20분 경과 시 자동 로그아웃 (보안)
+// 만료 1분 전에 연장 여부를 묻는 모달을 띄우고, '연장'을 누르면 20분이 다시 시작된다.
+// 세션 시작 시각을 localStorage 에 저장하므로 페이지 이동/탭 닫힘 후 재접속에도 만료가 판정된다.
+function setupSessionTimeout() {
+    var SESSION_MS = 10 * 60 * 1000;   // 세션 길이 10분
+    var WARN_MS = 60 * 1000;           // 만료 60초 전부터 연장 안내 모달 표시
+    var SESSION_LABEL = SESSION_MS >= 60000 ? Math.round(SESSION_MS / 60000) + '분' : Math.round(SESSION_MS / 1000) + '초';
+    var KEY = 'silab_session_start';
+    var modal = null, msgEl = null;
 
-    function mark() {
-        var now = Date.now();
-        if (now - lastWrite < 20000) return;   // 20초에 한 번만 기록(과도한 쓰기 방지)
-        lastWrite = now;
-        try { localStorage.setItem(KEY, String(now)); } catch (e) {}
-    }
-    function idleExceeded() {
-        var last = Number(localStorage.getItem(KEY) || 0);
-        return last > 0 && (Date.now() - last > IDLE_MS);
-    }
-    function idleToast() {
+    function sessionStart() { return Number(localStorage.getItem(KEY) || 0); }
+    function resetSession() { try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {} }
+    function clearSession() { try { localStorage.removeItem(KEY); } catch (e) {} }
+
+    function toast(text) {
         var d = document.createElement('div');
-        d.textContent = '30분간 활동이 없어 자동 로그아웃되었습니다.';
+        d.textContent = text;
         d.style.cssText = 'position:fixed;top:20px;right:20px;z-index:4000;background:#fff3cd;color:#856404;border:1px solid #ffeaa7;padding:12px 16px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.2);font-size:14px;';
         document.body.appendChild(d);
         setTimeout(function () { d.remove(); }, 5000);
     }
-    function logoutIdle() {
-        try { localStorage.setItem('silab_auth', '0'); localStorage.removeItem(KEY); } catch (e) {}
+
+    function doLogout(reason) {
+        hideModal();
+        try { localStorage.setItem('silab_auth', '0'); } catch (e) {}
+        clearSession();
         try { firebase.auth().signOut(); } catch (e) {}
-        idleToast();
+        if (reason) toast(reason);
     }
+
+    // 연장 안내 모달 (모든 페이지에서 쓰도록 JS 로 직접 생성)
+    function showModal(remainSec) {
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
+            var box = document.createElement('div');
+            box.style.cssText = 'background:#fff;border-radius:12px;padding:28px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+            var h = document.createElement('h3');
+            h.textContent = '세션 만료 예정';
+            h.style.cssText = 'margin:0 0 10px;font-size:18px;color:#333;';
+            msgEl = document.createElement('p');
+            msgEl.style.cssText = 'margin:0 0 20px;font-size:14px;color:#666;line-height:1.6;';
+            var btnRow = document.createElement('div');
+            btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;';
+            var extendBtn = document.createElement('button');
+            extendBtn.textContent = SESSION_LABEL + ' 연장';
+            extendBtn.style.cssText = 'padding:10px 22px;border:none;border-radius:8px;background:#2c5aa0;color:#fff;font-size:14px;cursor:pointer;';
+            extendBtn.addEventListener('click', function () { resetSession(); hideModal(); });
+            var outBtn = document.createElement('button');
+            outBtn.textContent = '로그아웃';
+            outBtn.style.cssText = 'padding:10px 22px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#555;font-size:14px;cursor:pointer;';
+            outBtn.addEventListener('click', function () { doLogout('로그아웃되었습니다.'); });
+            btnRow.appendChild(extendBtn); btnRow.appendChild(outBtn);
+            box.appendChild(h); box.appendChild(msgEl); box.appendChild(btnRow);
+            modal.appendChild(box);
+            document.body.appendChild(modal);
+        }
+        modal.style.display = 'flex';
+        msgEl.textContent = remainSec + '초 후 자동 로그아웃됩니다. 세션을 연장하시겠습니까?';
+    }
+    function hideModal() { if (modal) modal.style.display = 'none'; }
+
     function check() {
         try {
-            if (!firebase.apps.length) return;
-            if (firebase.auth().currentUser && idleExceeded()) logoutIdle();
-        } catch (e) {}
+            if (!firebase.apps.length || !firebase.auth().currentUser) { hideModal(); return; }
+        } catch (e) { return; }
+        var start = sessionStart();
+        if (!start) { resetSession(); return; }
+        var remain = SESSION_MS - (Date.now() - start);
+        if (remain <= 0) doLogout(SESSION_LABEL + ' 세션이 만료되어 자동 로그아웃되었습니다.');
+        else if (remain <= WARN_MS) showModal(Math.ceil(remain / 1000));
+        else hideModal();   // 다른 탭에서 연장한 경우 모달 정리
     }
 
-    ['click', 'keydown', 'mousemove', 'wheel', 'scroll', 'touchstart'].forEach(function (ev) {
-        window.addEventListener(ev, mark, { passive: true });
-    });
-
-    // 로그인 확인되면: 이미 30분 초과 상태면 즉시 로그아웃, 아니면 이번 방문을 활동으로 기록
+    // 로그인 확인 시: 저장된 세션 시작 시각이 없으면 지금을 시작으로 기록,
+    // 이미 20분이 지난 상태(탭 닫아둔 채 방치 등)면 즉시 로그아웃
     firebase.auth().onAuthStateChanged(function (user) {
-        if (!user) return;
-        if (idleExceeded()) logoutIdle();
-        else { lastWrite = 0; mark(); }
+        if (!user) { clearSession(); hideModal(); return; }
+        var start = sessionStart();
+        if (!start) resetSession();
+        else if (Date.now() - start > SESSION_MS) doLogout(SESSION_LABEL + ' 세션이 만료되어 자동 로그아웃되었습니다.');
     });
 
-    setInterval(check, 30 * 1000);   // 30초마다 유휴 확인
+    setInterval(check, 1000);   // 1초마다 만료/카운트다운 갱신
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -121,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.setItem('silab_auth', ok ? '1' : '0');
                 setPerfNav(ok);
             });
-            setupIdleLogout();   // 30분 무활동 자동 로그아웃
+            setupSessionTimeout();   // 로그인 20분 후 자동 로그아웃 (만료 전 연장 선택)
         } catch (e) { /* firebase 미로드 페이지는 캐시값 유지 */ }
     }
 
