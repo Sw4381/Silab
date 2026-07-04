@@ -54,7 +54,7 @@ function setPerfNav(show) {
 // 만료 1분 전에 연장 여부를 묻는 모달을 띄우고, '연장'을 누르면 20분이 다시 시작된다.
 // 세션 시작 시각을 localStorage 에 저장하므로 페이지 이동/탭 닫힘 후 재접속에도 만료가 판정된다.
 function setupSessionTimeout() {
-    var SESSION_MS = 10 * 60 * 1000;   // 세션 길이 10분
+    var SESSION_MS = 20 * 60 * 1000;   // 세션 길이 20분
     var WARN_MS = 60 * 1000;           // 만료 60초 전부터 연장 안내 모달 표시
     var SESSION_LABEL = SESSION_MS >= 60000 ? Math.round(SESSION_MS / 60000) + '분' : Math.round(SESSION_MS / 1000) + '초';
     var KEY = 'silab_session_start';
