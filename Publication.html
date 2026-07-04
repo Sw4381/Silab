@@ -172,8 +172,8 @@
                     <label for="publicationProjectUrl">프로젝트 페이지 URL (선택사항)
                         <i class="fas fa-info-circle" title="논문 소개/프로젝트 페이지 링크. 입력하면 목록에 'project page' 링크가 표시됩니다. (SCIE 논문 권장)"></i>
                     </label>
-                    <input type="url" id="publicationProjectUrl" name="publicationProjectUrl"
-                        placeholder="https://...">
+                    <input type="text" id="publicationProjectUrl" name="publicationProjectUrl"
+                        placeholder="예: project.html?id=p179 또는 https://...">
                 </div>
                 <div class="form-group">
                     <label for="publicationSummary">논문 요약 (선택사항)
@@ -246,7 +246,15 @@
                 </div>
                 <div class="form-group">
                     <label for="editPublicationProjectUrl">프로젝트 페이지 URL (선택사항)</label>
-                    <input type="url" id="editPublicationProjectUrl" name="editPublicationProjectUrl">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" id="editPublicationProjectUrl" name="editPublicationProjectUrl" style="flex:1;">
+                        <button type="button" id="editProjectPageBtn" class="submit-btn" style="white-space:nowrap;">
+                            <i class="fas fa-edit"></i> 페이지 내용 작성/편집
+                        </button>
+                    </div>
+                    <small style="display:block; margin-top:4px; color:#666;">
+                        버튼을 누르면 논문 소개 페이지 내용을 직접 작성/수정할 수 있습니다. 저장하면 위 URL이 자동으로 채워집니다. (링크를 논문에 반영하려면 이후 <b>수정 완료</b>를 눌러주세요.)
+                    </small>
                 </div>
                 <div class="form-group">
                     <label for="editPublicationSummary">논문 요약 (선택사항)</label>
@@ -353,7 +361,8 @@
 
     <!-- JavaScript -->
 <script src="config.js?v=30"></script>
-<script src="common.js?v=31"></script>
-<script src="Publication.js?v=33"></script>
+<script src="common.js?v=32"></script>
+<script src="project-editor.js?v=1"></script>
+<script src="Publication.js?v=34"></script>
 </body>
 </html>

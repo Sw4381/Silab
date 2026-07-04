@@ -1213,15 +1213,62 @@ function resetPositionFields() {
     }
 }
 
+// ==================== 프로젝트 페이지(논문 소개) 연동 ====================
+// projectUrl 문자열에서 project.html?id=XXX 의 id 추출
+function extractProjectPageId(url) {
+    var m = String(url || '').match(/[?&]id=([^&#]+)/);
+    return m ? decodeURIComponent(m[1]).trim() : '';
+}
+
+// 논문 ID(P179)로부터 프로젝트 페이지 id(p179) 생성
+function projectPageIdFromPublicationId(publicationId) {
+    return String(publicationId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// 수정 폼의 '페이지 내용 작성/편집' 버튼 → 프로젝트 페이지 편집기 열기
+function openProjectPageEditorFromEditForm() {
+    if (!currentUser) { showAlert('로그인이 필요합니다.', 'warning'); return; }
+    if (!window.ProjectEditor) { showAlert('프로젝트 편집기를 불러오지 못했습니다.', 'error'); return; }
+
+    const urlField = document.getElementById('editPublicationProjectUrl');
+    const idField = document.getElementById('editPublicationId');
+
+    let pageId = extractProjectPageId(urlField ? urlField.value : '');
+    if (!pageId) pageId = projectPageIdFromPublicationId(idField ? idField.value : '');
+    if (!pageId) { showAlert('먼저 논문 ID(예: P179)를 입력해주세요.', 'warning'); return; }
+
+    const defaults = {
+        title: (document.getElementById('editPublicationTitle') || {}).value || '',
+        authors: (document.getElementById('editPublicationAuthors') || {}).value || '',
+        venue: (document.getElementById('editPublicationJournal') || {}).value || '',
+        paperUrl: (document.getElementById('editPublicationUrl') || {}).value || ''
+    };
+
+    window.ProjectEditor.open({
+        pageId: pageId,
+        defaults: defaults,
+        onSaved: function (url) {
+            if (urlField) urlField.value = url;
+            showAlert('프로젝트 페이지가 저장되었습니다. 링크를 논문에 반영하려면 "수정 완료"를 눌러주세요.', 'success');
+        }
+    });
+}
+
 // ==================== 이벤트 리스너 설정 ====================
 function setupEditEventListeners() {
     editPublicationForm = document.getElementById('editPublicationForm');
     publicationEditForm = document.getElementById('publicationEditForm');
     cancelEditPublication = document.getElementById('cancelEditPublication');
-    
+
     if (!editPublicationForm || !publicationEditForm || !cancelEditPublication) {
         console.warn('⚠️ 수정 관련 DOM 요소를 찾을 수 없습니다.');
         return;
+    }
+
+    // 프로젝트 페이지 내용 작성/편집 버튼
+    const editProjectPageBtn = document.getElementById('editProjectPageBtn');
+    if (editProjectPageBtn) {
+        editProjectPageBtn.addEventListener('click', openProjectPageEditorFromEditForm);
     }
     
     // 수정 취소 버튼

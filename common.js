@@ -58,7 +58,7 @@ function setupSessionTimeout() {
     var WARN_MS = 60 * 1000;           // 만료 60초 전부터 연장 안내 모달 표시
     var SESSION_LABEL = SESSION_MS >= 60000 ? Math.round(SESSION_MS / 60000) + '분' : Math.round(SESSION_MS / 1000) + '초';
     var KEY = 'silab_session_start';
-    var modal = null, msgEl = null;
+    var modal = null, msgEl = null, badge = null;
 
     function sessionStart() { return Number(localStorage.getItem(KEY) || 0); }
     function resetSession() { try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {} }
@@ -73,7 +73,7 @@ function setupSessionTimeout() {
     }
 
     function doLogout(reason) {
-        hideModal();
+        hideModal(); hideBadge();
         try { localStorage.setItem('silab_auth', '0'); } catch (e) {}
         clearSession();
         try { firebase.auth().signOut(); } catch (e) {}
@@ -112,22 +112,42 @@ function setupSessionTimeout() {
     }
     function hideModal() { if (modal) modal.style.display = 'none'; }
 
+    // 세션 남은 시간 배지 (우측 하단, 로그인 중에만 표시. 클릭하면 즉시 연장)
+    function updateBadge(remainMs) {
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.title = '클릭하면 세션이 ' + SESSION_LABEL + ' 연장됩니다';
+            badge.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:3900;padding:8px 14px;border-radius:20px;font-size:13px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.25);user-select:none;';
+            badge.addEventListener('click', function () { resetSession(); });
+            document.body.appendChild(badge);
+        }
+        var sec = Math.max(0, Math.ceil(remainMs / 1000));
+        var mm = Math.floor(sec / 60), ss = sec % 60;
+        badge.textContent = '⏱ 세션 ' + (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
+        var warn = remainMs <= WARN_MS * 2;   // 만료가 가까우면 경고색
+        badge.style.background = warn ? '#dc3545' : 'rgba(44,90,160,0.92)';
+        badge.style.color = '#fff';
+        badge.style.display = '';
+    }
+    function hideBadge() { if (badge) badge.style.display = 'none'; }
+
     function check() {
         try {
-            if (!firebase.apps.length || !firebase.auth().currentUser) { hideModal(); return; }
+            if (!firebase.apps.length || !firebase.auth().currentUser) { hideModal(); hideBadge(); return; }
         } catch (e) { return; }
         var start = sessionStart();
         if (!start) { resetSession(); return; }
         var remain = SESSION_MS - (Date.now() - start);
-        if (remain <= 0) doLogout(SESSION_LABEL + ' 세션이 만료되어 자동 로그아웃되었습니다.');
-        else if (remain <= WARN_MS) showModal(Math.ceil(remain / 1000));
+        if (remain <= 0) { doLogout(SESSION_LABEL + ' 세션이 만료되어 자동 로그아웃되었습니다.'); return; }
+        updateBadge(remain);
+        if (remain <= WARN_MS) showModal(Math.ceil(remain / 1000));
         else hideModal();   // 다른 탭에서 연장한 경우 모달 정리
     }
 
     // 로그인 확인 시: 저장된 세션 시작 시각이 없으면 지금을 시작으로 기록,
     // 이미 20분이 지난 상태(탭 닫아둔 채 방치 등)면 즉시 로그아웃
     firebase.auth().onAuthStateChanged(function (user) {
-        if (!user) { clearSession(); hideModal(); return; }
+        if (!user) { clearSession(); hideModal(); hideBadge(); return; }
         var start = sessionStart();
         if (!start) resetSession();
         else if (Date.now() - start > SESSION_MS) doLogout(SESSION_LABEL + ' 세션이 만료되어 자동 로그아웃되었습니다.');

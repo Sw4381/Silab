@@ -53,9 +53,15 @@ function escHtmlSafe(s) {
         : String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// 이스케이프 후 줄바꿈(\n)을 <br>로 변환 (진행일 등 여러 줄 텍스트 표시용)
-function escHtmlMultiline(s) {
-    return escHtmlSafe(s).replace(/\r?\n/g, '<br>');
+// 진행일 표시: 첫 줄은 기여도 옆 (날짜) 괄호로, 이후 줄은 괄호 밖 아래 줄로 표기
+function dateHtml(date) {
+    if (!date) return '';
+    const lines = String(date).split(/\r?\n/);
+    const first = (lines.shift() || '').trim();
+    const rest = lines.map(l => l.trim()).filter(Boolean);
+    let html = first ? ` <span class="tk-date">(${escHtmlSafe(first)})</span>` : '';
+    if (rest.length) html += `<span class="tk-date-extra">${rest.map(escHtmlSafe).join('<br>')}</span>`;
+    return html;
 }
 
 function showAlert(message, type) {
@@ -337,7 +343,7 @@ function buildTrackMatrix(items, cols, defs, kind, headLabel) {
         const cells = cols.map(c => {
             const ct = (it.contribs || {})[c];
             if (!ct || !(Number(ct.w))) return `<td class="tk-cell empty"></td>`;
-            return `<td class="tk-cell ${cc}"><b>${fmtW(Number(ct.w))}</b>${it.date ? ` <span class="tk-date">(${escHtmlMultiline(it.date)})</span>` : ''}${ct.note ? `<span class="tk-note">(${escHtmlSafe(ct.note)})</span>` : ''}</td>`;
+            return `<td class="tk-cell ${cc}"><b>${fmtW(Number(ct.w))}</b>${dateHtml(it.date)}${ct.note ? `<span class="tk-note">(${escHtmlSafe(ct.note)})</span>` : ''}</td>`;
         }).join('');
         return `<tr>${label}${cells}</tr>`;
     }).join('');
