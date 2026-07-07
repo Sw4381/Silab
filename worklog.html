@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보안 지능 연구실 - 업무관리</title>
+    <link rel="icon" href="./image.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="common.css?v=30">
+    <link rel="stylesheet" href="photo.css?v=30">
+    <link rel="stylesheet" href="worklog.css?v=6">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <a href="index.html">
+                <img class="logo-picture" src="./image.png" alt="보안 지능 연구실 로고">
+            </a>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="menu">
+            <a href="index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="./members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="./research.html"><i class="fas fa-flask"></i> Research</a>
+            <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
+            <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
+            <a href="./performance.html" class="nav-perf" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>
+            <a href="./budget.html" class="nav-perf" style="display:none;"><i class="fas fa-coins"></i> 예산</a>
+            <a href="./worklog.html" class="nav-perf active" style="display:none;"><i class="fas fa-tasks"></i> 업무관리</a>
+        </nav>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> 로그아웃
+            </button>
+        </div>
+    </header>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fas fa-lock"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">연구실 멤버만 접근 가능합니다.</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- 로그아웃 상태 게이트 -->
+        <div id="authGate" class="auth-gate">
+            <i class="fas fa-user-lock"></i>
+            <h2>업무관리</h2>
+            <p>이 페이지는 연구실 멤버 로그인 후에만 볼 수 있습니다.</p>
+            <button class="login-btn gate-btn" id="gateLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인하기
+            </button>
+        </div>
+
+        <!-- 로그인 상태 본문 -->
+        <div id="wlApp" style="display:none;">
+            <div class="wl-topbar">
+                <h1><i class="fas fa-tasks"></i> 업무관리</h1>
+                <span class="wl-savestat" id="saveStat"><span class="wl-dot" id="saveDot"></span><span id="saveText">불러오는 중...</span></span>
+                <span class="wl-spacer"></span>
+                <div class="wl-actions">
+                    <button class="wl-btn" id="peopleBtn"><i class="fas fa-user-friends"></i> 담당자 명단</button>
+                    <button class="wl-btn" id="expandAllBtn">모두 펼치기</button>
+                    <button class="wl-btn" id="collapseAllBtn">모두 접기</button>
+                    <button class="wl-btn" id="exportBtn" title="JSON 백업 다운로드"><i class="fas fa-download"></i></button>
+                    <button class="wl-btn" id="importBtn" title="JSON 불러오기 (기존 업무관리 파일 호환)"><i class="fas fa-upload"></i></button>
+                    <button class="wl-btn primary" id="saveBtn" title="지금 바로 저장 (변경사항은 자동 저장도 됩니다)"><i class="fas fa-save"></i> 저장</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none">
+                </div>
+            </div>
+
+            <div class="wl-board" id="board"></div>
+
+            <div class="wl-add-section">
+                <button class="add-sec-open" id="addSectionOpenBtn">+ 카테고리 추가</button>
+                <div class="add-sec-form" id="addSectionForm" style="display:none;">
+                    <input type="text" id="newSectionName" placeholder="새 카테고리 이름 (예: 대외활동, 행정...)">
+                    <button class="wl-btn primary" id="addSectionBtn">추가</button>
+                    <button class="wl-btn" id="addSectionCancelBtn">취소</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="./image.png" alt="SILAB" class="footer-logo">
+                    <div>
+                        <span class="footer-lab-name">SILAB</span>
+                        <span class="footer-lab-sub">보안 지능 연구실</span>
+                    </div>
+                </div>
+                <div class="footer-info">
+                    <div class="footer-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>가천대학교 AI소프트웨어학부 스마트보안학과</span>
+                    </div>
+                </div>
+                <div class="footer-copy">© 2025 SILAB · Gachon University</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 담당자 명단 편집 모달 -->
+    <div id="peopleModal" class="wl-modal">
+        <div class="wl-modal-box">
+            <div class="wl-modal-head">
+                <h3><i class="fas fa-user-friends"></i> 담당자 명단 관리</h3>
+                <button class="wl-modal-close" id="peopleClose">&times;</button>
+            </div>
+            <p class="wl-modal-hint">한 줄에 한 명씩 입력하세요. 항목의 <i class="fas fa-user"></i> 버튼을 누르면 이 명단에서 클릭으로 담당자를 지정할 수 있습니다.</p>
+            <textarea id="peopleArea" rows="10" placeholder="예)&#10;홍길동&#10;김철수"></textarea>
+            <div class="wl-modal-actions">
+                <button class="wl-btn" id="loadMembersBtn"><i class="fas fa-sync"></i> 멤버 페이지에서 불러오기</button>
+                <span class="wl-spacer"></span>
+                <button class="wl-btn" id="peopleCancelBtn">취소</button>
+                <button class="wl-btn primary" id="peopleSaveBtn"><i class="fas fa-save"></i> 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="config.js?v=30"></script>
+    <script src="common.js?v=33"></script>
+    <script src="worklog.js?v=6"></script>
+</body>
+</html>
