@@ -50,11 +50,11 @@ function setPerfNav(show) {
     });
 }
 
-// 세션 만료 자동 로그아웃 — 로그인 후 20분 경과 시 자동 로그아웃 (보안)
-// 만료 1분 전에 연장 여부를 묻는 모달을 띄우고, '연장'을 누르면 20분이 다시 시작된다.
+// 세션 만료 자동 로그아웃 — 로그인 후 1시간 경과 시 자동 로그아웃 (보안)
+// 만료 1분 전에 연장 여부를 묻는 모달을 띄우고, '연장'을 누르면 1시간이 다시 시작된다.
 // 세션 시작 시각을 localStorage 에 저장하므로 페이지 이동/탭 닫힘 후 재접속에도 만료가 판정된다.
 function setupSessionTimeout() {
-    var SESSION_MS = 20 * 60 * 1000;   // 세션 길이 20분
+    var SESSION_MS = 60 * 60 * 1000;   // 세션 길이 1시간
     var WARN_MS = 60 * 1000;           // 만료 60초 전부터 연장 안내 모달 표시
     var SESSION_LABEL = SESSION_MS >= 60000 ? Math.round(SESSION_MS / 60000) + '분' : Math.round(SESSION_MS / 1000) + '초';
     var KEY = 'silab_session_start';
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.setItem('silab_auth', ok ? '1' : '0');
                 setPerfNav(ok);
             });
-            setupSessionTimeout();   // 로그인 20분 후 자동 로그아웃 (만료 전 연장 선택)
+            setupSessionTimeout();   // 로그인 1시간 후 자동 로그아웃 (만료 전 연장 선택)
         } catch (e) { /* firebase 미로드 페이지는 캐시값 유지 */ }
     }
 

@@ -61,9 +61,23 @@
 .wl-btn.primary { background: var(--wl-accent); color: #fff; }
 .wl-btn.primary:hover { background: #4338ca; }
 
-/* ===== 보드 (카드 다단) ===== */
-.wl-board { columns: 3 360px; column-gap: 16px; }
-@media (max-width: 1050px) { .wl-board { columns: 2 320px; } }
+/* ===== 자주가기 링크 바 ===== */
+.wl-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -4px 0 14px; }
+.wl-links-label { font-size: 13.5px; font-weight: 800; color: var(--wl-sub); }
+.wl-links-label i { font-size: 12px; margin-right: 3px; }
+.wl-link {
+    display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+    font-size: 14px; font-weight: 700; color: var(--wl-accent);
+    background: var(--wl-card); border: 1px solid var(--wl-line); border-radius: 16px;
+    padding: 6px 14px; text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+.wl-link:hover { border-color: var(--wl-accent); background: var(--wl-accent-soft); }
+.wl-link i { font-size: 11px; flex-shrink: 0; }
+.links-edit { opacity: .6; }
+.links-edit:hover { opacity: 1; }
+
+/* ===== 보드 (카드 다단 — 2단, 좁으면 1단) ===== */
+.wl-board { columns: 2 400px; column-gap: 18px; }
 @media (max-width: 700px)  { .wl-board { columns: 1; } }
 
 .wl-section {

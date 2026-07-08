@@ -12,6 +12,12 @@ const WL_COLOR_MAP = {
     '#0f7a99': '#0891b2', '#6d4a8e': '#7c3aed', '#6a7f1f': '#65a30d', '#a53a62': '#db2777'
 };
 
+// 자주가기 기본 링크 (첫 사용 시 자동 등록, 이후 '자주가기 편집'으로 자유롭게 관리)
+const WL_DEFAULT_LINKS = [
+    { label: 'Lab 업무 관리 (Docs)', url: 'https://docs.google.com/document/d/1HA1PZcrby3tQJp6qRyQNqp7-LbpLV4ULebC_KyCKycI/edit?pli=1&tab=t.6bqbdep0hp4l' },
+    { label: '논문 제출처', url: 'https://docs.google.com/spreadsheets/d/1CERDZ18IWs0fec5M8vcrxFjKkGYHyFBSewjK4MKTU2M/edit?gid=155235501#gid=155235501' }
+];
+
 const WL_DEFAULT = {
     sections: [
         { emoji: '🗓️', name: 'Lab회의', collapsed: false, color: '#4f46e5', items: [] },
@@ -95,6 +101,14 @@ function normalize() {
     });
     delete data.checked;
     data.people = toArr(data.people).map(String).filter(Boolean);
+    // 자주가기 링크: 최초 1회만 기본 링크 자동 등록 (모두 지워도 다시 채우지 않음)
+    data.links = toArr(data.links)
+        .map(l => ({ label: String((l && l.label) || ''), url: String((l && l.url) || '') }))
+        .filter(l => l.label && l.url);
+    if (!data.linksInit) {
+        if (!data.links.length) data.links = JSON.parse(JSON.stringify(WL_DEFAULT_LINKS));
+        data.linksInit = true;
+    }
 }
 
 function findSec(sid) { return data.sections.find(s => s.id === sid); }
@@ -310,6 +324,7 @@ function render() {
         box.appendChild(add);
         board.appendChild(el);
     });
+    renderLinks();
     // 펼쳐진 항목의 메모 높이 맞추기
     board.querySelectorAll('.item-wrap.open .detail-area').forEach(autoGrow);
     // 인라인 수정 중이면 입력칸에 포커스
@@ -319,6 +334,38 @@ function render() {
         const L = einp.value.length;
         try { einp.setSelectionRange(L, L); } catch (_) { }
     }
+}
+
+// ==================== 자주가기 링크 ====================
+function renderLinks() {
+    const bar = document.getElementById('linksBar');
+    if (!bar) return;
+    const chips = data.links.map(l =>
+        `<a class="wl-link" href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.url)}"><i class="fas fa-external-link-alt"></i> ${esc(l.label)}</a>`).join('');
+    bar.innerHTML = `<span class="wl-links-label"><i class="fas fa-thumbtack"></i> 자주가기</span>${chips}
+        <button class="mini links-edit" title="자주가기 편집" onclick="openLinksModal()">✏️</button>`;
+}
+
+function openLinksModal() {
+    document.getElementById('linksArea').value = data.links.map(l => l.label + ' | ' + l.url).join('\n');
+    document.getElementById('linksModal').classList.add('open');
+}
+function closeLinksModal() { document.getElementById('linksModal').classList.remove('open'); }
+function saveLinks() {
+    const lines = document.getElementById('linksArea').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const links = [];
+    for (const line of lines) {
+        const cut = line.indexOf('|');
+        if (cut < 0) { wlAlert(`'이름 | 주소' 형식이 아닌 줄이 있습니다: ${line.slice(0, 30)}`, 'error'); return; }
+        const label = line.slice(0, cut).trim();
+        let url = line.slice(cut + 1).trim();
+        if (!label || !url) { wlAlert(`이름 또는 주소가 비어 있는 줄이 있습니다.`, 'error'); return; }
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        links.push({ label: label, url: url });
+    }
+    data.links = links;
+    touch(); closeLinksModal(); renderLinks();
+    wlAlert('자주가기 링크가 저장되었습니다.', 'success');
 }
 
 // 접힌 카드의 요약 줄 클릭 → 카테고리를 펼치고 해당 항목의 세부까지 열기
@@ -536,6 +583,8 @@ function editItem(sid, iid) {
 }
 function deleteItem(sid, iid) {
     const s = findSec(sid);
+    const it = findItem(sid, iid);
+    if (!confirm(`'${it.text}' 항목을 삭제할까요?`)) return;
     s.items = s.items.filter(x => x.id !== iid);
     delete expanded[iid];
     delete detailEdit[iid];
@@ -602,10 +651,13 @@ function openOwnerPop(sid, iid, e) {
     pop.onclick = ev => ev.stopPropagation();
 
     function chipsHtml() {
-        const ppl = data.people.concat(newPeople.filter(p => data.people.indexOf(p) < 0));
-        if (!ppl.length) return '<div class="owner-pop-empty">등록된 명단이 없습니다.<br>아래 \'명단 편집\'에서 먼저 등록하세요.</div>';
+        // '모두'는 명단과 무관하게 항상 맨 앞에 제공
+        const ppl = ['모두'].concat(
+            data.people.filter(p => p !== '모두'),
+            newPeople.filter(p => data.people.indexOf(p) < 0 && p !== '모두'));
         return ppl.map(p =>
-            `<button class="owner-chip${pending.includes(p) ? ' on' : ''}" data-name="${esc(p)}">${esc(p)}</button>`).join('');
+            `<button class="owner-chip${pending.includes(p) ? ' on' : ''}" data-name="${esc(p)}">${esc(p)}</button>`).join('') +
+            (data.people.length ? '' : '<div class="owner-pop-empty" style="margin-top:6px;">개인 이름은 \'명단 편집\'에서 등록하세요.</div>');
     }
     pop.innerHTML = `
         <div class="owner-pop-head">담당자 지정 <span style="font-weight:400;color:#6b7280;">(클릭으로 선택 후 확인)</span></div>
@@ -725,6 +777,8 @@ function editSub(sid, iid, subId) {
 }
 function delSub(sid, iid, subId) {
     const it = findItem(sid, iid);
+    const s = it.subs.find(x => x.id === subId);
+    if (!confirm(`세부 항목 '${s ? s.text : ''}'을(를) 삭제할까요?`)) return;
     it.subs = it.subs.filter(x => x.id !== subId);
     touch(); render();
 }
@@ -848,6 +902,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.key === 'Enter') addSection();
         else if (e.key === 'Escape') setAddSectionForm(false);
     });
+
+    // 자주가기 링크 모달
+    document.getElementById('linksClose').addEventListener('click', closeLinksModal);
+    document.getElementById('linksCancelBtn').addEventListener('click', closeLinksModal);
+    document.getElementById('linksSaveBtn').addEventListener('click', saveLinks);
+    document.getElementById('linksModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeLinksModal(); });
 
     // 담당자 명단 모달
     document.getElementById('peopleBtn').addEventListener('click', openPeopleModal);
