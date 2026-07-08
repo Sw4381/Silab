@@ -346,20 +346,33 @@ function renderLinks() {
         <button class="mini links-edit" title="자주가기 편집" onclick="openLinksModal()">✏️</button>`;
 }
 
+// 링크 편집: 줄마다 이름/주소 입력칸 + 삭제 버튼 (텍스트 형식 입력 불필요)
+function linkRowHtml(l) {
+    return `<div class="link-row">
+        <input class="lr-label" type="text" placeholder="이름" value="${esc(l ? l.label : '')}">
+        <input class="lr-url" type="text" placeholder="https://주소" value="${esc(l ? l.url : '')}">
+        <button class="lr-del" title="이 링크 삭제" onclick="this.parentElement.remove()">✕</button>
+    </div>`;
+}
 function openLinksModal() {
-    document.getElementById('linksArea').value = data.links.map(l => l.label + ' | ' + l.url).join('\n');
+    const box = document.getElementById('linksRows');
+    box.innerHTML = data.links.map(linkRowHtml).join('') || linkRowHtml(null);
     document.getElementById('linksModal').classList.add('open');
+}
+function addLinkRow() {
+    const box = document.getElementById('linksRows');
+    box.insertAdjacentHTML('beforeend', linkRowHtml(null));
+    const rows = box.querySelectorAll('.link-row');
+    rows[rows.length - 1].querySelector('.lr-label').focus();
 }
 function closeLinksModal() { document.getElementById('linksModal').classList.remove('open'); }
 function saveLinks() {
-    const lines = document.getElementById('linksArea').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     const links = [];
-    for (const line of lines) {
-        const cut = line.indexOf('|');
-        if (cut < 0) { wlAlert(`'이름 | 주소' 형식이 아닌 줄이 있습니다: ${line.slice(0, 30)}`, 'error'); return; }
-        const label = line.slice(0, cut).trim();
-        let url = line.slice(cut + 1).trim();
-        if (!label || !url) { wlAlert(`이름 또는 주소가 비어 있는 줄이 있습니다.`, 'error'); return; }
+    for (const row of document.querySelectorAll('#linksRows .link-row')) {
+        const label = row.querySelector('.lr-label').value.trim();
+        let url = row.querySelector('.lr-url').value.trim();
+        if (!label && !url) continue;   // 빈 줄은 무시
+        if (!label || !url) { wlAlert('이름과 주소를 모두 입력해주세요.', 'error'); return; }
         if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
         links.push({ label: label, url: url });
     }
@@ -904,6 +917,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 자주가기 링크 모달
+    document.getElementById('addLinkRowBtn').addEventListener('click', addLinkRow);
     document.getElementById('linksClose').addEventListener('click', closeLinksModal);
     document.getElementById('linksCancelBtn').addEventListener('click', closeLinksModal);
     document.getElementById('linksSaveBtn').addEventListener('click', saveLinks);

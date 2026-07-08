@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css?v=30">
     <link rel="stylesheet" href="photo.css?v=30">
-    <link rel="stylesheet" href="worklog.css?v=7">
+    <link rel="stylesheet" href="worklog.css?v=8">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -158,13 +158,14 @@
 
     <!-- 자주가기 링크 편집 모달 -->
     <div id="linksModal" class="wl-modal">
-        <div class="wl-modal-box">
+        <div class="wl-modal-box wide">
             <div class="wl-modal-head">
                 <h3><i class="fas fa-thumbtack"></i> 자주가기 편집</h3>
                 <button class="wl-modal-close" id="linksClose">&times;</button>
             </div>
-            <p class="wl-modal-hint">한 줄에 하나씩 <b>이름 | 주소</b> 형식으로 입력하세요.<br>예) 논문 제출처 | https://docs.google.com/...</p>
-            <textarea id="linksArea" rows="6" placeholder="이름 | https://..."></textarea>
+            <div class="link-rows-head"><span class="lrh-label">이름</span><span class="lrh-url">주소 (URL)</span><span class="lrh-del"></span></div>
+            <div id="linksRows"></div>
+            <button class="wl-btn" id="addLinkRowBtn" style="margin-top:4px;"><i class="fas fa-plus"></i> 링크 추가</button>
             <div class="wl-modal-actions">
                 <span class="wl-spacer"></span>
                 <button class="wl-btn" id="linksCancelBtn">취소</button>
@@ -176,6 +177,6 @@
     <!-- JavaScript -->
     <script src="config.js?v=30"></script>
     <script src="common.js?v=34"></script>
-    <script src="worklog.js?v=7"></script>
+    <script src="worklog.js?v=8"></script>
 </body>
 </html>

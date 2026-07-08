@@ -308,6 +308,25 @@
 }
 .wl-modal.open { display: flex; }
 .wl-modal-box { background: #fff; border-radius: 14px; padding: 22px 24px; width: 100%; max-width: 460px; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+.wl-modal-box.wide { max-width: 620px; }
+
+/* 자주가기 편집: 줄 단위 입력 */
+.link-rows-head { display: flex; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--wl-sub); margin-bottom: 5px; padding: 0 2px; }
+.link-rows-head .lrh-label { width: 150px; flex-shrink: 0; }
+.link-rows-head .lrh-url { flex: 1; }
+.link-rows-head .lrh-del { width: 30px; flex-shrink: 0; }
+.link-row { display: flex; gap: 6px; margin-bottom: 7px; align-items: center; }
+.link-row input { border: 1.5px solid var(--wl-line); border-radius: 8px; padding: 8px 10px; font-size: 14.5px; font-family: inherit; color: var(--wl-ink); min-width: 0; }
+.link-row input:focus { outline: none; border-color: var(--wl-accent); }
+.link-row .lr-label { width: 150px; flex-shrink: 0; }
+.link-row .lr-url { flex: 1; }
+.link-row .lr-del { width: 30px; height: 34px; flex-shrink: 0; border: none; background: none; color: var(--wl-sub); font-size: 14px; border-radius: 6px; cursor: pointer; }
+.link-row .lr-del:hover { background: #fee2e2; color: #dc2626; }
+@media (max-width: 560px) {
+    .link-rows-head { display: none; }
+    .link-row { flex-wrap: wrap; }
+    .link-row .lr-label { width: calc(100% - 40px); }
+}
 .wl-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .wl-modal-head h3 { font-size: 18px; font-weight: 800; color: var(--wl-ink); }
 .wl-modal-close { border: none; background: none; font-size: 26px; color: var(--wl-sub); cursor: pointer; line-height: 1; }
