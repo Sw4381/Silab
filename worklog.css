@@ -76,6 +76,19 @@
 .links-edit { opacity: .6; }
 .links-edit:hover { opacity: 1; }
 
+/* ===== 담당자 필터 바 (자기 이름 것만 보기) ===== */
+.wl-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: -2px 0 16px; }
+.wl-filter:empty { display: none; }
+.filter-chip {
+    border: 1.5px solid var(--wl-line); background: var(--wl-card); color: var(--wl-ink);
+    border-radius: 16px; font-size: 14px; font-weight: 700; padding: 5px 14px; cursor: pointer; font-family: inherit;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+.filter-chip:hover { border-color: var(--wl-accent); color: var(--wl-accent); }
+.filter-chip.on { background: var(--wl-accent); border-color: var(--wl-accent); color: #fff; }
+.filter-chip.all.on { background: #6b7280; border-color: #6b7280; }
+.filter-hint { font-size: 13px; color: var(--wl-sub); font-weight: 600; }
+
 /* ===== 보드 (카드 다단 — 2단, 좁으면 1단) ===== */
 .wl-board { columns: 2 400px; column-gap: 18px; }
 @media (max-width: 700px)  { .wl-board { columns: 1; } }
@@ -129,6 +142,28 @@
 }
 .owner-tag:hover { background: #e0e7ff; }
 
+/* 마감일(D-Day) 배지 — 임박(3일 이내) 주황, 지남 빨강, 완료 회색 */
+.due-badge {
+    display: inline-block; font-size: 12.5px; font-weight: 800; color: var(--wl-sub); background: #f3f4f6;
+    border-radius: 8px; padding: 2px 8px; margin: 2px 0 2px 6px; white-space: nowrap; vertical-align: 2px; cursor: pointer;
+}
+.due-badge:hover { background: #e5e7eb; }
+.due-badge.soon    { color: #b45309; background: #fef3c7; }
+.due-badge.overdue { color: #b91c1c; background: #fee2e2; }
+.due-badge.fin     { color: var(--wl-done); background: #f3f4f6; }
+
+/* 피드백 개수 배지 */
+.eval-badge {
+    display: inline-block; font-size: 12.5px; font-weight: 800; color: #4b5563; background: #f3f4f6;
+    border-radius: 8px; padding: 2px 8px; margin: 2px 0 2px 6px; white-space: nowrap; vertical-align: 2px; cursor: pointer;
+}
+.eval-badge:hover { background: #e5e7eb; }
+
+/* 접힌 카드 요약의 D-Day */
+.digest-row .d-due { flex-shrink: 0; font-size: 12.5px; font-weight: 800; color: var(--wl-sub); background: #f3f4f6; border-radius: 7px; padding: 1px 7px; }
+.digest-row .d-due.soon    { color: #b45309; background: #fef3c7; }
+.digest-row .d-due.overdue { color: #b91c1c; background: #fee2e2; }
+
 /* 세부 개수 배지 */
 .sub-badge {
     display: inline-block; font-size: 12.5px; font-weight: 800; color: var(--wl-sub); background: #f3f4f6;
@@ -167,6 +202,23 @@
 .pct-pop .pct-quick button { flex: 1; border: 1px solid var(--wl-line); background: #fbfcfc; border-radius: 6px; font-size: 12.5px; font-weight: 700; padding: 5px 0; cursor: pointer; color: var(--wl-sub); }
 .pct-pop .pct-quick button:hover { background: var(--wl-accent-soft); color: var(--wl-accent); border-color: var(--wl-accent); }
 .pct-auto-hint { font-size: 13px; color: var(--wl-sub); line-height: 1.6; }
+
+/* ===== 마감일(D-Day) 팝오버 ===== */
+.due-pop {
+    position: fixed; z-index: 3500; background: #fff; border: 1px solid var(--wl-line); border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.15); padding: 12px 14px; width: 220px;
+}
+.due-pop .pct-pop-head { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+.due-pop .pct-pop-val { color: var(--wl-accent); }
+.due-pop input[type=date] {
+    width: 100%; box-sizing: border-box; border: 1.5px solid var(--wl-line); border-radius: 7px;
+    padding: 7px 9px; font-size: 14.5px; font-family: inherit; color: var(--wl-ink); cursor: pointer;
+}
+.due-pop input[type=date]:focus { outline: none; border-color: var(--wl-accent); }
+.due-quick { display: flex; gap: 4px; margin-top: 9px; }
+.due-quick button { flex: 1; border: 1px solid var(--wl-line); background: #fbfcfc; border-radius: 6px; font-size: 12.5px; font-weight: 700; padding: 5px 0; cursor: pointer; color: var(--wl-sub); font-family: inherit; }
+.due-quick button:hover { background: var(--wl-accent-soft); color: var(--wl-accent); border-color: var(--wl-accent); }
+.due-quick .due-clear:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
 
 /* ===== 드래그 앤 드롭 (순서 변경) ===== */
 .item-wrap { position: relative; }
@@ -282,6 +334,36 @@
     background: #fbfcfc; resize: none; overflow: hidden; box-sizing: border-box;
 }
 .detail-area:focus { outline: none; border-color: var(--wl-accent); background: #fff; }
+
+/* ===== 피드백 기록 (잘함/보완 + 이유 로그) ===== */
+.eval-box { margin-top: 12px; border-top: 1px dashed var(--wl-line); padding-top: 10px; }
+.eval-head { font-size: 13.5px; font-weight: 800; color: var(--wl-sub); margin-bottom: 6px; }
+.eval-head .eval-sum { font-weight: 700; color: #4b5563; margin-left: 4px; }
+.eval-empty { font-size: 13px; color: #a8b0bc; padding: 2px 2px 4px; line-height: 1.6; }
+.eval-item {
+    display: flex; align-items: baseline; gap: 8px; padding: 6px 9px; border-radius: 8px;
+    font-size: 14.5px; margin-bottom: 5px; border-left: 3px solid transparent;
+}
+.eval-item.good { background: #f0fdf4; border-left-color: #34d399; }
+.eval-item.bad  { background: #fef2f2; border-left-color: #f87171; }
+.eval-item .ev-ic { flex-shrink: 0; font-size: 13.5px; }
+.eval-item .ev-date { flex-shrink: 0; font-size: 12.5px; font-weight: 700; color: var(--wl-sub); }
+.eval-item .ev-txt { flex: 1; min-width: 0; line-height: 1.55; color: #374151; word-break: break-word; overflow-wrap: anywhere; white-space: pre-wrap; }
+.eval-item .ev-del { opacity: 0; border: none; background: none; color: var(--wl-sub); cursor: pointer; font-size: 12px; padding: 1px 5px; border-radius: 5px; transition: opacity .15s; flex-shrink: 0; }
+.eval-item:hover .ev-del { opacity: 1; }
+.eval-item .ev-del:hover { background: #fee2e2; color: #dc2626; }
+
+.eval-add { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-top: 7px; }
+.ev-kind {
+    border: 1.5px solid var(--wl-line); background: #fbfcfc; color: var(--wl-sub);
+    border-radius: 8px; font-size: 13px; font-weight: 700; padding: 6px 10px; cursor: pointer; font-family: inherit; flex-shrink: 0;
+}
+.ev-kind.good.on { background: #ecfdf5; border-color: #34d399; color: #047857; }
+.ev-kind.bad.on  { background: #fef2f2; border-color: #f87171; color: #b91c1c; }
+.eval-add input { flex: 1; min-width: 140px; border: 1px solid var(--wl-line); border-radius: 7px; padding: 7px 10px; font-size: 14px; font-family: inherit; }
+.eval-add input:focus { outline: none; border-color: var(--wl-accent); }
+.ev-add-btn { border: none; background: var(--wl-accent-soft); color: var(--wl-accent); font-weight: 700; font-size: 13.5px; border-radius: 7px; padding: 7px 12px; flex-shrink: 0; cursor: pointer; font-family: inherit; }
+.ev-add-btn:hover { background: #e0e7ff; }
 
 /* 항목 추가 줄 */
 .add-row { display: flex; gap: 6px; padding: 8px 6px 2px; }

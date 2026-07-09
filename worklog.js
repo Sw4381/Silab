@@ -96,6 +96,15 @@ function normalize() {
             o.done = ('done' in o) ? !!o.done : !!checked[o.id];
             if (!Number.isFinite(o.pct)) o.pct = 0;
             o.focus = !!o.focus;
+            // 마감일(D-Day): YYYY-MM-DD 문자열, 없으면 ''
+            o.due = (typeof o.due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o.due)) ? o.due : '';
+            // 피드백 기록: 잘함(good)/보완(bad) + 이유 + 기록일 로그
+            o.evals = toArr(o.evals).map(ev => ({
+                id: (ev.id && /^[A-Za-z0-9_-]+$/.test(ev.id)) ? ev.id : newId(),
+                kind: ev.kind === 'bad' ? 'bad' : 'good',
+                text: String(ev.text || ''),
+                date: String(ev.date || '')
+            }));
             return o;
         });
     });
@@ -119,6 +128,22 @@ function itemPct(it) {
     if (it.done) return 100;
     if (it.subs && it.subs.length) return Math.round(it.subs.filter(s => s.done).length / it.subs.length * 100);
     return it.pct;
+}
+
+function todayStr() {
+    const n = new Date();
+    return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+}
+
+// D-Day 계산: 마감일까지 남은 일수 → 라벨(D-3/D-Day/D+2)과 강조 클래스
+function ddayInfo(due) {
+    if (!due) return null;
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    const d = new Date(due + 'T00:00:00');
+    if (isNaN(d.getTime())) return null;
+    const diff = Math.round((d.getTime() - t.getTime()) / 86400000);
+    const label = diff === 0 ? 'D-Day' : (diff > 0 ? 'D-' + diff : 'D+' + (-diff));
+    return { diff: diff, label: label, cls: diff < 0 ? 'overdue' : (diff <= 3 ? 'soon' : '') };
 }
 
 // ==================== 이름 인라인 수정 (항목/세부/카테고리 공용) ====================
@@ -197,32 +222,59 @@ async function loadData() {
     render();
 }
 
+// ==================== 담당자 필터 (자기 이름 것만 보기) ====================
+let ownerFilter = '';   // 화면 상태(저장 안 함). ''=전체
+
+function matchesFilter(it) {
+    return it.owners.includes(ownerFilter) || it.owners.includes('모두');
+}
+function setOwnerFilter(name) {
+    ownerFilter = (ownerFilter === name) ? '' : name;   // 켜진 이름을 다시 누르면 해제
+    render();
+}
+function renderFilter() {
+    const bar = document.getElementById('filterBar');
+    if (!bar) return;
+    const names = data.people.filter(p => p !== '모두');
+    if (!names.length) { bar.innerHTML = ''; return; }
+    const chips = names.map(p =>
+        `<button class="filter-chip${ownerFilter === p ? ' on' : ''}" data-name="${esc(p)}">${esc(p)}</button>`).join('');
+    bar.innerHTML = `<span class="wl-links-label"><i class="fas fa-filter"></i> 담당자 보기</span>
+        <button class="filter-chip all${ownerFilter ? '' : ' on'}" data-name="">전체</button>${chips}
+        ${ownerFilter ? `<span class="filter-hint">'${esc(ownerFilter)}' 담당 항목만 표시 중 ('모두' 담당 포함 · 다시 누르면 해제)</span>` : ''}`;
+}
+
 // ==================== 렌더 ====================
 function render() {
     if (!board || !data) return;
     closePops();
     board.innerHTML = '';
     data.sections.forEach(sec => {
+        const visItems = ownerFilter ? sec.items.filter(matchesFilter) : sec.items;
+        if (ownerFilter && !visItems.length) return;   // 필터 중엔 해당 담당 항목이 없는 카테고리는 숨김
         const el = document.createElement('div');
         el.className = 'wl-section' + (sec.collapsed ? ' collapsed' : '');
         el.style.setProperty('--sec-color', sec.color);
-        const doneCount = sec.items.filter(it => it.done).length;
-        const allDone = sec.items.length > 0 && doneCount === sec.items.length;
+        const doneCount = visItems.filter(it => it.done).length;
+        const allDone = visItems.length > 0 && doneCount === visItems.length;
         const secNameHtml = isEditing('sec', sec.id)
             ? editorHtml(sec.name)
             : `<h2 title="더블클릭하여 이름 수정" ondblclick="editSectionName('${sec.id}',event)">${esc(sec.name)}</h2>`;
         // 접힌 상태 요약: 미완료 항목만 한 줄씩 (★/이름/담당자/진척율). 클릭하면 해당 항목으로 펼침.
         let digestHtml = '';
         if (sec.collapsed) {
-            const pending = sec.items.filter(it => !it.done);
+            const pending = visItems.filter(it => !it.done);
             const rows = pending.map(it => {
                 const owners = it.owners.length ? ` <span class="d-owner">(${esc(it.owners.join('·'))})</span>` : '';
+                const dd = ddayInfo(it.due);
+                const dueHtml = dd ? `<span class="d-due ${dd.cls}">${dd.label}</span>` : '';
                 return `<div class="digest-row${it.focus ? ' focused' : ''}" title="클릭하면 펼치기" onclick="openFromDigest('${sec.id}','${it.id}',event)">
                     <span class="d-star">${it.focus ? '★' : '·'}</span>
                     <span class="d-txt">${esc(it.text)}${owners}</span>
+                    ${dueHtml}
                     <span class="d-pct">${itemPct(it)}%</span></div>`;
             }).join('');
-            digestHtml = `<div class="digest">${rows || `<div class="digest-empty">${sec.items.length ? '모두 완료 ✓' : '항목 없음'}</div>`}</div>`;
+            digestHtml = `<div class="digest">${rows || `<div class="digest-empty">${visItems.length ? '모두 완료 ✓' : '항목 없음'}</div>`}</div>`;
         }
         el.innerHTML = `
             <div class="sec-head" onclick="toggleSection('${sec.id}',event)">
@@ -240,7 +292,7 @@ function render() {
         const box = el.querySelector('.items');
         box.ondragover = e => listDragOver(sec.id, e);
         box.ondrop = e => listDrop(sec.id, e);
-        sec.items.forEach(it => {
+        visItems.forEach(it => {
             const isOpen = !!expanded[it.id];
             const pct = itemPct(it);
             const wrap = document.createElement('div');
@@ -265,6 +317,17 @@ function render() {
             const subBadge = it.subs.length
                 ? `<span class="sub-badge${subDone === it.subs.length ? ' all-done' : ''}" title="세부 항목 ${subDone}/${it.subs.length} 완료">☑ ${subDone}/${it.subs.length}</span>` : '';
 
+            // 마감일(D-Day) 배지 — 클릭하면 날짜 변경
+            const dd = ddayInfo(it.due);
+            const dueBadge = dd
+                ? `<span class="due-badge ${it.done ? 'fin' : dd.cls}" title="마감일 ${it.due} (클릭하여 변경)" onclick="openDuePop('${sec.id}','${it.id}',event)">📅 ${dd.label}</span>` : '';
+
+            // 피드백 배지 — 클릭하면 세부 펼쳐서 기록 보기
+            const evGood = it.evals.filter(v => v.kind === 'good').length;
+            const evBad = it.evals.length - evGood;
+            const evalBadge = it.evals.length
+                ? `<span class="eval-badge" title="피드백 ${it.evals.length}건 (클릭하여 보기)" onclick="openEvalLog('${it.id}',event)">👍${evGood} 👎${evBad}</span>` : '';
+
             // 세부영역: 보기 모드(깔끔) / 편집 모드(추가칸·삭제·메모 입력칸 표시)
             const isDE = !!detailEdit[it.id];
             const subsHtml = it.subs.map(s => {
@@ -282,12 +345,35 @@ function render() {
 
             const txtHtml = isEditing('item', it.id)
                 ? editorHtml(it.text)
-                : `<span class="txt" onclick="toggleExpand('${it.id}')">${esc(it.text)}${ownerTag}${subBadge}<span class="tcaret">▸</span></span>
+                : `<span class="txt" onclick="toggleExpand('${it.id}')">${esc(it.text)}${ownerTag}${dueBadge}${evalBadge}${subBadge}<span class="tcaret">▸</span></span>
                     <span class="item-actions">
                         <button class="mini" title="담당자 지정" onclick="openOwnerPop('${sec.id}','${it.id}',event)">👤</button>
+                        <button class="mini" title="마감일(D-Day) 지정" onclick="openDuePop('${sec.id}','${it.id}',event)">📅</button>
                         <button class="mini" title="항목명 수정" onclick="editItem('${sec.id}','${it.id}')">✏️</button>
                         <button class="mini" title="항목 삭제" onclick="deleteItem('${sec.id}','${it.id}')">✕</button>
                     </span>`;
+            // 피드백 기록 로그 (교수님이 잘한 점/보완할 점을 이유와 함께 기록) — 최신이 위
+            const kindSel = evalKind[it.id] === 'bad' ? 'bad' : 'good';
+            const evalRows = it.evals.slice().reverse().map(ev => `
+                <div class="eval-item ${ev.kind}">
+                    <span class="ev-ic">${ev.kind === 'good' ? '👍' : '👎'}</span>
+                    <span class="ev-date">${esc(ev.date)}</span>
+                    <span class="ev-txt">${esc(ev.text)}</span>
+                    <button class="ev-del" title="이 기록 삭제" onclick="delEval('${sec.id}','${it.id}','${ev.id}')">✕</button>
+                </div>`).join('');
+            const evalHtml = `
+                <div class="eval-box">
+                    <div class="eval-head">📋 피드백 기록${it.evals.length ? ` <span class="eval-sum">👍 ${evGood} · 👎 ${evBad}</span>` : ''}</div>
+                    <div class="eval-list">${evalRows || '<div class="eval-empty">아직 기록이 없습니다. 잘한 점 / 보완할 점을 이유와 함께 남겨보세요.</div>'}</div>
+                    <div class="eval-add">
+                        <button class="ev-kind good${kindSel === 'good' ? ' on' : ''}" onclick="setEvalKind('${it.id}','good')">👍 잘함</button>
+                        <button class="ev-kind bad${kindSel === 'bad' ? ' on' : ''}" onclick="setEvalKind('${it.id}','bad')">👎 보완</button>
+                        <input type="text" placeholder="이유 입력 후 Enter (예: 발표 준비가 꼼꼼했음)"
+                            onkeydown="if(event.key==='Enter')addEval('${sec.id}','${it.id}',this)">
+                        <button class="ev-add-btn" onclick="addEval('${sec.id}','${it.id}',this.previousElementSibling)">기록</button>
+                    </div>
+                </div>`;
+
             wrap.innerHTML = `
                 <div class="item${it.done ? ' done' : ''}" draggable="true"
                     ondragstart="dragStart('${sec.id}','${it.id}',event)" ondragend="dragEnd()">
@@ -314,17 +400,22 @@ function render() {
                     : (it.note.trim()
                         ? `<div class="note-view" title="클릭하여 편집" onclick="toggleDetailEdit('${it.id}')">${esc(it.note)}</div>`
                         : (it.subs.length ? '' : `<div class="detail-hint" onclick="toggleDetailEdit('${it.id}')">✏️ 편집을 눌러 세부 항목·메모를 추가하세요</div>`))}
+                    ${evalHtml}
                 </div>`;
             box.appendChild(wrap);
         });
-        const add = document.createElement('div');
-        add.className = 'add-row';
-        add.innerHTML = `<input type="text" placeholder="+ 항목 추가" onkeydown="if(event.key==='Enter')addItem('${sec.id}',this)">
-            <button onclick="addItem('${sec.id}',this.previousElementSibling)">추가</button>`;
-        box.appendChild(add);
+        // 필터 중에는 항목 추가 줄 숨김 (추가하자마자 안 보여서 혼동 방지)
+        if (!ownerFilter) {
+            const add = document.createElement('div');
+            add.className = 'add-row';
+            add.innerHTML = `<input type="text" placeholder="+ 항목 추가" onkeydown="if(event.key==='Enter')addItem('${sec.id}',this)">
+                <button onclick="addItem('${sec.id}',this.previousElementSibling)">추가</button>`;
+            box.appendChild(add);
+        }
         board.appendChild(el);
     });
     renderLinks();
+    renderFilter();
     // 펼쳐진 항목의 메모 높이 맞추기
     board.querySelectorAll('.item-wrap.open .detail-area').forEach(autoGrow);
     // 인라인 수정 중이면 입력칸에 포커스
@@ -392,7 +483,7 @@ function openFromDigest(sid, iid, e) {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function closePops() { document.querySelectorAll('.pct-pop, .owner-pop').forEach(p => p.remove()); }
+function closePops() { document.querySelectorAll('.pct-pop, .owner-pop, .due-pop').forEach(p => p.remove()); }
 
 // 팝오버를 화면(뷰포트) 기준으로 고정 배치 — 어느 위치·어느 단(column)에서 열어도 화면 밖으로 안 나감
 // (카드 안 absolute 배치는 CSS 다단 경계에서 좌표가 틀어져 화면 위로 튀는 문제가 있었음 → body + fixed)
@@ -581,7 +672,7 @@ function deleteSection(sid, e) {
 // ==================== 항목 ====================
 function addItem(sid, inp) {
     const v = inp.value.trim(); if (!v) return;
-    const it = { id: newId(), text: v, owners: [], note: '', subs: [], pct: 0, focus: false, done: false };
+    const it = { id: newId(), text: v, owners: [], note: '', subs: [], pct: 0, focus: false, done: false, due: '', evals: [] };
     findSec(sid).items.push(it);
     inp.value = '';
     touch(); render();
@@ -648,6 +739,76 @@ function setPct(sid, iid, v) {
     const it = findItem(sid, iid);
     it.pct = v;
     it.done = (v >= 100);
+    touch(); render();
+}
+
+// ==================== 마감일 (D-Day) ====================
+function openDuePop(sid, iid, e) {
+    e.stopPropagation();
+    closePops();
+    const it = findItem(sid, iid);
+    const pop = document.createElement('div');
+    pop.className = 'due-pop';
+    pop.onclick = ev => ev.stopPropagation();
+    const dd = ddayInfo(it.due);
+    pop.innerHTML = `
+        <div class="pct-pop-head"><span>마감일 (D-Day)</span>${dd ? `<span class="pct-pop-val">${dd.label}</span>` : ''}</div>
+        <input type="date" value="${it.due}">
+        <div class="due-quick">
+            <button data-d="0">오늘</button>
+            <button data-d="1">내일</button>
+            <button data-d="7">+1주</button>
+            <button class="due-clear">지우기</button>
+        </div>`;
+    document.body.appendChild(pop);
+    placePopFixed(pop, e.currentTarget);
+    const close = attachPopClose(pop);
+    pop.querySelector('input[type=date]').addEventListener('change', function () {
+        it.due = this.value || '';
+        close(); touch(); render();
+    });
+    pop.querySelectorAll('.due-quick button').forEach(btn => btn.addEventListener('click', () => {
+        if (btn.classList.contains('due-clear')) it.due = '';
+        else {
+            const d = new Date();
+            d.setDate(d.getDate() + (+btn.dataset.d));
+            it.due = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        close(); touch(); render();
+    }));
+}
+
+// ==================== 피드백 기록 (잘함/보완 + 이유 로그) ====================
+const evalKind = {};   // 항목별 기록 종류 선택 상태 (화면 상태, 저장 안 함)
+
+function setEvalKind(iid, kind) { evalKind[iid] = kind; render(); }
+
+function openEvalLog(iid, e) {
+    e.stopPropagation();
+    expanded[iid] = true;
+    render();
+    const el = board.querySelector(`.item-wrap[data-iid="${iid}"] .eval-box`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function addEval(sid, iid, inp) {
+    const v = inp.value.trim(); if (!v) return;
+    findItem(sid, iid).evals.push({
+        id: newId(),
+        kind: evalKind[iid] === 'bad' ? 'bad' : 'good',
+        text: v,
+        date: todayStr()
+    });
+    touch(); render();
+    const again = board.querySelector(`.item-wrap[data-iid="${iid}"] .eval-add input`);
+    if (again) again.focus();
+}
+
+function delEval(sid, iid, evId) {
+    const it = findItem(sid, iid);
+    const ev = it.evals.find(x => x.id === evId);
+    if (!confirm(`이 피드백 기록을 삭제할까요?\n"${ev ? ev.text : ''}"`)) return;
+    it.evals = it.evals.filter(x => x.id !== evId);
     touch(); render();
 }
 
@@ -914,6 +1075,13 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('newSectionName').addEventListener('keydown', e => {
         if (e.key === 'Enter') addSection();
         else if (e.key === 'Escape') setAddSectionForm(false);
+    });
+
+    // 담당자 필터 바 (이름 클릭 → 그 사람 항목만, 다시 클릭 → 해제)
+    document.getElementById('filterBar').addEventListener('click', e => {
+        const chip = e.target.closest('.filter-chip');
+        if (!chip) return;
+        setOwnerFilter(chip.dataset.name || '');
     });
 
     // 자주가기 링크 모달
