@@ -98,17 +98,13 @@ function normalize() {
             o.focus = !!o.focus;
             // 마감일(D-Day): YYYY-MM-DD 문자열, 없으면 ''
             o.due = (typeof o.due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o.due)) ? o.due : '';
-            // 피드백 기록: 잘함(good)/보완(bad) + 이유 + 기록일 로그
-            o.evals = toArr(o.evals).map(ev => ({
-                id: (ev.id && /^[A-Za-z0-9_-]+$/.test(ev.id)) ? ev.id : newId(),
-                kind: ev.kind === 'bad' ? 'bad' : 'good',
-                text: String(ev.text || ''),
-                date: String(ev.date || '')
-            }));
+            delete o.evals;   // 피드백은 항목이 아니라 인원별 평가 페이지(worklog-eval)에서 관리
             return o;
         });
     });
     delete data.checked;
+    // 인원별 평가(worklog/personEvals)는 worklog-eval.js 전용 — 이 페이지의 저장 대상에서 제외
+    delete data.personEvals;
     data.people = toArr(data.people).map(String).filter(Boolean);
     // 자주가기 링크: 최초 1회만 기본 링크 자동 등록 (모두 지워도 다시 채우지 않음)
     data.links = toArr(data.links)
@@ -199,7 +195,8 @@ async function saveNow() {
     if (!currentUser || !data || saving) return;
     saving = true;
     try {
-        await database.ref(WL_PATH).set(data);
+        // set() 대신 update(): worklog/personEvals(인원별 평가) 하위 경로를 지우지 않기 위함
+        await database.ref(WL_PATH).update(data);
         dirty = false;
         const now = new Date();
         setSaveStat('linked', '저장됨 ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
@@ -214,8 +211,13 @@ async function saveNow() {
 
 async function loadData() {
     setSaveStat('', '불러오는 중...');
-    const snap = await database.ref(WL_PATH).once('value');
-    data = snap.val() || JSON.parse(JSON.stringify(WL_DEFAULT));
+    // worklog 루트 통째 읽기 대신 자식별 읽기 — DB 규칙에서 worklog/personEvals(인원별 평가)만
+    // Root 전용으로 잠글 수 있게 함 (부모 읽기 권한은 자식에 상속되어 루트 읽기로는 분리 불가)
+    const KEYS = ['sections', 'people', 'links', 'linksInit'];
+    const snaps = await Promise.all(KEYS.map(k => database.ref(WL_PATH + '/' + k).once('value')));
+    data = {};
+    KEYS.forEach((k, i) => { const v = snaps[i].val(); if (v != null) data[k] = v; });
+    if (!Object.keys(data).length) data = JSON.parse(JSON.stringify(WL_DEFAULT));
     normalize();
     dirty = false;
     setSaveStat('linked', '동기화됨');
@@ -322,12 +324,6 @@ function render() {
             const dueBadge = dd
                 ? `<span class="due-badge ${it.done ? 'fin' : dd.cls}" title="마감일 ${it.due} (클릭하여 변경)" onclick="openDuePop('${sec.id}','${it.id}',event)">📅 ${dd.label}</span>` : '';
 
-            // 피드백 배지 — 클릭하면 세부 펼쳐서 기록 보기
-            const evGood = it.evals.filter(v => v.kind === 'good').length;
-            const evBad = it.evals.length - evGood;
-            const evalBadge = it.evals.length
-                ? `<span class="eval-badge" title="피드백 ${it.evals.length}건 (클릭하여 보기)" onclick="openEvalLog('${it.id}',event)">👍${evGood} 👎${evBad}</span>` : '';
-
             // 세부영역: 보기 모드(깔끔) / 편집 모드(추가칸·삭제·메모 입력칸 표시)
             const isDE = !!detailEdit[it.id];
             const subsHtml = it.subs.map(s => {
@@ -345,35 +341,13 @@ function render() {
 
             const txtHtml = isEditing('item', it.id)
                 ? editorHtml(it.text)
-                : `<span class="txt" onclick="toggleExpand('${it.id}')">${esc(it.text)}${ownerTag}${dueBadge}${evalBadge}${subBadge}<span class="tcaret">▸</span></span>
+                : `<span class="txt" onclick="toggleExpand('${it.id}')">${esc(it.text)}${ownerTag}${dueBadge}${subBadge}<span class="tcaret">▸</span></span>
                     <span class="item-actions">
                         <button class="mini" title="담당자 지정" onclick="openOwnerPop('${sec.id}','${it.id}',event)">👤</button>
                         <button class="mini" title="마감일(D-Day) 지정" onclick="openDuePop('${sec.id}','${it.id}',event)">📅</button>
                         <button class="mini" title="항목명 수정" onclick="editItem('${sec.id}','${it.id}')">✏️</button>
                         <button class="mini" title="항목 삭제" onclick="deleteItem('${sec.id}','${it.id}')">✕</button>
                     </span>`;
-            // 피드백 기록 로그 (교수님이 잘한 점/보완할 점을 이유와 함께 기록) — 최신이 위
-            const kindSel = evalKind[it.id] === 'bad' ? 'bad' : 'good';
-            const evalRows = it.evals.slice().reverse().map(ev => `
-                <div class="eval-item ${ev.kind}">
-                    <span class="ev-ic">${ev.kind === 'good' ? '👍' : '👎'}</span>
-                    <span class="ev-date">${esc(ev.date)}</span>
-                    <span class="ev-txt">${esc(ev.text)}</span>
-                    <button class="ev-del" title="이 기록 삭제" onclick="delEval('${sec.id}','${it.id}','${ev.id}')">✕</button>
-                </div>`).join('');
-            const evalHtml = `
-                <div class="eval-box">
-                    <div class="eval-head">📋 피드백 기록${it.evals.length ? ` <span class="eval-sum">👍 ${evGood} · 👎 ${evBad}</span>` : ''}</div>
-                    <div class="eval-list">${evalRows || '<div class="eval-empty">아직 기록이 없습니다. 잘한 점 / 보완할 점을 이유와 함께 남겨보세요.</div>'}</div>
-                    <div class="eval-add">
-                        <button class="ev-kind good${kindSel === 'good' ? ' on' : ''}" onclick="setEvalKind('${it.id}','good')">👍 잘함</button>
-                        <button class="ev-kind bad${kindSel === 'bad' ? ' on' : ''}" onclick="setEvalKind('${it.id}','bad')">👎 보완</button>
-                        <input type="text" placeholder="이유 입력 후 Enter (예: 발표 준비가 꼼꼼했음)"
-                            onkeydown="if(event.key==='Enter')addEval('${sec.id}','${it.id}',this)">
-                        <button class="ev-add-btn" onclick="addEval('${sec.id}','${it.id}',this.previousElementSibling)">기록</button>
-                    </div>
-                </div>`;
-
             wrap.innerHTML = `
                 <div class="item${it.done ? ' done' : ''}" draggable="true"
                     ondragstart="dragStart('${sec.id}','${it.id}',event)" ondragend="dragEnd()">
@@ -400,7 +374,6 @@ function render() {
                     : (it.note.trim()
                         ? `<div class="note-view" title="클릭하여 편집" onclick="toggleDetailEdit('${it.id}')">${esc(it.note)}</div>`
                         : (it.subs.length ? '' : `<div class="detail-hint" onclick="toggleDetailEdit('${it.id}')">✏️ 편집을 눌러 세부 항목·메모를 추가하세요</div>`))}
-                    ${evalHtml}
                 </div>`;
             box.appendChild(wrap);
         });
@@ -672,7 +645,7 @@ function deleteSection(sid, e) {
 // ==================== 항목 ====================
 function addItem(sid, inp) {
     const v = inp.value.trim(); if (!v) return;
-    const it = { id: newId(), text: v, owners: [], note: '', subs: [], pct: 0, focus: false, done: false, due: '', evals: [] };
+    const it = { id: newId(), text: v, owners: [], note: '', subs: [], pct: 0, focus: false, done: false, due: '' };
     findSec(sid).items.push(it);
     inp.value = '';
     touch(); render();
@@ -776,40 +749,6 @@ function openDuePop(sid, iid, e) {
         }
         close(); touch(); render();
     }));
-}
-
-// ==================== 피드백 기록 (잘함/보완 + 이유 로그) ====================
-const evalKind = {};   // 항목별 기록 종류 선택 상태 (화면 상태, 저장 안 함)
-
-function setEvalKind(iid, kind) { evalKind[iid] = kind; render(); }
-
-function openEvalLog(iid, e) {
-    e.stopPropagation();
-    expanded[iid] = true;
-    render();
-    const el = board.querySelector(`.item-wrap[data-iid="${iid}"] .eval-box`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function addEval(sid, iid, inp) {
-    const v = inp.value.trim(); if (!v) return;
-    findItem(sid, iid).evals.push({
-        id: newId(),
-        kind: evalKind[iid] === 'bad' ? 'bad' : 'good',
-        text: v,
-        date: todayStr()
-    });
-    touch(); render();
-    const again = board.querySelector(`.item-wrap[data-iid="${iid}"] .eval-add input`);
-    if (again) again.focus();
-}
-
-function delEval(sid, iid, evId) {
-    const it = findItem(sid, iid);
-    const ev = it.evals.find(x => x.id === evId);
-    if (!confirm(`이 피드백 기록을 삭제할까요?\n"${ev ? ev.text : ''}"`)) return;
-    it.evals = it.evals.filter(x => x.id !== evId);
-    touch(); render();
 }
 
 // ==================== 담당자 (미리 등록한 명단에서 클릭 지정) ====================
@@ -1004,6 +943,9 @@ function updateAuthUI() {
     if (userName && currentUser) userName.textContent = currentUser.email;
     if (authGate) authGate.style.display = authed ? 'none' : 'flex';
     if (wlApp) wlApp.style.display = authed ? 'block' : 'none';
+    // 인원별 평가 탭은 Root(admin_kinjecs0) 계정에게만 노출
+    const evalTab = document.getElementById('evalTab');
+    if (evalTab) evalTab.style.display = (currentUser && currentUser.uid === ROOT_UID) ? '' : 'none';
 }
 
 // ==================== 초기화 ====================
