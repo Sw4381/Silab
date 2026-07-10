@@ -26,7 +26,8 @@ const WL_DEFAULT = {
         { emoji: '📁', name: '프로젝트 관리', collapsed: false, color: '#0891b2', items: [] },
         { emoji: '📝', name: '논문/특허', collapsed: false, color: '#d97706', items: [] }
     ],
-    people: []
+    people: [],
+    leaders: []   // 팀장: 팀별 1명씩 = 여러 명 가능, 명단 모달에서 지정 (표시는 fa-user-tie 아이콘)
 };
 
 // ==================== 전역 상태 ====================
@@ -106,6 +107,10 @@ function normalize() {
     // 인원별 평가(worklog/personEvals)는 worklog-eval.js 전용 — 이 페이지의 저장 대상에서 제외
     delete data.personEvals;
     data.people = toArr(data.people).map(String).filter(Boolean);
+    // 팀장(팀별 1명씩 = 여러 명): 명단에 있는 이름만 유효 (명단에서 빠지면 자동 해제)
+    const legacyLeader = (typeof data.leader === 'string' && data.leader) ? [data.leader] : [];   // 구버전 단일 팀장 이관
+    data.leaders = [...new Set(toArr(data.leaders).map(String).concat(legacyLeader))].filter(n => data.people.includes(n));
+    data.leader = null;   // 구버전 키는 다음 저장(update) 때 DB에서도 제거
     // 자주가기 링크: 최초 1회만 기본 링크 자동 등록 (모두 지워도 다시 채우지 않음)
     data.links = toArr(data.links)
         .map(l => ({ label: String((l && l.label) || ''), url: String((l && l.url) || '') }))
@@ -114,6 +119,17 @@ function normalize() {
         if (!data.links.length) data.links = JSON.parse(JSON.stringify(WL_DEFAULT_LINKS));
         data.linksInit = true;
     }
+}
+
+// 팀장이면 이름 앞에 작은 아이콘 (칩 색은 그대로 — esc 처리된 HTML 반환)
+const LEADER_IC = '<i class="fas fa-user-tie leader-ic" title="팀장"></i>';
+function isLeader(name) { return !!(data && data.leaders && data.leaders.includes(name)); }
+function crowned(name) { return (isLeader(name) ? LEADER_IC + ' ' : '') + esc(name); }
+function leaderCls(name) { return isLeader(name) ? ' leader' : ''; }
+// 이름 정렬: '모두' → 팀장 → 나머지 (같은 등급끼리는 원래 순서 유지 — 표시용, 데이터는 안 바꿈)
+function ownerSort(arr) {
+    const rank = n => n === '모두' ? 0 : (isLeader(n) ? 1 : 2);
+    return arr.slice().sort((a, b) => rank(a) - rank(b));
 }
 
 function findSec(sid) { return data.sections.find(s => s.id === sid); }
@@ -213,7 +229,7 @@ async function loadData() {
     setSaveStat('', '불러오는 중...');
     // worklog 루트 통째 읽기 대신 자식별 읽기 — DB 규칙에서 worklog/personEvals(인원별 평가)만
     // Root 전용으로 잠글 수 있게 함 (부모 읽기 권한은 자식에 상속되어 루트 읽기로는 분리 불가)
-    const KEYS = ['sections', 'people', 'links', 'linksInit'];
+    const KEYS = ['sections', 'people', 'leaders', 'leader', 'links', 'linksInit'];   // leader(구버전 단일 팀장)는 이관용
     const snaps = await Promise.all(KEYS.map(k => database.ref(WL_PATH + '/' + k).once('value')));
     data = {};
     KEYS.forEach((k, i) => { const v = snaps[i].val(); if (v != null) data[k] = v; });
@@ -240,7 +256,7 @@ function renderFilter() {
     const names = data.people.filter(p => p !== '모두');
     if (!names.length) { bar.innerHTML = ''; return; }
     const chips = names.map(p =>
-        `<button class="filter-chip${ownerFilter === p ? ' on' : ''}" data-name="${esc(p)}">${esc(p)}</button>`).join('');
+        `<button class="filter-chip${ownerFilter === p ? ' on' : ''}${leaderCls(p)}" data-name="${esc(p)}">${crowned(p)}</button>`).join('');
     bar.innerHTML = `<span class="wl-links-label"><i class="fas fa-filter"></i> 담당자 보기</span>
         <button class="filter-chip all${ownerFilter ? '' : ' on'}" data-name="">전체</button>${chips}
         ${ownerFilter ? `<span class="filter-hint">'${esc(ownerFilter)}' 담당 항목만 표시 중 ('모두' 담당 포함 · 다시 누르면 해제)</span>` : ''}`;
@@ -267,7 +283,7 @@ function render() {
         if (sec.collapsed) {
             const pending = visItems.filter(it => !it.done);
             const rows = pending.map(it => {
-                const owners = it.owners.length ? ` <span class="d-owner">(${esc(it.owners.join('·'))})</span>` : '';
+                const owners = it.owners.length ? ` <span class="d-owner">(${ownerSort(it.owners).map(o => (isLeader(o) ? LEADER_IC : '') + esc(o)).join('·')})</span>` : '';
                 const dd = ddayInfo(it.due);
                 const dueHtml = dd ? `<span class="d-due ${dd.cls}">${dd.label}</span>` : '';
                 return `<div class="digest-row${it.focus ? ' focused' : ''}" title="클릭하면 펼치기" onclick="openFromDigest('${sec.id}','${it.id}',event)">
@@ -313,8 +329,8 @@ function render() {
                 </svg><span class="pct-num">${pct}%</span></div>`;
 
             // 담당자는 이름마다 개별 칩 — 칸을 넘어가면 자동 줄바꿈
-            const ownerTag = it.owners.map(o =>
-                `<span class="owner-tag" title="담당자 변경" onclick="openOwnerPop('${sec.id}','${it.id}',event)">${esc(o)}</span>`).join('');
+            const ownerTag = ownerSort(it.owners).map(o =>
+                `<span class="owner-tag${leaderCls(o)}" title="담당자 변경" onclick="openOwnerPop('${sec.id}','${it.id}',event)">${crowned(o)}</span>`).join('');
             const subDone = it.subs.filter(s => s.done).length;
             const subBadge = it.subs.length
                 ? `<span class="sub-badge${subDone === it.subs.length ? ' all-done' : ''}" title="세부 항목 ${subDone}/${it.subs.length} 완료">☑ ${subDone}/${it.subs.length}</span>` : '';
@@ -764,17 +780,18 @@ function openOwnerPop(sid, iid, e) {
     pop.onclick = ev => ev.stopPropagation();
 
     function chipsHtml() {
-        // '모두'는 명단과 무관하게 항상 맨 앞에 제공
+        // '모두'는 명단과 무관하게 항상 맨 앞, 그 다음 팀장들, 나머지 순
         const ppl = ['모두'].concat(
-            data.people.filter(p => p !== '모두'),
+            ownerSort(data.people.filter(p => p !== '모두')),
             newPeople.filter(p => data.people.indexOf(p) < 0 && p !== '모두'));
         return ppl.map(p =>
-            `<button class="owner-chip${pending.includes(p) ? ' on' : ''}" data-name="${esc(p)}">${esc(p)}</button>`).join('') +
+            `<button class="owner-chip${pending.includes(p) ? ' on' : ''}${leaderCls(p)}" data-name="${esc(p)}">${crowned(p)}</button>`).join('') +
             (data.people.length ? '' : '<div class="owner-pop-empty" style="margin-top:6px;">개인 이름은 \'명단 편집\'에서 등록하세요.</div>');
     }
     pop.innerHTML = `
         <div class="owner-pop-head">담당자 지정 <span style="font-weight:400;color:#6b7280;">(클릭으로 선택 후 확인)</span></div>
         <div class="owner-chips">${chipsHtml()}</div>
+        ${data.leaders.length ? `<div class="owner-pop-note">${LEADER_IC} 담당자에는 팀장이 1명 이상 포함되어야 합니다.</div>` : ''}
         <div class="owner-pop-foot">
             <input type="text" placeholder="직접 입력 후 Enter">
             <button title="목록에 추가">+</button>
@@ -809,6 +826,11 @@ function openOwnerPop(sid, iid, e) {
 
     pop.querySelector('.op-cancel').addEventListener('click', () => close());
     pop.querySelector('.op-ok').addEventListener('click', () => {
+        // 팀장 1명 이상 필수 (예외: 담당자를 전부 비우거나 '모두'로 지정) — 팝업을 유지해 팀장을 고르게 함
+        if (data.leaders.length && pending.length && !pending.includes('모두') && !pending.some(p => data.leaders.includes(p))) {
+            wlAlert('담당자에는 팀장이 1명 이상 포함되어야 합니다.', 'error');
+            return;
+        }
         it.owners = pending;
         newPeople.forEach(p => { if (!data.people.includes(p)) data.people.push(p); });
         close();
@@ -818,14 +840,30 @@ function openOwnerPop(sid, iid, e) {
 }
 
 // ----- 명단 편집 모달 -----
+let pendingLeaders = [];   // 모달 안 팀장 선택 상태 (복수 가능, [저장] 전에는 반영 안 함)
+
+// 팀장 지정 칩 — 텍스트영역의 현재 명단과 실시간 동기화
+function renderLeaderChips() {
+    const box = document.getElementById('leaderChips');
+    if (!box) return;
+    const names = [...new Set(document.getElementById('peopleArea').value
+        .split(/\r?\n/).map(s => s.trim()).filter(Boolean))];
+    pendingLeaders = pendingLeaders.filter(n => names.includes(n));
+    box.innerHTML = names.length
+        ? names.map(p => `<button type="button" class="l-chip${pendingLeaders.includes(p) ? ' on' : ''}" data-name="${esc(p)}">${pendingLeaders.includes(p) ? LEADER_IC + ' ' : ''}${esc(p)}</button>`).join('')
+        : '<span class="l-empty">위에 명단을 먼저 입력하세요.</span>';
+}
 function openPeopleModal() {
     document.getElementById('peopleArea').value = data.people.join('\n');
+    pendingLeaders = (data.leaders || []).slice();
+    renderLeaderChips();
     document.getElementById('peopleModal').classList.add('open');
 }
 function closePeopleModal() { document.getElementById('peopleModal').classList.remove('open'); }
 function savePeople() {
     const lines = document.getElementById('peopleArea').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     data.people = [...new Set(lines)];
+    data.leaders = pendingLeaders.filter(n => data.people.includes(n));
     touch(); closePeopleModal(); render();
     wlAlert('담당자 명단이 저장되었습니다.', 'success');
 }
@@ -846,6 +884,7 @@ async function loadMembersToPeople() {
         const area = document.getElementById('peopleArea');
         const cur = area.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
         area.value = [...new Set([...cur, ...names])].join('\n');
+        renderLeaderChips();
         wlAlert(names.length + '명을 불러왔습니다. 저장을 눌러 반영하세요.', 'success');
     } catch (err) {
         wlAlert('멤버 불러오기 실패: ' + err.message, 'error');
@@ -1040,6 +1079,14 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('peopleSaveBtn').addEventListener('click', savePeople);
     document.getElementById('loadMembersBtn').addEventListener('click', loadMembersToPeople);
     document.getElementById('peopleModal').addEventListener('click', e => { if (e.target === e.currentTarget) closePeopleModal(); });
+    // 팀장 지정: 명단 입력이 바뀌면 칩 갱신, 칩 클릭으로 지정/해제 (팀별 1명씩 = 여러 명 선택 가능)
+    document.getElementById('peopleArea').addEventListener('input', renderLeaderChips);
+    document.getElementById('leaderChips').addEventListener('click', e => {
+        const chip = e.target.closest('.l-chip'); if (!chip) return;
+        const name = chip.dataset.name;
+        pendingLeaders = pendingLeaders.includes(name) ? pendingLeaders.filter(n => n !== name) : pendingLeaders.concat(name);
+        renderLeaderChips();
+    });
 
     // 저장 전에 떠나면 경고
     window.addEventListener('beforeunload', e => {

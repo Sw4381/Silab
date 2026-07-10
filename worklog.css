@@ -155,6 +155,10 @@
 }
 .owner-tag:hover { background: #e0e7ff; }
 
+/* 팀장 — 칩 색은 다른 이름과 동일, 이름 앞 작은 아이콘(fa-user-tie)으로만 구분 */
+.leader-ic { font-size: .82em; opacity: .75; }
+.owner-pop-note { font-size: 12.5px; color: var(--wl-sub); margin-top: 8px; line-height: 1.5; }
+
 /* 마감일(D-Day) 배지 — 임박(3일 이내) 주황, 지남 빨강, 완료 회색 */
 .due-badge {
     display: inline-block; font-size: 12.5px; font-weight: 800; color: var(--wl-sub); background: #f3f4f6;
@@ -380,6 +384,7 @@
 .eval-card .ep-ic { font-size: 19px; flex-shrink: 0; }
 .eval-card .ep-name { font-size: 18.5px; font-weight: 800; color: var(--wl-ink); min-width: 0; word-break: break-word; margin-right: auto; }
 .eval-card .ep-out { font-size: 11.5px; font-weight: 700; color: #9ca3af; background: #f3f4f6; border-radius: 7px; padding: 2px 7px; flex-shrink: 0; }
+.eval-card .ep-leader { font-size: 11.5px; font-weight: 700; color: var(--wl-accent); background: var(--wl-accent-soft); border-radius: 7px; padding: 2px 7px; vertical-align: 2px; margin-left: 4px; }
 .eval-card .ep-cnt { font-size: 13px; font-weight: 800; color: #4b5563; background: #f3f4f6; padding: 3px 10px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
 .eval-card .ep-cnt.none { color: #b6bcc6; }
 .eval-card .eval-person-body { padding: 4px 15px 14px; }
@@ -440,4 +445,17 @@
 .wl-modal-hint { font-size: 13.5px; color: var(--wl-sub); margin-bottom: 12px; line-height: 1.6; }
 #peopleArea { width: 100%; border: 1.5px solid var(--wl-line); border-radius: 9px; padding: 10px 12px; font-size: 15px; line-height: 1.7; font-family: inherit; resize: vertical; box-sizing: border-box; }
 #peopleArea:focus { outline: none; border-color: var(--wl-accent); }
+
+/* 명단 모달 — 팀장 지정 칩 */
+.leader-box { margin-top: 13px; }
+.leader-label { font-size: 13.5px; font-weight: 800; color: var(--wl-ink); margin-bottom: 7px; }
+.leader-label span { font-weight: 400; color: var(--wl-sub); }
+.leader-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.leader-chips .l-chip {
+    border: 1.5px solid var(--wl-line); background: var(--wl-card); color: var(--wl-ink);
+    border-radius: 16px; font-size: 14px; font-weight: 700; padding: 4px 13px; cursor: pointer; font-family: inherit;
+}
+.leader-chips .l-chip:hover { border-color: var(--wl-accent); color: var(--wl-accent); }
+.leader-chips .l-chip.on { background: var(--wl-accent); border-color: var(--wl-accent); color: #fff; }
+.leader-chips .l-empty { font-size: 13px; color: #9ca3af; }
 .wl-modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 14px; }

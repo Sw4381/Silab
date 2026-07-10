@@ -15,6 +15,7 @@ let auth, database;
 let currentUser = null;   // Root 계정으로 로그인한 경우만 세팅
 let headerUser = null;    // 헤더 표시용 (Root가 아니어도 사이트 관리자면 로그인 상태 유지)
 let people = [];      // 담당자 명단 (업무 보드에서 관리, 여기서는 읽기만)
+let leaders = [];     // 팀장(복수) — worklog/leaders, 업무 보드의 명단 모달에서 지정
 let evals = [];       // [{id, name, kind: 'good'|'bad', text, date}]
 let personList = [];  // 렌더 순서 고정용 (명단 + 명단 외 기록 보유자)
 let dirty = false;
@@ -86,11 +87,15 @@ async function saveNow() {
 
 async function loadData() {
     setSaveStat('', '불러오는 중...');
-    const [ps, es] = await Promise.all([
+    const [ps, es, ls, lsOld] = await Promise.all([
         database.ref(PEOPLE_PATH).once('value'),
-        database.ref(EV_PATH).once('value')
+        database.ref(EV_PATH).once('value'),
+        database.ref('worklog/leaders').once('value'),
+        database.ref('worklog/leader').once('value')   // 구버전 단일 팀장 (이관 전 호환)
     ]);
     people = toArr(ps.val()).map(String).filter(Boolean);
+    leaders = toArr(ls.val()).map(String).filter(n => people.includes(n));
+    if (!leaders.length && typeof lsOld.val() === 'string' && people.includes(lsOld.val())) leaders = [lsOld.val()];
     evals = toArr(es.val()).map(ev => ({
         id: (ev && ev.id && /^[A-Za-z0-9_-]+$/.test(ev.id)) ? ev.id : newId(),
         name: String((ev && ev.name) || ''),
@@ -142,7 +147,7 @@ function render() {
         <div class="wl-section eval-card" data-pi="${i}" style="--sec-color:${EV_PALETTE[i % EV_PALETTE.length]}">
             <div class="eval-person-head">
                 <span class="ep-ic">👤</span>
-                <span class="ep-name">${esc(name)}</span>
+                <span class="ep-name">${esc(name)}${leaders.includes(name) ? ' <span class="ep-leader"><i class="fas fa-user-tie"></i> 팀장</span>' : ''}</span>
                 ${people.includes(name) ? '' : '<span class="ep-out" title="담당자 명단에는 없지만 기록이 남아있는 인원">명단 외</span>'}
                 <span class="ep-cnt${list.length ? '' : ' none'}">👍 ${g} · 👎 ${b}</span>
                 <button class="eval-add-open${isOpen ? ' on' : ''}" onclick="evToggleForm(${i})">${isOpen ? '✕ 닫기' : '＋ 기록'}</button>
