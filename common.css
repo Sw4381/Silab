@@ -112,6 +112,61 @@ body {
     transform: none;
 }
 
+/* ==================== 업무관리 드롭다운 (로그인 전용) ==================== */
+.nav-drop {
+    position: relative;
+}
+
+.nav-drop-btn {
+    display: inline-block;
+}
+
+.nav-drop-caret {
+    font-size: 0.75em;
+    margin-left: 2px;
+    opacity: 0.85;
+}
+
+.nav-drop-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 175px;
+    padding: 8px;
+    margin-top: 6px;
+    background: linear-gradient(135deg, #1a3462 0%, #24488c 100%);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 1100;
+}
+
+/* 버튼과 메뉴 사이 6px 틈에서 hover가 끊기지 않도록 투명 다리 */
+.nav-drop-menu::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 0;
+    right: 0;
+    height: 6px;
+}
+
+.nav-drop:hover .nav-drop-menu,
+.nav-drop:focus-within .nav-drop-menu {
+    display: flex;
+}
+
+.nav-drop-menu a {
+    background: transparent;
+}
+
+.nav-drop-menu a:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: none;
+}
+
 .logo-picture {
     width: 200px;
     height: auto;
@@ -501,6 +556,34 @@ footer a:hover {
         padding: 8px 14px;
         width: 100%;
         text-align: left;
+    }
+
+    /* 모바일: 드롭다운 대신 항상 펼친 하위 목록 */
+    .nav-drop {
+        width: 100%;
+    }
+
+    .nav-drop-btn {
+        display: block;
+        width: 100%;
+    }
+
+    .nav-drop-caret {
+        display: none;
+    }
+
+    .nav-drop-menu {
+        display: flex;
+        position: static;
+        min-width: 0;
+        margin: 4px 0 0 18px;
+        padding: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .nav-drop-menu::before {
+        display: none;
     }
 
     .auth-section {

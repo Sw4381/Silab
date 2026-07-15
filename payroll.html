@@ -6,7 +6,7 @@
     <title>보안 지능 연구실 - 학생 인건비 관리</title>
     <link rel="icon" href="./image.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="common.css?v=30">
+    <link rel="stylesheet" href="common.css?v=31">
     <link rel="stylesheet" href="photo.css?v=30">
     <link rel="stylesheet" href="performance.css?v=30">
     <link rel="stylesheet" href="payroll.css?v=30">
@@ -34,9 +34,15 @@
             <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
             <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
             <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
-            <a href="./performance.html" class="nav-perf" style="display:none;"><i class="fas fa-chart-line"></i> Performance</a>
-            <a href="./budget.html" class="nav-perf" style="display:none;"><i class="fas fa-coins"></i> 예산</a>
-            <a href="./worklog.html" class="nav-perf" style="display:none;"><i class="fas fa-tasks"></i> 업무관리</a>
+            <div class="nav-drop nav-perf" style="display:none;">
+                <a href="./worklog.html" class="nav-drop-btn"><i class="fas fa-tasks"></i> 업무관리 <i class="fas fa-caret-down nav-drop-caret"></i></a>
+                <div class="nav-drop-menu">
+                    <a href="./worklog.html"><i class="fas fa-clipboard-list"></i> 업무보드</a>
+                    <a href="./worklog-eval.html"><i class="fas fa-user-check"></i> 개인별 평가</a>
+                    <a href="./performance.html"><i class="fas fa-chart-line"></i> Performance</a>
+                    <a href="./budget.html"><i class="fas fa-coins"></i> 예산관리</a>
+                </div>
+            </div>
         </nav>
 
         <div class="auth-section">
@@ -282,7 +288,7 @@
 
     <!-- JavaScript -->
     <script src="config.js?v=30"></script>
-    <script src="common.js?v=34"></script>
+    <script src="common.js?v=35"></script>
     <script src="payroll.js?v=31"></script>
 </body>
 </html>

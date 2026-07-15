@@ -1,10 +1,11 @@
-// worklog-eval.js - 인원별 평가 (로그인 전용)
+// worklog-eval.js - 개인별 평가 (로그인 전용)
 // 업무관리의 자매 페이지: 담당자 명단(worklog/people)의 인원마다 잘함/보완 피드백을 이유와 함께 로그로 기록.
 // 저장은 worklog/personEvals 경로만 사용 — 업무 보드(worklog.js)는 update() 저장이라 이 경로를 건드리지 않음.
 // 설정값은 config.js 참조 (firebaseConfig, ADMIN_UID, ROOT_UID)
 
 // ==================== 상수 ====================
-const EV_ALLOWED = [ROOT_UID];              // 인원별 평가는 Root(admin_kinjecs0) 계정 전용
+const EV_VIEW = [ADMIN_UID, ROOT_UID];      // 열람 가능 계정 (일반 관리자는 읽기 전용)
+const EV_EDIT = [ROOT_UID];                 // 기록/삭제는 Root(admin_kinjecs0) 계정 전용
 const WL_SITE_UIDS = [ADMIN_UID, ROOT_UID]; // 사이트 관리자 목록 (여기 없는 계정은 로그아웃 처리)
 const EV_PATH = 'worklog/personEvals';
 const PEOPLE_PATH = 'worklog/people';
@@ -12,8 +13,9 @@ const EV_PALETTE = ['#4f46e5', '#059669', '#dc2626', '#d97706', '#0891b2', '#7c3
 
 // ==================== 전역 상태 ====================
 let auth, database;
-let currentUser = null;   // Root 계정으로 로그인한 경우만 세팅
-let headerUser = null;    // 헤더 표시용 (Root가 아니어도 사이트 관리자면 로그인 상태 유지)
+let currentUser = null;   // 열람 허용 계정(EV_VIEW)으로 로그인한 경우만 세팅
+let canEdit = false;      // Root(EV_EDIT)만 true — false면 읽기 전용 (기록/삭제 UI 숨김)
+let headerUser = null;    // 헤더 표시용 (열람 권한이 없어도 사이트 관리자면 로그인 상태 유지)
 let people = [];      // 담당자 명단 (업무 보드에서 관리, 여기서는 읽기만)
 let leaders = [];     // 팀장(복수) — worklog/leaders, 업무 보드의 명단 모달에서 지정
 let evals = [];       // [{id, name, kind: 'good'|'bad', text, date}]
@@ -69,7 +71,7 @@ function touch() {
 }
 
 async function saveNow() {
-    if (!currentUser || saving) return;
+    if (!currentUser || !canEdit || saving) return;
     saving = true;
     try {
         await database.ref(EV_PATH).set(evals);
@@ -133,9 +135,9 @@ function render() {
                 <span class="ev-ic">${ev.kind === 'good' ? '👍' : '👎'}</span>
                 <span class="ev-date">${esc(ev.date)}</span>
                 <span class="ev-txt">${esc(ev.text)}</span>
-                <button class="ev-del" title="이 기록 삭제" onclick="evDel('${ev.id}')">✕</button>
+                ${canEdit ? `<button class="ev-del" title="이 기록 삭제" onclick="evDel('${ev.id}')">✕</button>` : ''}
             </div>`).join('');
-        const formHtml = isOpen ? `
+        const formHtml = (canEdit && isOpen) ? `
             <div class="eval-add">
                 <button class="ev-kind good${k === 'good' ? ' on' : ''}" onclick="evSetKind(${i},'good')">👍 잘함</button>
                 <button class="ev-kind bad${k === 'bad' ? ' on' : ''}" onclick="evSetKind(${i},'bad')">👎 보완</button>
@@ -150,18 +152,19 @@ function render() {
                 <span class="ep-name">${esc(name)}${leaders.includes(name) ? ' <span class="ep-leader"><i class="fas fa-user-tie"></i> 팀장</span>' : ''}</span>
                 ${people.includes(name) ? '' : '<span class="ep-out" title="담당자 명단에는 없지만 기록이 남아있는 인원">명단 외</span>'}
                 <span class="ep-cnt${list.length ? '' : ' none'}">👍 ${g} · 👎 ${b}</span>
-                <button class="eval-add-open${isOpen ? ' on' : ''}" onclick="evToggleForm(${i})">${isOpen ? '✕ 닫기' : '＋ 기록'}</button>
+                ${canEdit ? `<button class="eval-add-open${isOpen ? ' on' : ''}" onclick="evToggleForm(${i})">${isOpen ? '✕ 닫기' : '＋ 기록'}</button>` : ''}
             </div>
             <div class="eval-person-body">
                 ${formHtml}
-                <div class="eval-list">${rows || (isOpen ? '' : '<div class="eval-empty">아직 기록이 없습니다. [＋ 기록]으로 잘한 점 / 보완할 점을 남겨보세요.</div>')}</div>
+                <div class="eval-list">${rows || (isOpen ? '' : `<div class="eval-empty">${canEdit ? '아직 기록이 없습니다. [＋ 기록]으로 잘한 점 / 보완할 점을 남겨보세요.' : '아직 기록이 없습니다.'}</div>`)}</div>
             </div>
         </div>`;
     }).join('');
 }
 
-// ==================== 기록 (잘함/보완 + 이유) ====================
+// ==================== 기록 (잘함/보완 + 이유, Root 전용) ====================
 function evToggleForm(i) {
+    if (!canEdit) return;
     if (formOpen[i]) delete formOpen[i];
     else formOpen[i] = true;
     render();
@@ -179,6 +182,7 @@ function evSetKind(i, kind) {
 }
 
 function evAdd(i, inp) {
+    if (!canEdit) return;
     const v = inp.value.trim(); if (!v) return;
     evals.push({
         id: newId(),
@@ -192,6 +196,7 @@ function evAdd(i, inp) {
 }
 
 function evDel(id) {
+    if (!canEdit) return;
     const ev = evals.find(x => x.id === id);
     if (!confirm(`이 기록을 삭제할까요?\n"${ev ? ev.text : ''}"`)) return;
     evals = evals.filter(x => x.id !== id);
@@ -211,7 +216,7 @@ async function loginUser(email, password) {
 }
 
 function updateAuthUI() {
-    // 헤더는 로그인 여부(headerUser), 본문 게이트는 Root 여부(currentUser)로 판단
+    // 헤더는 로그인 여부(headerUser), 본문 게이트는 열람 권한(currentUser)으로 판단
     const signedIn = !!headerUser;
     const authed = !!currentUser;
     const loginBtn = document.getElementById('loginBtn');
@@ -226,8 +231,15 @@ function updateAuthUI() {
     if (evApp) evApp.style.display = authed ? 'block' : 'none';
     const gateMsg = document.getElementById('gateMsg');
     if (gateMsg) gateMsg.textContent = signedIn && !authed
-        ? '현재 계정으로는 볼 수 없습니다. 이 페이지는 Root 관리자 계정 전용입니다.'
-        : '이 페이지는 Root 관리자 계정으로 로그인해야 볼 수 있습니다.';
+        ? '현재 계정으로는 볼 수 없습니다. 이 페이지는 관리자 계정 전용입니다.'
+        : '이 페이지는 관리자 계정으로 로그인해야 볼 수 있습니다.';
+    // 읽기 전용 안내 + 저장 상태 표시는 편집 권한이 있을 때만 의미가 있음
+    const hint = document.querySelector('.ev-hint');
+    if (hint) hint.textContent = canEdit
+        ? '인원 명단은 업무 보드의 [담당자 명단]에서 관리합니다.'
+        : '읽기 전용 페이지입니다. 기록 추가/삭제는 Root 계정만 가능합니다.';
+    const saveStat = document.getElementById('saveStat');
+    if (saveStat) saveStat.style.display = canEdit ? '' : 'none';
 }
 
 // ==================== 초기화 ====================
@@ -247,7 +259,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     auth.onAuthStateChanged(async (user) => {
         headerUser = user || null;
-        currentUser = (user && EV_ALLOWED.includes(user.uid)) ? user : null;
+        currentUser = (user && EV_VIEW.includes(user.uid)) ? user : null;
+        canEdit = !!(user && EV_EDIT.includes(user.uid));
         // 사이트 관리자가 아닌 계정만 로그아웃 처리 (일반 관리자는 다른 페이지를 쓸 수 있으므로 유지)
         if (user && WL_SITE_UIDS.indexOf(user.uid) < 0) { headerUser = null; await auth.signOut(); }
         updateAuthUI();

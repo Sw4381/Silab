@@ -982,9 +982,9 @@ function updateAuthUI() {
     if (userName && currentUser) userName.textContent = currentUser.email;
     if (authGate) authGate.style.display = authed ? 'none' : 'flex';
     if (wlApp) wlApp.style.display = authed ? 'block' : 'none';
-    // 인원별 평가 탭은 Root(admin_kinjecs0) 계정에게만 노출
+    // 개인별 평가 탭: 관리자 모두에게 노출 (일반 관리자는 읽기 전용, 기록/삭제는 Root만)
     const evalTab = document.getElementById('evalTab');
-    if (evalTab) evalTab.style.display = (currentUser && currentUser.uid === ROOT_UID) ? '' : 'none';
+    if (evalTab) evalTab.style.display = authed ? '' : 'none';
 }
 
 // ==================== 초기화 ====================
