@@ -774,6 +774,8 @@ function openOwnerPop(sid, iid, e) {
     const it = findItem(sid, iid);
     let pending = it.owners.slice();   // [확인]을 누르기 전에는 반영하지 않음
     const newPeople = [];              // 직접 입력한 이름 — 확인 시 명단에도 등록
+    // 팀장 1명 이상 필수는 'Lab 연구논의' 카테고리에서만 적용 (다른 카테고리는 자유 지정)
+    const leaderRequired = data.leaders.length && (findSec(sid).name || '').includes('연구논의');
 
     const pop = document.createElement('div');
     pop.className = 'owner-pop';
@@ -791,7 +793,7 @@ function openOwnerPop(sid, iid, e) {
     pop.innerHTML = `
         <div class="owner-pop-head">담당자 지정 <span style="font-weight:400;color:#6b7280;">(클릭으로 선택 후 확인)</span></div>
         <div class="owner-chips">${chipsHtml()}</div>
-        ${data.leaders.length ? `<div class="owner-pop-note">${LEADER_IC} 담당자에는 팀장이 1명 이상 포함되어야 합니다.</div>` : ''}
+        ${leaderRequired ? `<div class="owner-pop-note">${LEADER_IC} 이 카테고리의 담당자에는 팀장이 1명 이상 포함되어야 합니다.</div>` : ''}
         <div class="owner-pop-foot">
             <input type="text" placeholder="직접 입력 후 Enter">
             <button title="목록에 추가">+</button>
@@ -826,9 +828,9 @@ function openOwnerPop(sid, iid, e) {
 
     pop.querySelector('.op-cancel').addEventListener('click', () => close());
     pop.querySelector('.op-ok').addEventListener('click', () => {
-        // 팀장 1명 이상 필수 (예외: 담당자를 전부 비우거나 '모두'로 지정) — 팝업을 유지해 팀장을 고르게 함
-        if (data.leaders.length && pending.length && !pending.includes('모두') && !pending.some(p => data.leaders.includes(p))) {
-            wlAlert('담당자에는 팀장이 1명 이상 포함되어야 합니다.', 'error');
+        // 팀장 1명 이상 필수 — 'Lab 연구논의' 카테고리만 (예외: 담당자를 전부 비우거나 '모두'로 지정) — 팝업을 유지해 팀장을 고르게 함
+        if (leaderRequired && pending.length && !pending.includes('모두') && !pending.some(p => data.leaders.includes(p))) {
+            wlAlert('이 카테고리의 담당자에는 팀장이 1명 이상 포함되어야 합니다.', 'error');
             return;
         }
         it.owners = pending;
