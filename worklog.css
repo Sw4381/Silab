@@ -395,6 +395,32 @@
 }
 .ev-none a { color: var(--wl-accent); font-weight: 800; }
 
+/* ===== 근태 관리 페이지 (worklog-attend): 월별 항목 카드 + 자유 텍스트박스 ===== */
+.at-card .at-head { display: flex; align-items: center; gap: 9px; padding: 14px 15px 6px; }
+.at-card .at-ic { font-size: 19px; flex-shrink: 0; }
+.at-card .at-title { font-size: 18.5px; font-weight: 800; color: var(--wl-ink); min-width: 0; word-break: break-word; margin-right: auto; }
+.at-card .at-title-inp {
+    flex: 1; min-width: 0; border: 1.5px solid var(--wl-accent); border-radius: 8px;
+    padding: 7px 10px; font-size: 16px; font-weight: 700; font-family: inherit; color: var(--wl-ink);
+}
+.at-card .at-title-inp:focus { outline: none; }
+.at-card .at-del { border: none; background: none; color: var(--wl-sub); cursor: pointer; font-size: 13px; padding: 2px 6px; border-radius: 5px; flex-shrink: 0; }
+.at-card .at-del:hover { background: #fee2e2; color: #dc2626; }
+.at-card .at-body { padding: 4px 15px 14px; }
+.at-note {
+    background: #fbfcfc; border: 1.5px solid var(--wl-line); border-radius: 9px;
+    padding: 10px 12px; font-size: 15px; line-height: 1.75; color: #374151;
+    white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+}
+.at-note.empty { color: #a8b0bc; font-size: 13.5px; }
+.at-area {
+    width: 100%; min-height: 110px; border: 1.5px solid var(--wl-line); border-radius: 9px;
+    padding: 10px 12px; font-size: 15px; line-height: 1.75; font-family: inherit; color: #374151;
+    background: #fff; resize: vertical; box-sizing: border-box;
+}
+.at-area:focus { outline: none; border-color: var(--wl-accent); }
+.at-actions { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; }
+
 /* 항목 추가 줄 */
 .add-row { display: flex; gap: 6px; padding: 8px 6px 2px; }
 .add-row input { flex: 1; min-width: 0; border: 1px solid var(--wl-line); border-radius: 7px; padding: 8px 11px; font-size: 15px; font-family: inherit; }
