@@ -13,10 +13,7 @@
 // (운영만 남기려면 아래에서 'null'과 localhost 항목을 지우면 된다)
 const ALLOWED_ORIGINS = [
     'https://silab.ai.kr',
-    'https://www.silab.ai.kr',
-    'http://localhost:5500',
-    'http://127.0.0.1:5500',
-    'null',
+    'https://www.silab.ai.kr'
 ];
 
 const CACHE_TTL = 300;   // 같은 검색어 반복 호출 시 5분간 에지 캐시 (네이버 쿼터 절약)

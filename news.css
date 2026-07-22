@@ -164,15 +164,17 @@
     color: #721c24;
 }
 
-/* ==================== 뉴스 카드 목록 ==================== */
+/* ==================== 뉴스 카드 목록 (그리드) ==================== */
 .news-results {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+    align-items: stretch;
 }
 
 .news-card {
-    display: block;
+    display: flex;
+    flex-direction: column;
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -207,7 +209,7 @@
     line-height: 1.6;
     margin-bottom: 10px;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -223,6 +225,7 @@
     gap: 12px;
     font-size: 0.8rem;
     color: #98a2ad;
+    margin-top: auto;   /* 그리드에서 카드 높이가 달라도 메타줄은 바닥 정렬 */
 }
 
 .news-card-press {
@@ -235,6 +238,7 @@
 
 /* 로딩 스피너 */
 .news-loading {
+    grid-column: 1 / -1;
     text-align: center;
     padding: 40px 0;
     color: #98a2ad;
@@ -248,6 +252,7 @@
 
 /* 빈 결과 */
 .news-empty {
+    grid-column: 1 / -1;
     text-align: center;
     padding: 50px 0;
     color: #98a2ad;
@@ -288,6 +293,28 @@
 .news-more-btn:disabled {
     opacity: 0.5;
     cursor: default;
+}
+
+/* ==================== 로그인 안내 (비로그인) ==================== */
+.news-login-notice {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
+    color: #778;
+}
+
+.news-login-notice i {
+    display: block;
+    font-size: 2.2rem;
+    margin-bottom: 16px;
+    color: #cfd8e0;
+}
+
+.news-login-notice p {
+    font-size: 1rem;
+    line-height: 1.7;
 }
 
 /* ==================== 반응형 ==================== */

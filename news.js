@@ -6,10 +6,11 @@
 // ⚠ Worker 배포 후 발급되는 주소로 교체할 것 (예: 'https://silab-news.xxxx.workers.dev')
 var NEWS_PROXY_URL = 'https://floral-river-472f.dltjs5621.workers.dev';
 
-// Firebase(news/keywords)에서 못 읽을 때 쓰는 기본 키워드 채널
-var DEFAULT_KEYWORDS = ['침해사고', '랜섬웨어', '제로데이', 'AI 보안', '개인정보 유출', 'APT 공격'];
+// Firebase(news/keywords)에서 못 읽을 때 쓰는 기본 키워드 채널 — 연구주제(LLM 보안,
+// Agentic AI 레드티밍, 엔드포인트/TTP 분석, SOC 오탐 감소)에 맞춘 검색어
+var DEFAULT_KEYWORDS = ['LLM 보안', 'AI 에이전트 보안', '프롬프트 인젝션', 'AI 레드팀', '보안관제', '엔드포인트 보안', '위협 인텔리전스', 'APT 공격', '침해사고'];
 
-var PAGE_SIZE = 20;        // 한 번에 가져올 기사 수 (네이버 최대 100)
+var PAGE_SIZE = 24;        // 한 번에 가져올 기사 수 (네이버 최대 100)
 var MAX_START = 1000;      // 네이버 API가 허용하는 시작 위치 상한
 
 // ==================== 전역 상태 ====================
@@ -209,6 +210,7 @@ function loginUser(email, password) {
 }
 
 function updateAuthUI() {
+    // 로그인 전용 페이지: 관리자 계정(일반/Root)으로 로그인해야 내용이 보인다 (worklog와 동일 기준)
     var isAdmin = !!(currentUser && (currentUser.uid === ADMIN_UID || currentUser.uid === ROOT_UID));
     var loginBtn = document.getElementById('loginBtn');
     var logoutBtn = document.getElementById('logoutBtn');
@@ -225,6 +227,8 @@ function updateAuthUI() {
         userInfo.style.display = 'none';
     }
     document.getElementById('newsAdminPanel').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('newsContent').style.display = isAdmin ? '' : 'none';
+    document.getElementById('newsLoginNotice').style.display = isAdmin ? 'none' : '';
 }
 
 // ==================== 초기화 ====================
