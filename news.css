@@ -317,6 +317,110 @@
     line-height: 1.7;
 }
 
+/* ==================== 로그인 모달 (common.css 미포함분 — 없으면 폼이 페이지 상단에 그대로 노출됨) ==================== */
+.login-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.login-modal-content {
+    background: #fff;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+}
+
+.login-form h2 { color: #005792; text-align: center; margin-bottom: 22px; }
+.login-modal .form-group { margin-bottom: 18px; }
+.login-modal label { display: block; margin-bottom: 6px; color: #555; font-weight: bold; font-size: 14px; }
+.login-modal input {
+    width: 100%; padding: 10px 12px; border: 2px solid #ddd;
+    border-radius: 6px; font-size: 14px; box-sizing: border-box;
+}
+.login-modal input:focus { outline: none; border-color: #4facfe; }
+.login-submit {
+    width: 100%; background: #4facfe; color: #fff; border: none;
+    padding: 12px; border-radius: 8px; font-size: 16px; cursor: pointer;
+}
+.login-submit:hover { background: #005792; }
+.login-close { position: absolute; top: 15px; right: 20px; font-size: 28px; color: #aaa; cursor: pointer; }
+.login-close:hover { color: #005792; }
+.login-help { text-align: center; margin-top: 15px; font-size: 0.9em; color: #666; }
+
+/* ==================== 관리자 패널 / 모달 버튼 (common.css 미포함분) ==================== */
+.admin-panel {
+    background: white;
+    padding: 10px 20px 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-top: 3px solid #24488c;
+}
+
+.admin-panel h3 {
+    color: #162d55;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.admin-btn {
+    background: linear-gradient(135deg, #162d55 0%, #24488c 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    white-space: nowrap;
+}
+
+.submit-btn, .cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.submit-btn {
+    background: #005792;
+    color: white;
+}
+
+.submit-btn:hover { background: #003d6b; }
+
+.cancel-btn {
+    background: #f0f2f5;
+    color: #555;
+    border: 1px solid #dde2ea;
+}
+
+.cancel-btn:hover { background: #e2e6ed; }
+
 /* ==================== 반응형 ==================== */
 @media (max-width: 768px) {
     .page-header h1 {
