@@ -32,6 +32,8 @@ Silab/
 ├── projects.html / projects.css / projects.js # 프로젝트 목록
 ├── Publication.html / Publication.css / Publication.js # 논문 목록
 ├── photo.html / photo.css / photo.js       # 기타 활동 사진
+├── news.html / news.css / news.js           # 보안 뉴스 검색 (네이버 API, Worker 중계)
+├── worker/news-proxy.js + README.md         # Cloudflare Worker 프록시 (네이버 키 보관, 배포 가이드)
 ├── common.css                               # 공통 스타일 (헤더, 푸터, 모달 등)
 ├── styles.css                               # 전역 기본 스타일
 ├── batch_upload.html                        # 관리자용 일괄 업로드 도구
@@ -49,6 +51,7 @@ Silab/
 - **projects**: 연구과제/프로젝트 목록 (연도별)
 - **Publication**: 논문 목록 (SCI/KCI 등 구분)
 - **photo**: 워크숍, 학회 등 활동 사진 갤러리
+- **news** (보안 뉴스 검색): 네이버 뉴스 검색 API 기반 뉴스 검색(공개 페이지). GitHub Pages는 정적이라 네이버 API 직접 호출 불가(CORS + Secret 노출) → **Cloudflare Worker(`worker/news-proxy.js`)가 중계**하고 네이버 키는 Worker 비밀 변수에만 저장(저장소에 키 없음). `news.js` 상단 `NEWS_PROXY_URL`에 Worker 주소 입력 필요(배포 절차는 `worker/README.md`). 검색창+정렬(최신/정확도)+더보기 페이지네이션, 키워드 채널 칩은 `news/keywords`(Firebase)에서 로드(규칙 미설정 시 `DEFAULT_KEYWORDS` 사용), 관리자 로그인 시 '키워드 채널 편집' 가능 — DB 규칙에 `news` 노드 read true / write 관리자 허용 필요. API 응답의 `<b>` 강조는 template 기반 `sanitizeApiHtml()`로 XSS 없이 유지. 무료 한도: 네이버 25,000회/일, Worker 100,000회/일(같은 검색어 5분 에지 캐시).
 - **nav 구조**: 로그인 전용 메뉴는 **업무관리 드롭다운 하나**(`.nav-drop.nav-perf`, common.css)로 통합 — 하위에 업무보드(worklog)/개인별 평가(worklog-eval)/Performance(performance)/예산관리(budget) 4개. 데스크톱은 hover로 펼침, 모바일(≤768px)은 항상 펼침. 하위 페이지 활성 시 부모 버튼도 active(common.js). 별칭: member-/team-performance→performance, payroll·activity→budget.
 - **performance**: (로그인 전용) 과제별 연차 실적 요구사항(목표) 입력 + 실적 등록 → 달성/목표 자동 집계 대시보드. 로그아웃 시 내용 비공개, 메뉴(`.nav-perf`)도 숨김. DB 경로: `performance/{과제}/{meta, rows, achievements}`, 논문/특허 트래커는 `performance/__track__/{papers, patents, meta}`
 - **member-performance** (멤버 실적): (로그인 전용, 읽기 전용) 현재 구성원(`members/{phd,ms,bs}`, 파트타임·졸업생·교수 제외)별로 논문·특허·수상을 종합 집계. **별도 입력 없이** 기존 DB를 재집계:
