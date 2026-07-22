@@ -112,5 +112,5 @@ git push origin main   # GitHub Pages 자동 배포
 | 논문 추가 | 브라우저 로그인 → Publications 페이지 관리자 패널 |
 | 홈 슬라이드 이미지 추가 | 브라우저 로그인 → Home 관리자 패널 → 슬라이드 추가 |
 | 연구분야 카드 수정 | 브라우저 로그인 → Home 관리자 패널 → 연구카드 수정 |
-| 새 페이지 추가 | `(페이지명).html/.css/.js` 생성 + `common.css` 포함 + 모든 페이지 nav에 링크 추가 |
+| 새 페이지 추가 | `(페이지명).html/.css/.js` 생성 + `common.css` 포함 + 모든 페이지 nav에 링크 추가. ⚠`.login-modal`(display:none)·`.admin-panel`·`.submit-btn/.cancel-btn` 스타일은 common.css에 없고 **각 페이지 css마다 복사돼 있음** — 새 페이지 css에 안 넣으면 로그인 폼이 페이지 상단에 그대로 노출됨(news.css 하단 블록 참고) |
 | Firebase 규칙 변경 | Firebase Console → Realtime Database → Rules |
