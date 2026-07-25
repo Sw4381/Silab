@@ -7,7 +7,7 @@
     <link rel="icon" href="./image.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css?v=31">
-    <link rel="stylesheet" href="news.css?v=3">
+    <link rel="stylesheet" href="news.css?v=4">
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -32,7 +32,7 @@
             <a href="./projects.html"><i class="fas fa-file-alt"></i> Projects</a>
             <a href="./Publication.html"><i class="fas fa-copy"></i> Publications</a>
             <a href="./photo.html"><i class="fas fa-image"></i> Other Activities</a>
-            <a href="./news.html" class="active nav-perf" style="display:none;"><i class="fas fa-newspaper"></i> News</a>
+            <a href="./news.html" class="active"><i class="fas fa-newspaper"></i> News</a>
             <div class="nav-drop nav-perf" style="display:none;">
                 <a href="./worklog.html" class="nav-drop-btn"><i class="fas fa-tasks"></i> 업무관리 <i class="fas fa-caret-down nav-drop-caret"></i></a>
                 <div class="nav-drop-menu">
@@ -100,14 +100,8 @@
             <p>보안 관련 최신 뉴스를 검색하고 동향을 확인하세요</p>
         </div>
 
-        <!-- 로그인 안내 (비로그인 시) -->
-        <div class="news-login-notice" id="newsLoginNotice">
-            <i class="fas fa-lock"></i>
-            <p>뉴스 검색은 연구실 멤버 전용입니다.<br>로그인 후 이용해 주세요.</p>
-        </div>
-
-        <!-- 뉴스 콘텐츠 (로그인 시에만 표시) -->
-        <div id="newsContent" style="display:none;">
+        <!-- 뉴스 콘텐츠 -->
+        <div id="newsContent">
 
         <!-- 검색 영역 -->
         <div class="news-search-card">
@@ -177,6 +171,6 @@
 
     <script src="config.js?v=30"></script>
     <script src="common.js?v=35"></script>
-    <script src="news.js?v=2"></script>
+    <script src="news.js?v=3"></script>
 </body>
 </html>

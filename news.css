@@ -167,9 +167,15 @@
 /* ==================== 뉴스 카드 목록 (그리드) ==================== */
 .news-results {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns: repeat(3, 1fr);   /* 3단 고정 (넓은 화면에서 4단 금지) */
     gap: 14px;
     align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+    .news-results {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .news-card {
@@ -209,7 +215,7 @@
     line-height: 1.6;
     margin-bottom: 10px;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 5;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -293,28 +299,6 @@
 .news-more-btn:disabled {
     opacity: 0.5;
     cursor: default;
-}
-
-/* ==================== 로그인 안내 (비로그인) ==================== */
-.news-login-notice {
-    text-align: center;
-    padding: 80px 20px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
-    color: #778;
-}
-
-.news-login-notice i {
-    display: block;
-    font-size: 2.2rem;
-    margin-bottom: 16px;
-    color: #cfd8e0;
-}
-
-.news-login-notice p {
-    font-size: 1rem;
-    line-height: 1.7;
 }
 
 /* ==================== 로그인 모달 (common.css 미포함분 — 없으면 폼이 페이지 상단에 그대로 노출됨) ==================== */
@@ -447,5 +431,9 @@
 
     .news-card {
         padding: 15px 16px;
+    }
+
+    .news-results {
+        grid-template-columns: 1fr;
     }
 }

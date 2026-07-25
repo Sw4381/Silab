@@ -210,7 +210,7 @@ function loginUser(email, password) {
 }
 
 function updateAuthUI() {
-    // 로그인 전용 페이지: 관리자 계정(일반/Root)으로 로그인해야 내용이 보인다 (worklog와 동일 기준)
+    // 뉴스 검색은 로그인 없이 공개. 관리자(일반/Root)만 키워드 채널 편집 패널이 보인다.
     var isAdmin = !!(currentUser && (currentUser.uid === ADMIN_UID || currentUser.uid === ROOT_UID));
     var loginBtn = document.getElementById('loginBtn');
     var logoutBtn = document.getElementById('logoutBtn');
@@ -227,8 +227,6 @@ function updateAuthUI() {
         userInfo.style.display = 'none';
     }
     document.getElementById('newsAdminPanel').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('newsContent').style.display = isAdmin ? '' : 'none';
-    document.getElementById('newsLoginNotice').style.display = isAdmin ? 'none' : '';
 }
 
 // ==================== 초기화 ====================
