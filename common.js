@@ -50,11 +50,11 @@ function setPerfNav(show) {
     });
 }
 
-// 세션 만료 자동 로그아웃 — 로그인 후 1시간 경과 시 자동 로그아웃 (보안)
-// 만료 1분 전에 연장 여부를 묻는 모달을 띄우고, '연장'을 누르면 1시간이 다시 시작된다.
+// 세션 만료 자동 로그아웃 — 로그인 후 2시간 경과 시 자동 로그아웃 (보안)
+// 만료 1분 전에 연장 여부를 묻는 모달을 띄우고, '연장'을 누르면 2시간이 다시 시작된다.
 // 세션 시작 시각을 localStorage 에 저장하므로 페이지 이동/탭 닫힘 후 재접속에도 만료가 판정된다.
 function setupSessionTimeout() {
-    var SESSION_MS = 60 * 60 * 1000;   // 세션 길이 1시간
+    var SESSION_MS = 2 * 60 * 60 * 1000;   // 세션 길이 2시간 (잦은 로그아웃 불편 → 연장)
     var WARN_MS = 60 * 1000;           // 만료 60초 전부터 연장 안내 모달 표시
     var SESSION_LABEL = SESSION_MS >= 60000 ? Math.round(SESSION_MS / 60000) + '분' : Math.round(SESSION_MS / 1000) + '초';
     var KEY = 'silab_session_start';
@@ -155,6 +155,18 @@ function setupSessionTimeout() {
 
     setInterval(check, 1000);   // 1초마다 만료/카운트다운 갱신
 }
+
+// Lab 노트(labnote) 등에서 iframe 임베드로 열릴 때: ?embed=1 이면 전역 네비/푸터 숨김
+(function detectEmbedMode() {
+    try {
+        var p = new URLSearchParams(window.location.search);
+        if (p.get('embed') === '1') {
+            var apply = function () { document.body && document.body.classList.add('ln-embed-mode'); };
+            if (document.body) apply();
+            else document.addEventListener('DOMContentLoaded', apply);
+        }
+    } catch (e) { /* 구형 브라우저는 무시 */ }
+})();
 
 document.addEventListener('DOMContentLoaded', function () {
     // 현재 페이지 자동 활성화 (탭으로 묶인 서브페이지는 부모 메뉴를 활성화)

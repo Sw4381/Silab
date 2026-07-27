@@ -230,6 +230,11 @@ body {
     animation: fadeInUp 0.35s ease both;
 }
 
+/* Lab 노트 등에서 iframe 임베드(?embed=1)로 열릴 때: 전역 네비/푸터 숨기고 여백 축소 */
+body.ln-embed-mode .navbar { display: none !important; }
+body.ln-embed-mode footer { display: none !important; }
+body.ln-embed-mode .container { padding-top: 12px !important; min-height: 0 !important; animation: none !important; }
+
 /* ==================== 푸터 스타일 ==================== */
 footer {
     background: var(--footer-gradient);

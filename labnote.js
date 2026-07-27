@@ -1,0 +1,799 @@
+// labnote.js - Lab 노트 (로그인 전용, 원포인트 업무 허브)
+// 교수님 초안(test.html)의 트리 메뉴 + 텍스트창 양식 준용. 저장소는 Firebase RTDB `labnote` 노드.
+// 구조: 메뉴(group) > 서브탭(item) > 세부(sub). 각 단계 모두 본문(자유 텍스트) 보유.
+// 설정값은 config.js 참조 (firebaseConfig, ADMIN_UID, ROOT_UID)
+
+// ==================== 상수 ====================
+const LN_ALLOWED = [ADMIN_UID, ROOT_UID];
+const LN_PATH = 'labnote';
+const LN_COLORS = ['#4f46e5', '#0891b2', '#7c3aed', '#dc2626', '#d97706', '#059669', '#db2777', '#65a30d'];
+
+// 첫 사용 시 자동 생성되는 기본 메뉴 (이후 추가/이름변경/삭제/순서변경 자유)
+const LN_DEFAULT_GROUPS = [
+    { name: 'Lab 세미나', color: '#4f46e5', items: [] },
+    { name: 'Lab 주간보고', color: '#0891b2', items: [] },
+    { name: 'Lab 연구논의', color: '#7c3aed', items: [] },
+    { name: 'Lab 수시업무', color: '#dc2626', items: [] },
+    { name: '논문/특허 관리', color: '#d97706', items: [
+        { text: '논문 제출처', link: 'https://docs.google.com/spreadsheets/d/1CERDZ18IWs0fec5M8vcrxFjKkGYHyFBSewjK4MKTU2M/edit?gid=155235501#gid=155235501' }
+    ] },
+    { name: 'Projects', color: '#059669', items: [] },
+    { name: '실적평가', color: '#db2777', items: [
+        { text: '개인별 평가', link: 'worklog-eval.html' },
+        { text: '개인별 실적 전반', link: 'member-performance.html' }
+    ] },
+    { name: '기타관리', color: '#65a30d', items: [
+        { text: 'Lab 운영정책' },
+        { text: 'Lab 구성원', link: 'members.html' },
+        { text: 'Lab 예산관리', link: 'budget.html' },
+        { text: 'Lab 주소록' }
+    ] }
+];
+
+// 캘린더 일정 유형과 색
+const LN_EV_TYPES = { '휴가': '#059669', '출장': '#2563eb', '세미나': '#7c3aed', '기타': '#6b7280' };
+
+// ==================== 전역 상태 ====================
+let auth, database;
+let currentUser = null;
+let data = null;            // { groups:[], calendar:[] }
+let dirty = false;
+let saveTimer = null;
+let saving = false;
+let cur = null;             // {type:'group'|'item'|'sub'|'calendar', id?}
+let renameId = null;        // 인라인 이름변경 중인 노드 id
+const openN = {};           // 트리 펼침 상태 (화면 상태 — 저장 안 함)
+let dragSrc = null;         // 드래그 중인 노드 {type,id}
+let calY, calM;             // 캘린더 표시 연/월
+let evPopCtx = null;        // 일정 팝오버 컨텍스트 {mode:'new'|'edit', id?}
+
+let lnApp, authGate, treeEl, bodyEl;
+
+// ==================== 유틸 ====================
+function esc(s) {
+    return (typeof escHtml === 'function') ? escHtml(s)
+        : String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+let uidSeq = 0;
+function newId(p) { return (p || 'n') + Date.now().toString(36) + (uidSeq++).toString(36); }
+
+function lnAlert(message, type) {
+    const el = document.createElement('div');
+    el.className = 'wl-alert ' + (type || 'info');
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+}
+
+function toArr(v) {
+    if (Array.isArray(v)) return v.filter(x => x != null);
+    if (v && typeof v === 'object') return Object.values(v).filter(x => x != null);   // Firebase가 배열을 객체로 줄 때
+    return [];
+}
+
+function todayStr() {
+    const n = new Date();
+    return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+}
+const LN_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+function stripHtml(h) {
+    const d = document.createElement('div');
+    d.innerHTML = h || '';
+    return (d.innerText || d.textContent || '').trim();
+}
+
+// ==================== 정규화 ====================
+function normalize() {
+    if (!data || typeof data !== 'object') data = {};
+    data.groups = toArr(data.groups);
+    if (!data.groups.length) data.groups = JSON.parse(JSON.stringify(LN_DEFAULT_GROUPS));
+    data.groups.forEach((g, i) => {
+        if (!g.id) g.id = newId('g');
+        if (!g.name) g.name = '(이름없음)';
+        if (!g.color) g.color = LN_COLORS[i % LN_COLORS.length];
+        if (typeof g.body !== 'string') g.body = '';
+        g.items = toArr(g.items).map(it => {
+            const o = (typeof it === 'string') ? { text: it } : it;
+            if (!o.id) o.id = newId('i');
+            o.text = String(o.text || '제목 없음');
+            if (typeof o.body !== 'string') o.body = '';
+            if (typeof o.link !== 'string') o.link = '';
+            o.subs = toArr(o.subs).map(s => {
+                const x = (typeof s === 'string') ? { text: s } : s;
+                return { id: x.id || newId('s'), text: String(x.text || ''), name: x.name ? String(x.name) : '', link: (typeof x.link === 'string') ? x.link : '' };
+            });
+            return o;
+        });
+    });
+    data.calendar = toArr(data.calendar)
+        .map(e => ({
+            id: e.id || newId('e'),
+            date: (typeof e.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.date)) ? e.date : '',
+            title: String(e.title || ''),
+            type: LN_EV_TYPES[e.type] ? e.type : '기타'
+        }))
+        .filter(e => e.date && e.title);
+}
+
+// ==================== 조회 ====================
+function findGroup(id) { return data.groups.find(g => g.id === id); }
+function findItem(id) { for (const g of data.groups) { const it = g.items.find(x => x.id === id); if (it) return { g, it }; } return null; }
+function findSub(id) { for (const g of data.groups) for (const it of g.items) { const s = it.subs.find(x => x.id === id); if (s) return { g, it, s }; } return null; }
+function subName(s) { return s.name || stripHtml(s.text).split('\n')[0].trim() || '세부'; }
+
+// ==================== 저장 / 불러오기 ====================
+function setSaveStat(state, text) {
+    const dot = document.getElementById('saveDot');
+    const t = document.getElementById('saveText');
+    if (dot) dot.className = 'wl-dot' + (state ? ' ' + state : '');
+    if (t) t.textContent = text;
+}
+
+function touch() {
+    dirty = true;
+    setSaveStat('dirty', '저장 중...');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 800);
+}
+
+async function saveNow() {
+    if (!currentUser || !data || saving) return;
+    saving = true;
+    try {
+        await database.ref(LN_PATH).update({ groups: data.groups, calendar: data.calendar });
+        dirty = false;
+        const now = new Date();
+        setSaveStat('linked', '저장됨 ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
+    } catch (err) {
+        setSaveStat('dirty', '저장 실패');
+        lnAlert('저장 실패: ' + err.message, 'error');
+    } finally {
+        saving = false;
+        if (dirty) { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 800); }
+    }
+}
+
+async function loadData() {
+    setSaveStat('', '불러오는 중...');
+    const snap = await database.ref(LN_PATH).once('value');
+    data = snap.val() || {};
+    normalize();
+    dirty = false;
+    setSaveStat('linked', '동기화됨');
+    // 처음엔 메뉴(그룹)만 펼쳐 전체가 한눈에 들어오게
+    data.groups.forEach(g => { if (!(g.id in openN)) openN[g.id] = true; });
+    render();
+    showBody();
+}
+
+// ==================== 트리 렌더 ====================
+function render() {
+    if (!treeEl) return;
+    treeEl.innerHTML = '';
+    if (!data || !data.groups.length) {
+        treeEl.innerHTML = '<div class="ln-menu-empty">＋ 메뉴 추가로 시작하세요.</div>';
+        return;
+    }
+    data.groups.forEach(g => {
+        const gEl = document.createElement('div');
+        gEl.className = 'ln-grp' + (openN[g.id] !== false ? ' open' : '');
+        gEl.appendChild(rowEl({
+            type: 'group', node: g, cls: 'ln-g-head', sel: cur && cur.type === 'group' && cur.id === g.id,
+            label: g.name, color: g.color, count: g.items.length,
+            onToggle: () => toggleN(g.id), onSelect: () => select('group', g.id)
+        }));
+        const cg = document.createElement('div'); cg.className = 'ln-children-g';
+        g.items.forEach(it => {
+            const iEl = document.createElement('div'); iEl.className = 'ln-itm' + (openN[it.id] ? ' open' : '');
+            iEl.appendChild(rowEl({
+                type: 'item', node: it, cls: 'ln-i-head', sel: cur && cur.type === 'item' && cur.id === it.id,
+                label: it.text, count: it.subs.length, link: it.link,
+                onToggle: () => toggleN(it.id), onSelect: () => select('item', it.id)
+            }));
+            const ci = document.createElement('div'); ci.className = 'ln-children-i';
+            it.subs.forEach(s => {
+                ci.appendChild(rowEl({
+                    type: 'sub', node: s, cls: 'ln-s-head', sel: cur && cur.type === 'sub' && cur.id === s.id,
+                    label: subName(s), leaf: true, link: s.link,
+                    onSelect: () => select('sub', s.id)
+                }));
+            });
+            iEl.appendChild(ci); cg.appendChild(iEl);
+        });
+        gEl.appendChild(cg); treeEl.appendChild(gEl);
+    });
+    // 하단 고정 메뉴(캘린더) 활성 표시
+    const calBtn = document.getElementById('calendarMenuBtn');
+    if (calBtn) calBtn.classList.toggle('active', !!(cur && cur.type === 'calendar'));
+}
+
+function rowEl(o) {
+    const row = document.createElement('div');
+    row.className = 'ln-row ' + o.cls + (o.sel ? ' active' : '')
+        + ((!o.leaf && o.type === 'group' && openN[o.node.id] !== false) ? ' open' : '')
+        + ((!o.leaf && o.type === 'item' && openN[o.node.id]) ? ' open' : '');
+    row.dataset.type = o.type; row.dataset.id = o.node.id;
+
+    // 드래그 (이름변경 중이 아닐 때만)
+    if (renameId !== o.node.id) {
+        row.draggable = true;
+        row.ondragstart = e => { dragSrc = { type: o.type, id: o.node.id }; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', o.node.id); };
+        row.ondragend = () => { row.classList.remove('dragging'); clearDropMarks(); };
+        row.ondragover = e => onDragOver(e, row, o.type, o.node.id);
+        row.ondragleave = () => row.classList.remove('drop-before', 'drop-after', 'drop-into');
+        row.ondrop = e => onDrop(e, row, o.type, o.node.id);
+    }
+
+    // caret (leaf 제외)
+    if (!o.leaf) {
+        const c = document.createElement('span'); c.className = 'caret'; c.textContent = '▶';
+        c.onclick = e => { e.stopPropagation(); o.onToggle(); };
+        row.appendChild(c);
+    } else {
+        const sp = document.createElement('span'); sp.className = 'caret'; sp.style.visibility = 'hidden'; sp.textContent = '•'; row.appendChild(sp);
+    }
+    // 색 점 (메뉴)
+    if (o.color) { const d = document.createElement('span'); d.className = 'dotc'; d.style.background = o.color; row.appendChild(d); }
+
+    // 라벨 또는 이름변경 입력칸
+    if (renameId === o.node.id) {
+        const inp = document.createElement('input'); inp.className = 'ln-rename'; inp.value = o.label;
+        inp.onclick = e => e.stopPropagation();
+        inp.onkeydown = e => { if (e.key === 'Enter') commitRename(o.type, o.node.id, inp.value); if (e.key === 'Escape') { renameId = null; render(); } };
+        inp.onblur = () => commitRename(o.type, o.node.id, inp.value);
+        row.appendChild(inp);
+        setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    } else {
+        const lb = document.createElement('span'); lb.className = 'label';
+        lb.textContent = o.label;
+        if (o.link) { const ic = document.createElement('i'); ic.className = 'fas fa-external-link-alt'; lb.appendChild(ic); }
+        lb.onclick = () => { if (o.link) openLink(o.link); else o.onSelect(); };   // 링크 항목은 클릭 시 해당 링크로 이동
+        row.appendChild(lb);
+        if (o.count !== undefined) { const cnt = document.createElement('span'); cnt.className = 'cnt'; cnt.textContent = o.count; cnt.onclick = o.onSelect; row.appendChild(cnt); }
+    }
+
+    // ... 메뉴
+    const kb = document.createElement('button'); kb.className = 'ln-kebab'; kb.textContent = '⋯'; kb.title = '메뉴';
+    kb.onclick = e => { e.stopPropagation(); openPop(e.currentTarget, o.type, o.node.id); };
+    row.appendChild(kb);
+    return row;
+}
+
+// 링크 열기: 외부(http)는 새 탭, 내부 페이지는 현재 탭에서 이동
+function openLink(url) {
+    if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
+    else window.location.href = url;
+}
+
+function toggleN(id) { openN[id] = (openN[id] === false) ? true : !openN[id]; if (openN[id] === undefined) openN[id] = true; render(); }
+function expandAll(open) { data.groups.forEach(g => { openN[g.id] = open; g.items.forEach(it => openN[it.id] = open); }); render(); }
+
+// ==================== 팝업(...) 메뉴 ====================
+function openPop(btn, type, id) {
+    const pop = document.getElementById('lnPop'); pop.innerHTML = '';
+    const add = (label, fn, cls) => { const b = document.createElement('button'); if (cls) b.className = cls; b.innerHTML = label; b.onclick = () => { closePop(); fn(); }; pop.appendChild(b); };
+    const sep = () => { const s = document.createElement('div'); s.className = 'sep'; pop.appendChild(s); };
+
+    const node = type === 'group' ? findGroup(id) : type === 'item' ? (findItem(id) || {}).it : (findSub(id) || {}).s;
+    if (!node) return;
+
+    if (type === 'group') add('➕ 서브탭 추가', () => addChild('group', id));
+    if (type === 'item') add('➕ 세부 추가', () => addChild('item', id));
+    add('✏️ 이름 바꾸기', () => startRename(id));
+    if (type !== 'group') {
+        add(node.link ? '🔗 링크 수정' : '🔗 링크 지정', () => setLink(type, id));
+        if (node.link) add('⛓️ 링크 해제', () => { node.link = ''; touch(); render(); if (cur && cur.id === id) showBody(); });
+    }
+    sep();
+    add('🗑️ 삭제', () => del(type, id), 'danger');
+
+    const r = btn.getBoundingClientRect();
+    pop.style.display = 'block';
+    let left = r.right - 4, top = r.bottom + 4;
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    if (left + pw > window.innerWidth - 8) left = r.left - pw + 22;
+    if (top + ph > window.innerHeight - 8) top = r.top - ph - 4;
+    pop.style.left = Math.max(8, left) + 'px'; pop.style.top = Math.max(8, top) + 'px';
+}
+function closePop() { document.getElementById('lnPop').style.display = 'none'; }
+
+// 링크 지정: 외부 URL 또는 내부 페이지(예: budget.html)
+function setLink(type, id) {
+    const node = type === 'item' ? findItem(id).it : findSub(id).s;
+    const v = prompt('연결할 주소를 입력하세요.\n(외부: https://... / 내부 페이지: budget.html 등, 비우면 해제)', node.link || '');
+    if (v === null) return;
+    node.link = v.trim();
+    touch(); render();
+    if (cur && cur.id === id) showBody();
+}
+
+// ==================== 편집 동작 ====================
+function addGroup() {
+    const g = { id: newId('g'), name: '새 메뉴', color: LN_COLORS[data.groups.length % LN_COLORS.length], items: [], body: '' };
+    data.groups.push(g); openN[g.id] = true; touch(); startRename(g.id); render();
+}
+function addChild(type, id) {
+    if (type === 'group') {
+        const g = findGroup(id);
+        const it = { id: newId('i'), text: '새 서브탭', body: '', link: '', subs: [] };
+        g.items.push(it); openN[g.id] = true; openN[it.id] = true; touch(); startRename(it.id); render();
+    } else {
+        const r = findItem(id);
+        const s = { id: newId('s'), name: '새 세부', text: '', link: '' };
+        r.it.subs.push(s); openN[r.it.id] = true; touch(); startRename(s.id); render();
+    }
+}
+function startRename(id) { renameId = id; render(); }
+function commitRename(type, id, val) {
+    val = (val || '').trim(); renameId = null;
+    if (val) {
+        if (type === 'group') findGroup(id).name = val;
+        else if (type === 'item') findItem(id).it.text = val;
+        else findSub(id).s.name = val;
+        touch();
+    }
+    render();
+    if (cur && cur.id === id) showBody();
+}
+function del(type, id) {
+    const kind = type === 'group' ? '메뉴' : type === 'item' ? '서브탭' : '세부';
+    if (!confirm('이 ' + kind + '을(를) 삭제할까요? 하위 내용과 본문도 함께 삭제됩니다.')) return;
+    if (type === 'group') data.groups = data.groups.filter(g => g.id !== id);
+    else if (type === 'item') { const r = findItem(id); r.g.items = r.g.items.filter(x => x.id !== id); }
+    else { const r = findSub(id); r.it.subs = r.it.subs.filter(x => x.id !== id); }
+    if (cur && cur.id === id) { cur = null; showBody(); }
+    touch(); render();
+}
+
+// ==================== 드래그 순서변경 ====================
+function clearDropMarks() { document.querySelectorAll('.ln-row.drop-before,.ln-row.drop-after,.ln-row.drop-into').forEach(r => r.classList.remove('drop-before', 'drop-after', 'drop-into')); }
+function locate(type, id) {
+    if (type === 'group') { const arr = data.groups; const i = arr.findIndex(x => x.id === id); return i < 0 ? null : { arr, idx: i, node: arr[i] }; }
+    if (type === 'item') { const r = findItem(id); if (!r) return null; const arr = r.g.items; return { arr, idx: arr.indexOf(r.it), node: r.it }; }
+    const r = findSub(id); if (!r) return null; const arr = r.it.subs; return { arr, idx: arr.indexOf(r.s), node: r.s };
+}
+function dropKind(dragType, rowType) {
+    if (dragType === rowType) return 'reorder';
+    if (dragType === 'item' && rowType === 'group') return 'into';   // 서브탭을 다른 메뉴로
+    if (dragType === 'sub' && rowType === 'item') return 'into';     // 세부를 다른 서브탭으로
+    return null;
+}
+function onDragOver(e, row, rowType, rowId) {
+    if (!dragSrc) return;
+    const kind = dropKind(dragSrc.type, rowType);
+    if (!kind) return;
+    if (dragSrc.type === rowType && dragSrc.id === rowId) return;   // 자기 자신
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    row.classList.remove('drop-before', 'drop-after', 'drop-into');
+    if (kind === 'into') row.classList.add('drop-into');
+    else { const r = row.getBoundingClientRect(); row.classList.add(e.clientY > r.top + r.height / 2 ? 'drop-after' : 'drop-before'); }
+}
+function onDrop(e, row, rowType, rowId) {
+    if (!dragSrc) return;
+    const kind = dropKind(dragSrc.type, rowType); if (!kind) { clearDropMarks(); return; }
+    e.preventDefault(); e.stopPropagation();
+    const after = row.classList.contains('drop-after');
+    clearDropMarks();
+    const src = locate(dragSrc.type, dragSrc.id); if (!src) { dragSrc = null; return; }
+    const node = src.node;
+    if (kind === 'into') {
+        let destArr;
+        if (rowType === 'group') { const g = findGroup(rowId); if (!g) return; destArr = g.items; openN[g.id] = true; }
+        else { const r = findItem(rowId); if (!r) return; destArr = r.it.subs; openN[r.it.id] = true; }
+        if (destArr === src.arr) { dragSrc = null; return; }   // 같은 부모면 무시
+        src.arr.splice(src.idx, 1);
+        destArr.push(node);
+    } else {
+        src.arr.splice(src.idx, 1);
+        const tgt = locate(rowType, rowId); if (!tgt) { src.arr.splice(src.idx, 0, node); dragSrc = null; return; }
+        tgt.arr.splice(tgt.idx + (after ? 1 : 0), 0, node);
+    }
+    dragSrc = null; touch(); render();
+}
+
+// ==================== 본문 (텍스트 편집창) ====================
+function select(type, id) { cur = { type, id }; showBody(); render(); }
+
+function bodyOf() {
+    if (!cur || cur.type === 'calendar') return null;
+    if (cur.type === 'group') { const g = findGroup(cur.id); return g && { crumb: '', title: g.name, link: '', val: g.body || '', set: v => g.body = v }; }
+    if (cur.type === 'item') { const r = findItem(cur.id); return r && { crumb: r.g.name, title: r.it.text, link: r.it.link, val: r.it.body || '', set: v => r.it.body = v }; }
+    const r = findSub(cur.id); return r && { crumb: r.g.name + ' › ' + r.it.text, title: subName(r.s), link: r.s.link, val: r.s.text || '', set: v => r.s.text = v };
+}
+
+// 편집창 글자 크기 (브라우저 확대/축소와 별개로 편집창만 조절, 기기별 저장)
+function edFontSize() { const v = Number(localStorage.getItem('ln_edfs')); return (v >= 12 && v <= 24) ? v : 15; }
+function setEdFontSize(px) {
+    px = Math.min(24, Math.max(12, px));
+    try { localStorage.setItem('ln_edfs', String(px)); } catch (e) {}
+    const ed = document.getElementById('lnEditor');
+    if (ed) ed.style.fontSize = px + 'px';
+    const lb = document.getElementById('edFsLbl');
+    if (lb) lb.textContent = px + 'px';
+}
+
+function showBody() {
+    if (!bodyEl) return;
+    if (cur && cur.type === 'calendar') { renderCalendar(); return; }
+    const b = bodyOf();
+    if (!b) { bodyEl.innerHTML = '<div class="ln-placeholder">왼쪽 메뉴에서 항목을 선택하세요.</div>'; return; }
+
+    // 링크 항목: 바로가기 카드 (라벨 클릭 시 이미 이동, 여기서는 '열기' 버튼 제공)
+    if (b.link) {
+        bodyEl.innerHTML =
+            (b.crumb ? '<div class="ln-crumb">' + esc(b.crumb) + '</div>' : '') +
+            '<div class="ln-title">' + esc(b.title) + '</div>' +
+            '<div class="ln-linkbox"><i class="fas fa-external-link-alt"></i> 이 항목은 바로가기 링크입니다.' +
+            '<br><a href="#" id="lnLinkGo">열기</a>' +
+            '<span class="url">' + esc(b.link) + '</span></div>';
+        document.getElementById('lnLinkGo').onclick = e => { e.preventDefault(); openLink(b.link); };
+        return;
+    }
+
+    bodyEl.innerHTML =
+        (b.crumb ? '<div class="ln-crumb">' + esc(b.crumb) + '</div>' : '') +
+        '<div class="ln-title">' + esc(b.title) + '</div>' +
+        '<div class="ln-toolbar">' +
+        '  <button class="ln-tb date-btn" title="맨 위에 오늘 날짜 머리글 추가 (최근 날짜가 위로)" data-cmd="date">📅 오늘 날짜</button>' +
+        '  <span class="ln-sep"></span>' +
+        '  <button class="ln-tb" title="굵게" data-cmd="bold"><b>B</b></button>' +
+        '  <button class="ln-tb" title="밑줄" data-cmd="underline"><u>U</u></button>' +
+        '  <button class="ln-tb" title="취소선" data-cmd="strikeThrough"><s>S</s></button>' +
+        '  <span class="ln-sep"></span>' +
+        '  <span class="ln-lbl">크기</span>' +
+        '  <select class="ln-tb-sel" id="fontSel" title="선택한 글자 크기">' +
+        '    <option value="2">작게</option><option value="3" selected>보통</option><option value="4">크게</option><option value="5">아주 크게</option>' +
+        '  </select>' +
+        '  <span class="ln-sep"></span>' +
+        '  <span class="ln-lbl">글자</span>' +
+        '  <button class="ln-tb swatch" style="background:#1f2328" title="검정" data-color="#1f2328">.</button>' +
+        '  <button class="ln-tb swatch" style="background:#2563eb" title="파랑" data-color="#2563eb">.</button>' +
+        '  <button class="ln-tb swatch" style="background:#dc2626" title="빨강" data-color="#dc2626">.</button>' +
+        '  <span class="ln-sep"></span>' +
+        '  <span class="ln-lbl">배경</span>' +
+        '  <button class="ln-tb swatch" style="background:#fef08a" title="노랑" data-bg="#fef08a">.</button>' +
+        '  <button class="ln-tb swatch" style="background:#d9f99d" title="연두" data-bg="#d9f99d">.</button>' +
+        '  <button class="ln-tb swatch" style="background:#ffffff;border-color:#cbd5e1" title="지움(흰색)" data-bg="#ffffff">.</button>' +
+        '  <span class="ln-sep"></span>' +
+        '  <button class="ln-tb" title="서식 지우기" data-cmd="removeFormat">서식↺</button>' +
+        '  <span class="wl-spacer"></span>' +
+        '  <span class="ln-lbl">편집창</span>' +
+        '  <button class="ln-tb" title="편집창 글자 작게" data-cmd="zoomOut">A−</button>' +
+        '  <span class="ln-lbl" id="edFsLbl"></span>' +
+        '  <button class="ln-tb" title="편집창 글자 크게" data-cmd="zoomIn">A＋</button>' +
+        '</div>' +
+        '<div class="ln-editor" id="lnEditor" contenteditable="true" spellcheck="false" data-ph="내용을 자유롭게 기재하세요. (서식·글자크기는 붙여넣기 시에도 유지됩니다)"></div>';
+
+    const ed = document.getElementById('lnEditor');
+    ed.innerHTML = b.val || '';
+    ed.style.fontSize = edFontSize() + 'px';
+    setEdFontSize(edFontSize());
+    ed.oninput = () => { b.set(ed.innerHTML); touch(); if (cur && cur.type === 'sub') refreshLabel(); };
+
+    // 툴바 동작
+    bodyEl.querySelector('.ln-toolbar').addEventListener('mousedown', e => {
+        if (e.target.closest('.ln-tb')) e.preventDefault();   // 에디터 선택영역 유지
+    });
+    bodyEl.querySelector('.ln-toolbar').addEventListener('click', e => {
+        const btn = e.target.closest('.ln-tb'); if (!btn) return;
+        const cmd = btn.dataset.cmd;
+        if (cmd === 'date') return insertDateHeading();
+        if (cmd === 'zoomIn') return setEdFontSize(edFontSize() + 1);
+        if (cmd === 'zoomOut') return setEdFontSize(edFontSize() - 1);
+        ed.focus();
+        if (btn.dataset.color) { document.execCommand('styleWithCSS', false, true); document.execCommand('foreColor', false, btn.dataset.color); }
+        else if (btn.dataset.bg) { document.execCommand('styleWithCSS', false, true); if (!document.execCommand('hiliteColor', false, btn.dataset.bg)) document.execCommand('backColor', false, btn.dataset.bg); }
+        else if (cmd) document.execCommand(cmd, false, null);
+        rtSync();
+    });
+    document.getElementById('fontSel').addEventListener('change', e => {
+        ed.focus();
+        document.execCommand('styleWithCSS', false, false);
+        document.execCommand('fontSize', false, e.target.value);
+        rtSync();
+    });
+}
+
+// 오늘 날짜 머리글을 본문 맨 위에 삽입 — 주간보고 등에서 '최근 날짜가 위로' 규칙 유지용
+function insertDateHeading() {
+    const ed = document.getElementById('lnEditor'); if (!ed) return;
+    const n = new Date();
+    const label = todayStr() + ' (' + LN_DAYS[n.getDay()] + ')';
+    const hadContent = !!ed.firstChild;
+    const head = document.createElement('div');
+    head.innerHTML = '<b>■ ' + esc(label) + '</b>';
+    const line = document.createElement('div');   // 날짜 아래 빈 줄 (여기에 커서)
+    line.innerHTML = '<br>';
+    ed.insertBefore(head, ed.firstChild);         // 맨 위에 날짜 머리글
+    ed.insertBefore(line, head.nextSibling);      // 그 아래 빈 줄
+    if (hadContent) {                             // 기존 내용이 있으면 구분 빈 줄 하나 더
+        const gap = document.createElement('div'); gap.innerHTML = '<br>';
+        ed.insertBefore(gap, line.nextSibling);
+    }
+    ed.focus();
+    const sel = window.getSelection(); const rg = document.createRange();
+    rg.setStart(line, 0); rg.collapse(true);
+    sel.removeAllRanges(); sel.addRange(rg);
+    rtSync();
+}
+
+function rtSync() {
+    const ed = document.getElementById('lnEditor'); const b = bodyOf();
+    if (ed && b) { b.set(ed.innerHTML); touch(); if (cur && cur.type === 'sub') refreshLabel(); }
+}
+
+// 세부 이름이 본문 첫 줄에서 파생될 때 메뉴 라벨만 갱신 (에디터 포커스 유지)
+let _lblTimer = null;
+function refreshLabel() {
+    clearTimeout(_lblTimer);
+    _lblTimer = setTimeout(() => {
+        const r = findSub(cur.id); if (!r || r.s.name) return;
+        document.querySelectorAll('#lnTree .ln-row.ln-s-head.active .label').forEach(l => l.textContent = subName(r.s));
+    }, 400);
+}
+
+// ==================== Lab 캘린더 ====================
+function selectCalendar() {
+    cur = { type: 'calendar' };
+    const n = new Date();
+    if (calY == null) { calY = n.getFullYear(); calM = n.getMonth(); }
+    showBody(); render();
+}
+
+function calMove(d) {
+    calM += d;
+    if (calM < 0) { calM = 11; calY--; }
+    if (calM > 11) { calM = 0; calY++; }
+    renderCalendar();
+}
+
+function renderCalendar() {
+    const today = todayStr();
+    const first = new Date(calY, calM, 1);
+    const startDow = first.getDay();
+    const dim = new Date(calY, calM + 1, 0).getDate();
+    const dimPrev = new Date(calY, calM, 0).getDate();
+
+    let legend = '';
+    Object.keys(LN_EV_TYPES).forEach(t => { legend += '<span class="lg"><i style="background:' + LN_EV_TYPES[t] + '"></i>' + t + '</span>'; });
+
+    let html =
+        '<div class="ln-cal-head">' +
+        '  <button class="ln-cal-nav" id="calPrev" title="이전 달">◀</button>' +
+        '  <h2>' + calY + '년 ' + (calM + 1) + '월</h2>' +
+        '  <button class="ln-cal-nav" id="calNext" title="다음 달">▶</button>' +
+        '  <button class="wl-btn" id="calToday" style="padding:5px 11px;font-size:12.5px;">오늘</button>' +
+        '  <div class="ln-cal-legend">' + legend + '</div>' +
+        '</div>' +
+        '<div class="ln-cal-hint">날짜 칸을 클릭하면 일정(휴가·출장·세미나 등)을 추가하고, 일정을 클릭하면 수정/삭제할 수 있습니다.</div>' +
+        '<table class="ln-cal"><thead><tr>';
+    LN_DAYS.forEach((d, i) => { html += '<th class="' + (i === 0 ? 'sun' : i === 6 ? 'sat' : '') + '">' + d + '</th>'; });
+    html += '</tr></thead><tbody>';
+
+    // 날짜별 일정 맵
+    const byDate = {};
+    (data.calendar || []).forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+
+    let day = 1 - startDow;
+    for (let w = 0; w < 6; w++) {
+        if (day > dim) break;
+        html += '<tr>';
+        for (let dow = 0; dow < 7; dow++, day++) {
+            let y = calY, m = calM, d = day, out = false;
+            if (day < 1) { out = true; m = calM - 1; if (m < 0) { m = 11; y--; } d = dimPrev + day; }
+            else if (day > dim) { out = true; m = calM + 1; if (m > 11) { m = 0; y++; } d = day - dim; }
+            const ds = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            const evs = byDate[ds] || [];
+            let cell = '<span class="dnum">' + d + '</span>';
+            evs.slice(0, 3).forEach(e => {
+                cell += '<span class="ln-ev" data-ev="' + esc(e.id) + '" style="background:' + LN_EV_TYPES[e.type] + '" title="[' + esc(e.type) + '] ' + esc(e.title) + '">' + esc(e.title) + '</span>';
+            });
+            if (evs.length > 3) cell += '<span class="ln-ev-more">+' + (evs.length - 3) + '건 더</span>';
+            html += '<td class="' + (out ? 'out ' : '') + (dow === 0 ? 'sun ' : dow === 6 ? 'sat ' : '') + (ds === today ? 'today' : '') + '" data-date="' + ds + '">' + cell + '</td>';
+        }
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+
+    bodyEl.innerHTML = '<div class="ln-title"><i class="fas fa-calendar-alt" style="color:#4f46e5;margin-right:6px;"></i>Lab 캘린더</div>' + html;
+
+    document.getElementById('calPrev').onclick = () => calMove(-1);
+    document.getElementById('calNext').onclick = () => calMove(1);
+    document.getElementById('calToday').onclick = () => { const n = new Date(); calY = n.getFullYear(); calM = n.getMonth(); renderCalendar(); };
+    bodyEl.querySelector('.ln-cal tbody').addEventListener('click', e => {
+        const chip = e.target.closest('.ln-ev');
+        if (chip) { e.stopPropagation(); openEvPop(chip, 'edit', chip.dataset.ev); return; }
+        const td = e.target.closest('td[data-date]');
+        if (td) openEvPop(td, 'new', td.dataset.date);
+    });
+}
+
+// 일정 추가/수정 팝오버
+function openEvPop(anchor, mode, key) {
+    const pop = document.getElementById('evPop');
+    evPopCtx = { mode, id: mode === 'edit' ? key : null };
+    const ev = mode === 'edit' ? data.calendar.find(x => x.id === key) : null;
+    if (mode === 'edit' && !ev) return;
+    const date = mode === 'edit' ? ev.date : key;
+
+    let typeOpts = '';
+    Object.keys(LN_EV_TYPES).forEach(t => { typeOpts += '<option value="' + t + '"' + ((ev ? ev.type : '기타') === t ? ' selected' : '') + '>' + t + '</option>'; });
+
+    pop.innerHTML =
+        '<h4>' + (mode === 'edit' ? '일정 수정' : '일정 추가') + '</h4>' +
+        '<input type="text" id="evTitle" placeholder="일정 내용 (예: 홍길동 휴가)" value="' + esc(ev ? ev.title : '') + '">' +
+        '<input type="date" id="evDate" value="' + esc(date) + '">' +
+        '<select id="evType">' + typeOpts + '</select>' +
+        '<div class="ev-actions">' +
+        (mode === 'edit' ? '<button class="wl-btn ev-del" id="evDelBtn"><i class="fas fa-trash"></i></button>' : '') +
+        '<span class="wl-spacer"></span>' +
+        '<button class="wl-btn" id="evCancelBtn">취소</button>' +
+        '<button class="wl-btn primary" id="evOkBtn">' + (mode === 'edit' ? '수정' : '추가') + '</button>' +
+        '</div>';
+
+    const r = anchor.getBoundingClientRect();
+    pop.style.display = 'block';
+    let left = r.left, top = r.bottom + 6;
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+    if (top + ph > window.innerHeight - 8) top = r.top - ph - 6;
+    pop.style.left = Math.max(8, left) + 'px'; pop.style.top = Math.max(8, top) + 'px';
+
+    document.getElementById('evCancelBtn').onclick = closeEvPop;
+    document.getElementById('evOkBtn').onclick = saveEvPop;
+    document.getElementById('evTitle').onkeydown = e => { if (e.key === 'Enter') saveEvPop(); if (e.key === 'Escape') closeEvPop(); };
+    const delBtn = document.getElementById('evDelBtn');
+    if (delBtn) delBtn.onclick = () => {
+        if (!confirm('이 일정을 삭제할까요?')) return;
+        data.calendar = data.calendar.filter(x => x.id !== evPopCtx.id);
+        closeEvPop(); touch(); renderCalendar();
+    };
+    setTimeout(() => document.getElementById('evTitle').focus(), 0);
+}
+function saveEvPop() {
+    const title = document.getElementById('evTitle').value.trim();
+    const date = document.getElementById('evDate').value;
+    const type = document.getElementById('evType').value;
+    if (!title) { lnAlert('일정 내용을 입력하세요.', 'error'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { lnAlert('날짜를 선택하세요.', 'error'); return; }
+    if (evPopCtx.mode === 'edit') {
+        const ev = data.calendar.find(x => x.id === evPopCtx.id);
+        if (ev) { ev.title = title; ev.date = date; ev.type = type; }
+    } else {
+        data.calendar.push({ id: newId('e'), date, title, type });
+    }
+    closeEvPop(); touch(); renderCalendar();
+}
+function closeEvPop() { document.getElementById('evPop').style.display = 'none'; evPopCtx = null; }
+
+// ==================== 백업 (내보내기 / 불러오기) ====================
+function exportData() {
+    const b = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'silab-lab노트-data_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+}
+function importData(e) {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+        try {
+            const parsed = JSON.parse(ev.target.result);
+            if (!confirm('현재 내용을 불러온 파일로 교체할까요? (교수님 초안 test.json 형식도 지원)')) return;
+            // 교수님 초안(test.html)의 {knowledge:{groups}} 형식 호환
+            data = parsed.knowledge ? { groups: parsed.knowledge.groups, calendar: (data && data.calendar) || [] } : parsed;
+            normalize(); cur = null; touch(); render(); showBody();
+            lnAlert('불러오기 완료!', 'success');
+        } catch (err) { lnAlert('불러오기 실패: ' + err.message, 'error'); }
+    };
+    r.readAsText(f);
+    e.target.value = '';
+}
+
+// ==================== 인증 ====================
+async function loginUser(email, password) {
+    try {
+        return await auth.signInWithEmailAndPassword(email, password);
+    } catch (error) {
+        if (error.code === 'auth/user-not-found') throw new Error('등록되지 않은 계정입니다.');
+        if (error.code === 'auth/wrong-password') throw new Error('비밀번호가 틀렸습니다.');
+        if (error.code === 'auth/invalid-email') throw new Error('이메일 형식이 올바르지 않습니다.');
+        throw error;
+    }
+}
+
+function updateAuthUI() {
+    const authed = !!currentUser;
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userInfo = document.getElementById('userInfo');
+    const userName = document.getElementById('userName');
+    if (loginBtn) loginBtn.style.display = authed ? 'none' : 'flex';
+    if (logoutBtn) logoutBtn.style.display = authed ? 'flex' : 'none';
+    if (userInfo) userInfo.style.display = authed ? 'flex' : 'none';
+    if (userName && currentUser) userName.textContent = currentUser.email;
+    if (authGate) authGate.style.display = authed ? 'none' : 'flex';
+    if (lnApp) lnApp.style.display = authed ? 'block' : 'none';
+}
+
+// ==================== 초기화 ====================
+document.addEventListener('DOMContentLoaded', function () {
+    lnApp = document.getElementById('lnApp');
+    authGate = document.getElementById('authGate');
+    treeEl = document.getElementById('lnTree');
+    bodyEl = document.getElementById('lnBody');
+
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        database = firebase.database();
+    } catch (err) {
+        console.error('Firebase 초기화 실패', err);
+        return;
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+        if (user && LN_ALLOWED.includes(user.uid)) {
+            currentUser = user;
+        } else {
+            currentUser = null;
+            if (user && LN_ALLOWED.indexOf(user.uid) < 0) await auth.signOut();
+        }
+        updateAuthUI();
+        if (currentUser) {
+            try { await loadData(); } catch (e) { console.error(e); setSaveStat('dirty', '로드 실패'); lnAlert('데이터 로드 실패: ' + e.message, 'error'); }
+        }
+    });
+
+    // 로그인 모달
+    const loginModal = document.getElementById('loginModal');
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const gateLoginBtn = document.getElementById('gateLoginBtn');
+    const loginClose = document.getElementById('loginClose');
+    const logoutBtn = document.getElementById('logoutBtn');
+    loginBtn && loginBtn.addEventListener('click', () => loginModal.classList.add('open'));
+    gateLoginBtn && gateLoginBtn.addEventListener('click', () => loginModal.classList.add('open'));
+    loginClose && loginClose.addEventListener('click', () => loginModal.classList.remove('open'));
+    loginModal && loginModal.addEventListener('click', e => { if (e.target === loginModal) loginModal.classList.remove('open'); });
+    logoutBtn && logoutBtn.addEventListener('click', async () => { await auth.signOut(); lnAlert('로그아웃되었습니다.', 'success'); });
+    loginForm && loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await loginUser(document.getElementById('email').value.trim(), document.getElementById('password').value);
+            loginModal.classList.remove('open');
+            loginForm.reset();
+            lnAlert('로그인되었습니다.', 'success');
+        } catch (err) { lnAlert(err.message || '로그인 실패', 'error'); }
+    });
+
+    // 상단 바
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+        if (!currentUser) return;
+        clearTimeout(saveTimer);
+        await saveNow();
+        if (!dirty) lnAlert('저장되었습니다.', 'success');
+    });
+    document.getElementById('expandAllBtn').addEventListener('click', () => expandAll(true));
+    document.getElementById('collapseAllBtn').addEventListener('click', () => expandAll(false));
+    document.getElementById('exportBtn').addEventListener('click', exportData);
+    document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+    document.getElementById('importFile').addEventListener('change', importData);
+    document.getElementById('addGroupBtn').addEventListener('click', addGroup);
+    document.getElementById('calendarMenuBtn').addEventListener('click', selectCalendar);
+
+    // 팝업/팝오버 바깥 클릭 시 닫기
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.ln-popmenu') && !e.target.classList.contains('ln-kebab')) closePop();
+        if (!e.target.closest('.ln-evpop') && !e.target.closest('.ln-ev') && !e.target.closest('.ln-cal td')) closeEvPop();
+    });
+    window.addEventListener('resize', () => { closePop(); closeEvPop(); });
+
+    // 저장 전에 떠나면 경고
+    window.addEventListener('beforeunload', e => {
+        if (dirty) { e.preventDefault(); e.returnValue = ''; }
+    });
+});
