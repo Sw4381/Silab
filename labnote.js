@@ -9,29 +9,38 @@ const LN_PATH = 'labnote';
 const LN_COLORS = ['#4f46e5', '#0891b2', '#7c3aed', '#dc2626', '#d97706', '#059669', '#db2777', '#65a30d'];
 
 // 첫 사용 시 자동 생성되는 기본 메뉴 (이후 추가/이름변경/삭제/순서변경 자유)
+// link: 바깥/내부 페이지 주소 | embed:true 이면 클릭 시 새 창 대신 오른쪽 본문에 임베드
+// 상위 계정(ROOT)만 편집 가능한 기본 잠금 메뉴 (이름 기준 최초 1회 마이그레이션)
+const LN_OWNER_DEFAULT = ['Lab 세미나', 'Lab 연구논의', '실적평가'];
 const LN_DEFAULT_GROUPS = [
-    { name: 'Lab 세미나', color: '#4f46e5', items: [] },
+    { name: 'Lab 세미나', color: '#4f46e5', ownerOnly: true, items: [] },
     { name: 'Lab 주간보고', color: '#0891b2', items: [] },
-    { name: 'Lab 연구논의', color: '#7c3aed', items: [] },
+    { name: 'Lab 연구논의', color: '#7c3aed', ownerOnly: true, items: [] },
     { name: 'Lab 수시업무', color: '#dc2626', items: [] },
     { name: '논문/특허 관리', color: '#d97706', items: [
         { text: '논문 제출처', link: 'https://docs.google.com/spreadsheets/d/1CERDZ18IWs0fec5M8vcrxFjKkGYHyFBSewjK4MKTU2M/edit?gid=155235501#gid=155235501' }
     ] },
     { name: 'Projects', color: '#059669', items: [] },
-    { name: '실적평가', color: '#db2777', items: [
-        { text: '개인별 평가', link: 'worklog-eval.html' },
-        { text: '개인별 실적 전반', link: 'member-performance.html' }
+    { name: '실적평가', color: '#db2777', ownerOnly: true, items: [
+        { text: '개인별 평가', link: 'worklog-eval.html', embed: true },
+        { text: '개인별 실적 전반', link: 'member-performance.html', embed: true }
     ] },
     { name: '기타관리', color: '#65a30d', items: [
         { text: 'Lab 운영정책' },
         { text: 'Lab 구성원', link: 'members.html' },
+        { text: '학생 인건비', link: 'payroll.html', embed: true },
         { text: 'Lab 예산관리', link: 'budget.html' },
         { text: 'Lab 주소록' }
     ] }
 ];
 
-// 캘린더 일정 유형과 색
-const LN_EV_TYPES = { '휴가': '#059669', '출장': '#2563eb', '세미나': '#7c3aed', '기타': '#6b7280' };
+// 캘린더 일정 유형과 색 (bg=칸 색, fg=글자 색)
+const LN_EV_TYPES = {
+    '휴가':   { bg: '#facc15', fg: '#3f3000' },   // 노랑
+    '출장':   { bg: '#a3e635', fg: '#1a2e05' },   // 연두
+    '세미나': { bg: '#2563eb', fg: '#ffffff' },   // 파랑
+    '기타':   { bg: '#1f2328', fg: '#ffffff' }    // 검정
+};
 
 // ==================== 전역 상태 ====================
 let auth, database;
@@ -94,26 +103,30 @@ function normalize() {
         if (!g.name) g.name = '(이름없음)';
         if (!g.color) g.color = LN_COLORS[i % LN_COLORS.length];
         if (typeof g.body !== 'string') g.body = '';
+        // 상위 계정 전용 잠금: 값이 없으면 기본 잠금 메뉴 이름으로 최초 1회 판정
+        if (typeof g.ownerOnly !== 'boolean') g.ownerOnly = LN_OWNER_DEFAULT.includes(g.name);
         g.items = toArr(g.items).map(it => {
             const o = (typeof it === 'string') ? { text: it } : it;
             if (!o.id) o.id = newId('i');
             o.text = String(o.text || '제목 없음');
             if (typeof o.body !== 'string') o.body = '';
             if (typeof o.link !== 'string') o.link = '';
+            o.embed = !!o.embed;
             o.subs = toArr(o.subs).map(s => {
                 const x = (typeof s === 'string') ? { text: s } : s;
-                return { id: x.id || newId('s'), text: String(x.text || ''), name: x.name ? String(x.name) : '', link: (typeof x.link === 'string') ? x.link : '' };
+                return { id: x.id || newId('s'), text: String(x.text || ''), name: x.name ? String(x.name) : '', link: (typeof x.link === 'string') ? x.link : '', embed: !!x.embed };
             });
             return o;
         });
     });
+    const dre = /^\d{4}-\d{2}-\d{2}$/;
     data.calendar = toArr(data.calendar)
-        .map(e => ({
-            id: e.id || newId('e'),
-            date: (typeof e.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.date)) ? e.date : '',
-            title: String(e.title || ''),
-            type: LN_EV_TYPES[e.type] ? e.type : '기타'
-        }))
+        .map(e => {
+            const date = (typeof e.date === 'string' && dre.test(e.date)) ? e.date : '';
+            let end = (typeof e.end === 'string' && dre.test(e.end)) ? e.end : date;
+            if (date && end < date) end = date;   // 종료일이 시작보다 앞이면 보정
+            return { id: e.id || newId('e'), date, end, title: String(e.title || ''), type: LN_EV_TYPES[e.type] ? e.type : '기타' };
+        })
         .filter(e => e.date && e.title);
 }
 
@@ -121,6 +134,21 @@ function normalize() {
 function findGroup(id) { return data.groups.find(g => g.id === id); }
 function findItem(id) { for (const g of data.groups) { const it = g.items.find(x => x.id === id); if (it) return { g, it }; } return null; }
 function findSub(id) { for (const g of data.groups) for (const it of g.items) { const s = it.subs.find(x => x.id === id); if (s) return { g, it, s }; } return null; }
+
+// ==================== 권한(상위 계정 전용 잠금) ====================
+// '나'(편집자) = ROOT_UID. 잠긴 메뉴(ownerOnly)는 그 외 계정에게 보기 전용(UI 레벨).
+function isOwner() { return !!(currentUser && currentUser.uid === ROOT_UID); }
+function groupOfNode(type, id) {
+    if (type === 'group') return findGroup(id);
+    if (type === 'item') { const r = findItem(id); return r && r.g; }
+    const r = findSub(id); return r && r.g;
+}
+// 이 노드를 지금 사용자가 편집할 수 없으면 true (잠긴 메뉴인데 상위 계정이 아님)
+function isLocked(type, id) {
+    if (isOwner()) return false;
+    const g = groupOfNode(type, id);
+    return !!(g && g.ownerOnly);
+}
 function subName(s) { return s.name || stripHtml(s.text).split('\n')[0].trim() || '세부'; }
 
 // ==================== 저장 / 불러오기 ====================
@@ -164,6 +192,8 @@ async function loadData() {
     setSaveStat('linked', '동기화됨');
     // 처음엔 메뉴(그룹)만 펼쳐 전체가 한눈에 들어오게
     data.groups.forEach(g => { if (!(g.id in openN)) openN[g.id] = true; });
+    // 첫 화면도 메뉴를 클릭한 것과 같은 크기로 — 첫 메뉴를 자동 선택
+    if (!cur && data.groups[0]) cur = { type: 'group', id: data.groups[0].id };
     render();
     showBody();
 }
@@ -176,27 +206,28 @@ function render() {
         treeEl.innerHTML = '<div class="ln-menu-empty">＋ 메뉴 추가로 시작하세요.</div>';
         return;
     }
-    data.groups.forEach(g => {
+    data.groups.forEach((g, gi) => {
+        const gLocked = !!g.ownerOnly && !isOwner();   // 이 메뉴가 지금 사용자에게 잠겼는가
         const gEl = document.createElement('div');
         gEl.className = 'ln-grp' + (openN[g.id] !== false ? ' open' : '');
         gEl.appendChild(rowEl({
             type: 'group', node: g, cls: 'ln-g-head', sel: cur && cur.type === 'group' && cur.id === g.id,
-            label: g.name, color: g.color, count: g.items.length,
+            label: g.name, num: String(gi + 1), count: g.items.length, locked: gLocked, ownerOnly: g.ownerOnly,
             onToggle: () => toggleN(g.id), onSelect: () => select('group', g.id)
         }));
         const cg = document.createElement('div'); cg.className = 'ln-children-g';
-        g.items.forEach(it => {
+        g.items.forEach((it, ii) => {
             const iEl = document.createElement('div'); iEl.className = 'ln-itm' + (openN[it.id] ? ' open' : '');
             iEl.appendChild(rowEl({
                 type: 'item', node: it, cls: 'ln-i-head', sel: cur && cur.type === 'item' && cur.id === it.id,
-                label: it.text, count: it.subs.length, link: it.link,
+                label: it.text, num: (gi + 1) + '-' + (ii + 1), count: it.subs.length, link: it.link, embed: it.embed, locked: gLocked,
                 onToggle: () => toggleN(it.id), onSelect: () => select('item', it.id)
             }));
             const ci = document.createElement('div'); ci.className = 'ln-children-i';
-            it.subs.forEach(s => {
+            it.subs.forEach((s, si) => {
                 ci.appendChild(rowEl({
                     type: 'sub', node: s, cls: 'ln-s-head', sel: cur && cur.type === 'sub' && cur.id === s.id,
-                    label: subName(s), leaf: true, link: s.link,
+                    label: subName(s), num: (gi + 1) + '-' + (ii + 1) + '-' + (si + 1), leaf: true, link: s.link, embed: s.embed, locked: gLocked,
                     onSelect: () => select('sub', s.id)
                 }));
             });
@@ -216,8 +247,8 @@ function rowEl(o) {
         + ((!o.leaf && o.type === 'item' && openN[o.node.id]) ? ' open' : '');
     row.dataset.type = o.type; row.dataset.id = o.node.id;
 
-    // 드래그 (이름변경 중이 아닐 때만)
-    if (renameId !== o.node.id) {
+    // 드래그 (이름변경 중이 아니고, 잠기지 않은 경우만)
+    if (renameId !== o.node.id && !o.locked) {
         row.draggable = true;
         row.ondragstart = e => { dragSrc = { type: o.type, id: o.node.id }; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', o.node.id); };
         row.ondragend = () => { row.classList.remove('dragging'); clearDropMarks(); };
@@ -234,8 +265,8 @@ function rowEl(o) {
     } else {
         const sp = document.createElement('span'); sp.className = 'caret'; sp.style.visibility = 'hidden'; sp.textContent = '•'; row.appendChild(sp);
     }
-    // 색 점 (메뉴)
-    if (o.color) { const d = document.createElement('span'); d.className = 'dotc'; d.style.background = o.color; row.appendChild(d); }
+    // 번호 (1 / 1-1 / 1-1-1) — 점 대신 순서 번호
+    if (o.num) { const nm = document.createElement('span'); nm.className = 'ln-num'; nm.textContent = o.num; row.appendChild(nm); }
 
     // 라벨 또는 이름변경 입력칸
     if (renameId === o.node.id) {
@@ -248,10 +279,27 @@ function rowEl(o) {
     } else {
         const lb = document.createElement('span'); lb.className = 'label';
         lb.textContent = o.label;
-        if (o.link) { const ic = document.createElement('i'); ic.className = 'fas fa-external-link-alt'; lb.appendChild(ic); }
-        lb.onclick = () => { if (o.link) openLink(o.link); else o.onSelect(); };   // 링크 항목은 클릭 시 해당 링크로 이동
+        if (o.link) { const ic = document.createElement('i'); ic.className = o.embed ? 'fas fa-desktop' : 'fas fa-external-link-alt'; lb.appendChild(ic); }
+        // 링크: embed면 본문에 표시(select), 아니면 새 창/페이지 이동
+        lb.onclick = () => { if (o.link && !o.embed) openLink(o.link); else o.onSelect(); };
         row.appendChild(lb);
         if (o.count !== undefined) { const cnt = document.createElement('span'); cnt.className = 'cnt'; cnt.textContent = o.count; cnt.onclick = o.onSelect; row.appendChild(cnt); }
+    }
+
+    // 잠금 메뉴(상위 계정 전용, 비소유자): 편집 ⋯메뉴 숨김. 아이콘은 메뉴 머리행에만.
+    if (o.locked) {
+        if (o.type === 'group') {
+            const lk = document.createElement('span'); lk.className = 'ln-lock'; lk.title = '상위 계정만 편집 가능 (보기 전용)';
+            lk.innerHTML = '<i class="fas fa-lock"></i>';
+            row.appendChild(lk);
+        }
+        return row;
+    }
+    // 소유자에게는 잠긴 메뉴 머리행에 표시 아이콘 (편집은 가능)
+    if (o.ownerOnly && o.type === 'group' && isOwner()) {
+        const lk = document.createElement('span'); lk.className = 'ln-lock owner'; lk.title = '상위 계정 전용 메뉴 (다른 관리자는 보기 전용)';
+        lk.innerHTML = '<i class="fas fa-lock"></i>';
+        row.appendChild(lk);
     }
 
     // ... 메뉴
@@ -267,6 +315,14 @@ function openLink(url) {
     else window.location.href = url;
 }
 
+// 임베드용 주소: 외부는 그대로, 내부 페이지는 ?embed=1 부착(네비/푸터 숨김)
+function embedSrc(url) {
+    if (/^https?:\/\//i.test(url)) return url;
+    const sep = url.indexOf('?') >= 0 ? '&' : '?';
+    const h = url.indexOf('#');
+    return h >= 0 ? url.slice(0, h) + sep + 'embed=1' + url.slice(h) : url + sep + 'embed=1';
+}
+
 function toggleN(id) { openN[id] = (openN[id] === false) ? true : !openN[id]; if (openN[id] === undefined) openN[id] = true; render(); }
 function expandAll(open) { data.groups.forEach(g => { openN[g.id] = open; g.items.forEach(it => openN[it.id] = open); }); render(); }
 
@@ -276,15 +332,29 @@ function openPop(btn, type, id) {
     const add = (label, fn, cls) => { const b = document.createElement('button'); if (cls) b.className = cls; b.innerHTML = label; b.onclick = () => { closePop(); fn(); }; pop.appendChild(b); };
     const sep = () => { const s = document.createElement('div'); s.className = 'sep'; pop.appendChild(s); };
 
+    if (isLocked(type, id)) return;   // 잠긴 메뉴는 편집 팝업 자체를 열지 않음
     const node = type === 'group' ? findGroup(id) : type === 'item' ? (findItem(id) || {}).it : (findSub(id) || {}).s;
     if (!node) return;
+
+    // 상위 계정만: 메뉴 잠금/해제 토글
+    if (type === 'group' && isOwner()) {
+        add(node.ownerOnly ? '🔓 공동 편집으로 (잠금 해제)' : '🔒 나만 편집 (잠금)', () => {
+            node.ownerOnly = !node.ownerOnly; touch(); render();
+        });
+        sep();
+    }
 
     if (type === 'group') add('➕ 서브탭 추가', () => addChild('group', id));
     if (type === 'item') add('➕ 세부 추가', () => addChild('item', id));
     add('✏️ 이름 바꾸기', () => startRename(id));
     if (type !== 'group') {
         add(node.link ? '🔗 링크 수정' : '🔗 링크 지정', () => setLink(type, id));
-        if (node.link) add('⛓️ 링크 해제', () => { node.link = ''; touch(); render(); if (cur && cur.id === id) showBody(); });
+        if (node.link) {
+            add(node.embed ? '↗️ 새 창으로 열기로 전환' : '🖥️ 본문에 표시(임베드)', () => {
+                node.embed = !node.embed; touch(); render(); if (cur && cur.id === id) showBody();
+            });
+            add('⛓️ 링크 해제', () => { node.link = ''; node.embed = false; touch(); render(); if (cur && cur.id === id) showBody(); });
+        }
     }
     sep();
     add('🗑️ 삭제', () => del(type, id), 'danger');
@@ -398,9 +468,9 @@ function select(type, id) { cur = { type, id }; showBody(); render(); }
 
 function bodyOf() {
     if (!cur || cur.type === 'calendar') return null;
-    if (cur.type === 'group') { const g = findGroup(cur.id); return g && { crumb: '', title: g.name, link: '', val: g.body || '', set: v => g.body = v }; }
-    if (cur.type === 'item') { const r = findItem(cur.id); return r && { crumb: r.g.name, title: r.it.text, link: r.it.link, val: r.it.body || '', set: v => r.it.body = v }; }
-    const r = findSub(cur.id); return r && { crumb: r.g.name + ' › ' + r.it.text, title: subName(r.s), link: r.s.link, val: r.s.text || '', set: v => r.s.text = v };
+    if (cur.type === 'group') { const g = findGroup(cur.id); return g && { crumb: '', title: g.name, link: '', embed: false, val: g.body || '', set: v => g.body = v }; }
+    if (cur.type === 'item') { const r = findItem(cur.id); return r && { crumb: r.g.name, title: r.it.text, link: r.it.link, embed: r.it.embed, val: r.it.body || '', set: v => r.it.body = v }; }
+    const r = findSub(cur.id); return r && { crumb: r.g.name + ' › ' + r.it.text, title: subName(r.s), link: r.s.link, embed: r.s.embed, val: r.s.text || '', set: v => r.s.text = v };
 }
 
 // 편집창 글자 크기 (브라우저 확대/축소와 별개로 편집창만 조절, 기기별 저장)
@@ -420,7 +490,18 @@ function showBody() {
     const b = bodyOf();
     if (!b) { bodyEl.innerHTML = '<div class="ln-placeholder">왼쪽 메뉴에서 항목을 선택하세요.</div>'; return; }
 
-    // 링크 항목: 바로가기 카드 (라벨 클릭 시 이미 이동, 여기서는 '열기' 버튼 제공)
+    // 링크 항목: embed면 본문에 iframe 임베드, 아니면 바로가기 카드
+    if (b.link && b.embed) {
+        bodyEl.innerHTML =
+            (b.crumb ? '<div class="ln-crumb">' + esc(b.crumb) + '</div>' : '') +
+            '<div class="ln-title ln-title-row"><span>' + esc(b.title) + '</span>' +
+            '<button class="wl-btn" id="lnNewTab" title="새 탭으로 크게 보기"><i class="fas fa-external-link-alt"></i> 새 탭</button></div>' +
+            '<div class="ln-embed-wrap"><iframe class="ln-embed" id="lnEmbed" src="' + esc(embedSrc(b.link)) + '" referrerpolicy="no-referrer-when-downgrade"></iframe></div>' +
+            '<div class="ln-embed-note">화면이 비어 있으면(외부 사이트 보안 정책) <a href="#" id="lnNote">새 탭으로 열기</a>를 눌러주세요.</div>';
+        document.getElementById('lnNewTab').onclick = () => openLink(b.link);
+        document.getElementById('lnNote').onclick = e => { e.preventDefault(); openLink(b.link); };
+        return;
+    }
     if (b.link) {
         bodyEl.innerHTML =
             (b.crumb ? '<div class="ln-crumb">' + esc(b.crumb) + '</div>' : '') +
@@ -429,6 +510,15 @@ function showBody() {
             '<br><a href="#" id="lnLinkGo">열기</a>' +
             '<span class="url">' + esc(b.link) + '</span></div>';
         document.getElementById('lnLinkGo').onclick = e => { e.preventDefault(); openLink(b.link); };
+        return;
+    }
+
+    // 잠긴 메뉴(상위 계정 전용, 비소유자): 보기 전용 — 툴바/입력 없이 내용만 표시
+    if (cur && isLocked(cur.type, cur.id)) {
+        bodyEl.innerHTML =
+            (b.crumb ? '<div class="ln-crumb">' + esc(b.crumb) + '</div>' : '') +
+            '<div class="ln-title">' + esc(b.title) + ' <span class="ln-ro-badge"><i class="fas fa-lock"></i> 보기 전용</span></div>' +
+            '<div class="ln-readonly">' + (b.val || '<span class="ln-ro-empty">내용 없음</span>') + '</div>';
         return;
     }
 
@@ -557,7 +647,7 @@ function renderCalendar() {
     const dimPrev = new Date(calY, calM, 0).getDate();
 
     let legend = '';
-    Object.keys(LN_EV_TYPES).forEach(t => { legend += '<span class="lg"><i style="background:' + LN_EV_TYPES[t] + '"></i>' + t + '</span>'; });
+    Object.keys(LN_EV_TYPES).forEach(t => { legend += '<span class="lg"><i style="background:' + LN_EV_TYPES[t].bg + '"></i>' + t + '</span>'; });
 
     let html =
         '<div class="ln-cal-head">' +
@@ -567,14 +657,13 @@ function renderCalendar() {
         '  <button class="wl-btn" id="calToday" style="padding:5px 11px;font-size:12.5px;">오늘</button>' +
         '  <div class="ln-cal-legend">' + legend + '</div>' +
         '</div>' +
-        '<div class="ln-cal-hint">날짜 칸을 클릭하면 일정(휴가·출장·세미나 등)을 추가하고, 일정을 클릭하면 수정/삭제할 수 있습니다.</div>' +
+        '<div class="ln-cal-hint">날짜 칸을 클릭하면 일정을 추가하고(시작일~종료일 지정 가능), 일정을 클릭하면 수정/삭제할 수 있습니다.</div>' +
         '<table class="ln-cal"><thead><tr>';
     LN_DAYS.forEach((d, i) => { html += '<th class="' + (i === 0 ? 'sun' : i === 6 ? 'sat' : '') + '">' + d + '</th>'; });
     html += '</tr></thead><tbody>';
 
-    // 날짜별 일정 맵
-    const byDate = {};
-    (data.calendar || []).forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+    // 시작일 순으로 정렬 (여러 날 일정은 걸치는 날마다 표시)
+    const cal = (data.calendar || []).slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 
     let day = 1 - startDow;
     for (let w = 0; w < 6; w++) {
@@ -585,10 +674,13 @@ function renderCalendar() {
             if (day < 1) { out = true; m = calM - 1; if (m < 0) { m = 11; y--; } d = dimPrev + day; }
             else if (day > dim) { out = true; m = calM + 1; if (m > 11) { m = 0; y++; } d = day - dim; }
             const ds = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-            const evs = byDate[ds] || [];
+            const evs = cal.filter(e => e.date <= ds && e.end >= ds);   // 이 날에 걸치는 일정
             let cell = '<span class="dnum">' + d + '</span>';
             evs.slice(0, 3).forEach(e => {
-                cell += '<span class="ln-ev" data-ev="' + esc(e.id) + '" style="background:' + LN_EV_TYPES[e.type] + '" title="[' + esc(e.type) + '] ' + esc(e.title) + '">' + esc(e.title) + '</span>';
+                const c = LN_EV_TYPES[e.type] || LN_EV_TYPES['기타'];
+                const multi = e.date !== e.end;
+                const rangeTxt = multi ? ' (' + e.date + ' ~ ' + e.end + ')' : '';
+                cell += '<span class="ln-ev" data-ev="' + esc(e.id) + '" style="background:' + c.bg + ';color:' + c.fg + '" title="[' + esc(e.type) + '] ' + esc(e.title) + esc(rangeTxt) + '">' + esc(e.title) + '</span>';
             });
             if (evs.length > 3) cell += '<span class="ln-ev-more">+' + (evs.length - 3) + '건 더</span>';
             html += '<td class="' + (out ? 'out ' : '') + (dow === 0 ? 'sun ' : dow === 6 ? 'sat ' : '') + (ds === today ? 'today' : '') + '" data-date="' + ds + '">' + cell + '</td>';
@@ -617,6 +709,7 @@ function openEvPop(anchor, mode, key) {
     const ev = mode === 'edit' ? data.calendar.find(x => x.id === key) : null;
     if (mode === 'edit' && !ev) return;
     const date = mode === 'edit' ? ev.date : key;
+    const end = mode === 'edit' ? (ev.end || ev.date) : key;
 
     let typeOpts = '';
     Object.keys(LN_EV_TYPES).forEach(t => { typeOpts += '<option value="' + t + '"' + ((ev ? ev.type : '기타') === t ? ' selected' : '') + '>' + t + '</option>'; });
@@ -624,7 +717,10 @@ function openEvPop(anchor, mode, key) {
     pop.innerHTML =
         '<h4>' + (mode === 'edit' ? '일정 수정' : '일정 추가') + '</h4>' +
         '<input type="text" id="evTitle" placeholder="일정 내용 (예: 홍길동 휴가)" value="' + esc(ev ? ev.title : '') + '">' +
+        '<label class="ev-lbl">시작일</label>' +
         '<input type="date" id="evDate" value="' + esc(date) + '">' +
+        '<label class="ev-lbl">종료일 <span>(하루면 시작일과 같게)</span></label>' +
+        '<input type="date" id="evEnd" value="' + esc(end) + '">' +
         '<select id="evType">' + typeOpts + '</select>' +
         '<div class="ev-actions">' +
         (mode === 'edit' ? '<button class="wl-btn ev-del" id="evDelBtn"><i class="fas fa-trash"></i></button>' : '') +
@@ -655,14 +751,17 @@ function openEvPop(anchor, mode, key) {
 function saveEvPop() {
     const title = document.getElementById('evTitle').value.trim();
     const date = document.getElementById('evDate').value;
+    let end = document.getElementById('evEnd').value;
     const type = document.getElementById('evType').value;
     if (!title) { lnAlert('일정 내용을 입력하세요.', 'error'); return; }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { lnAlert('날짜를 선택하세요.', 'error'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { lnAlert('시작일을 선택하세요.', 'error'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(end)) end = date;
+    if (end < date) end = date;   // 종료일이 시작보다 앞이면 하루짜리로
     if (evPopCtx.mode === 'edit') {
         const ev = data.calendar.find(x => x.id === evPopCtx.id);
-        if (ev) { ev.title = title; ev.date = date; ev.type = type; }
+        if (ev) { ev.title = title; ev.date = date; ev.end = end; ev.type = type; }
     } else {
-        data.calendar.push({ id: newId('e'), date, title, type });
+        data.calendar.push({ id: newId('e'), date, end, title, type });
     }
     closeEvPop(); touch(); renderCalendar();
 }

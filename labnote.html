@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>보안 지능 연구실 - Lab 노트</title>
+    <title>보안 지능 연구실 - SILab 업무관리</title>
     <link rel="icon" href="./image.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="common.css?v=31">
     <link rel="stylesheet" href="photo.css?v=30">
     <link rel="stylesheet" href="worklog.css?v=11">
-    <link rel="stylesheet" href="labnote.css?v=6">
+    <link rel="stylesheet" href="labnote.css?v=8">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -38,7 +38,7 @@
             <div class="nav-drop nav-perf" style="display:none;">
                 <a href="./worklog.html" class="nav-drop-btn"><i class="fas fa-tasks"></i> 업무관리 <i class="fas fa-caret-down nav-drop-caret"></i></a>
                 <div class="nav-drop-menu">
-                    <a href="./labnote.html"><i class="fas fa-book"></i> Lab 노트</a>
+                    <a href="./labnote.html"><i class="fas fa-book"></i> SILab 업무관리</a>
                     <a href="./worklog.html"><i class="fas fa-clipboard-list"></i> 업무보드</a>
                     <a href="./worklog-eval.html"><i class="fas fa-user-check"></i> 개인별 평가</a>
                     <a href="./performance.html"><i class="fas fa-chart-line"></i> Performance</a>
@@ -88,7 +88,7 @@
         <!-- 로그아웃 상태 게이트 -->
         <div id="authGate" class="auth-gate">
             <i class="fas fa-user-lock"></i>
-            <h2>Lab 노트</h2>
+            <h2>SILab 업무관리</h2>
             <p>이 페이지는 연구실 멤버 로그인 후에만 볼 수 있습니다.</p>
             <button class="login-btn gate-btn" id="gateLoginBtn">
                 <i class="fas fa-sign-in-alt"></i> 로그인하기
@@ -98,7 +98,7 @@
         <!-- 로그인 상태 본문 -->
         <div id="lnApp" style="display:none;">
             <div class="wl-topbar">
-                <h1><i class="fas fa-book"></i> Lab 노트</h1>
+                <h1><i class="fas fa-book"></i> SILab 업무관리</h1>
                 <span class="wl-savestat" id="saveStat"><span class="wl-dot" id="saveDot"></span><span id="saveText">불러오는 중...</span></span>
                 <span class="wl-spacer"></span>
                 <div class="wl-actions">
@@ -164,6 +164,6 @@
     <!-- JavaScript -->
     <script src="config.js?v=30"></script>
     <script src="common.js?v=37"></script>
-    <script src="labnote.js?v=6"></script>
+    <script src="labnote.js?v=8"></script>
 </body>
 </html>
