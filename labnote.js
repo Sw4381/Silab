@@ -6,6 +6,7 @@
 // ==================== 상수 ====================
 const LN_ALLOWED = [ADMIN_UID, ROOT_UID];
 const LN_PATH = 'labnote';
+const LN_BUILD = '12';   // 임베드 iframe 캐시 무력화용 버전 (배포 시 올림)
 const LN_COLORS = ['#4f46e5', '#0891b2', '#7c3aed', '#dc2626', '#d97706', '#059669', '#db2777', '#65a30d'];
 
 // 첫 사용 시 자동 생성되는 기본 메뉴 (이후 추가/이름변경/삭제/순서변경 자유)
@@ -318,12 +319,13 @@ function openLink(url) {
     else window.location.href = url;
 }
 
-// 임베드용 주소: 외부는 그대로, 내부 페이지는 ?embed=1 부착(네비/푸터 숨김)
+// 임베드용 주소: 외부는 그대로, 내부 페이지는 ?embed=1(네비/푸터 숨김) + _v(캐시 무력화)
 function embedSrc(url) {
     if (/^https?:\/\//i.test(url)) return url;
     const sep = url.indexOf('?') >= 0 ? '&' : '?';
+    const q = 'embed=1&_v=' + LN_BUILD;
     const h = url.indexOf('#');
-    return h >= 0 ? url.slice(0, h) + sep + 'embed=1' + url.slice(h) : url + sep + 'embed=1';
+    return h >= 0 ? url.slice(0, h) + sep + q + url.slice(h) : url + sep + q;
 }
 
 function toggleN(id) { openN[id] = (openN[id] === false) ? true : !openN[id]; if (openN[id] === undefined) openN[id] = true; render(); }
@@ -503,9 +505,16 @@ function showBody() {
         document.body.classList.add('ln-embed-body');
         bodyEl.innerHTML =
             '<div class="ln-title ln-title-row"><span>' + esc(b.title) + '</span>' +
+            '<button class="wl-btn" id="lnFs" title="브라우저 전체 화면으로 크게 보기"><i class="fas fa-expand"></i> 전체화면</button>' +
             '<button class="wl-btn" id="lnNewTab" title="새 탭으로 열기"><i class="fas fa-external-link-alt"></i> 새 탭</button></div>' +
-            '<div class="ln-embed-wrap"><iframe class="ln-embed" id="lnEmbed" src="' + esc(embedSrc(b.link)) + '" referrerpolicy="no-referrer-when-downgrade"></iframe></div>' +
+            '<div class="ln-embed-wrap" id="lnEmbedWrap">' +
+            '  <button class="wl-btn ln-fs-close" id="lnFsClose" title="전체화면 닫기"><i class="fas fa-compress"></i> 닫기</button>' +
+            '  <iframe class="ln-embed" id="lnEmbed" src="' + esc(embedSrc(b.link)) + '" referrerpolicy="no-referrer-when-downgrade"></iframe>' +
+            '</div>' +
             '<div class="ln-embed-note">화면이 비어 있으면(외부 사이트 보안 정책) <a href="#" id="lnNote">새 탭으로 열기</a>를 눌러주세요.</div>';
+        const wrap = document.getElementById('lnEmbedWrap');
+        document.getElementById('lnFs').onclick = () => wrap.classList.add('fs');
+        document.getElementById('lnFsClose').onclick = () => wrap.classList.remove('fs');
         document.getElementById('lnNewTab').onclick = () => openLink(b.link);
         document.getElementById('lnNote').onclick = e => { e.preventDefault(); openLink(b.link); };
         return;

@@ -119,8 +119,13 @@ body.ln-embed-body .container { max-width: 100% !important; padding-left: 8px; p
 .ln-title-row { display: flex; align-items: center; gap: 10px; }
 .ln-title-row span { flex: 1; min-width: 0; }
 .ln-title-row .wl-btn { font-size: 12.5px; padding: 6px 11px; }
-.ln-embed-wrap { border: 1px solid var(--ln-line); border-radius: 10px; overflow: hidden; background: #fff; }
+.ln-embed-wrap { position: relative; border: 1px solid var(--ln-line); border-radius: 10px; overflow: hidden; background: #fff; }
 .ln-embed { width: 100%; height: calc(100vh - 165px); min-height: 560px; border: 0; display: block; }
+/* 전체화면: 브라우저 창 전체를 덮어 무조건 최대 폭 */
+.ln-fs-close { display: none; position: fixed; top: 10px; right: 14px; z-index: 6001; }
+.ln-embed-wrap.fs { position: fixed; inset: 0; z-index: 6000; border: 0; border-radius: 0; }
+.ln-embed-wrap.fs .ln-embed { height: 100vh; min-height: 0; }
+.ln-embed-wrap.fs .ln-fs-close { display: inline-flex; }
 .ln-embed-note { font-size: 12px; color: var(--ln-sub); margin-top: 8px; }
 .ln-embed-note a { color: var(--ln-accent); font-weight: 700; }
 
