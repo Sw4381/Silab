@@ -298,12 +298,45 @@ function createStudentCard(section, key, member) {
     div.setAttribute('data-key', key);
     div.setAttribute('data-section', section);
 
-    const photoSrc = member.photo || './members_img/f4.png';
-
     const showActions = currentUser && (editMode || deleteMode);
     const showEdit = currentUser && editMode;
     const showDelete = currentUser && deleteMode;
 
+    const actionsHtml = `
+            <div class="member-actions" style="display:${showActions ? 'flex' : 'none'}; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                <button class="admin-btn edit" style="display:${showEdit ? 'flex' : 'none'}; padding:6px 12px; font-size:0.85em;" onclick="openEditModal('${section}', '${key}')">
+                    <i class="fas fa-edit"></i> 수정
+                </button>
+                <button class="admin-btn delete" style="display:${showDelete ? 'flex' : 'none'}; padding:6px 12px; font-size:0.85em;" onclick="deleteMember('${section}', '${key}')">
+                    <i class="fas fa-trash"></i> 삭제
+                </button>
+            </div>`;
+
+    // 파트타임: 사진(공간 포함)·연구분야 없이 간단하게 (이름 + 직책/학위만, 빈 항목은 생략)
+    if (section === 'parttime') {
+        div.classList.add('student-item--simple');
+        const rows = [];
+        if (member.role) rows.push(`
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fas fa-id-badge"></i> 직책</span>
+                    <span class="detail-value">${escHtml(member.role)}</span>
+                </div>`);
+        if (member.degree) rows.push(`
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fas fa-graduation-cap"></i> 학위</span>
+                    <span class="detail-value degree">${escHtml(member.degree)}</span>
+                </div>`);
+        div.innerHTML = `
+        <div class="student-info">
+            <div class="student-name">${escHtml(member.name)}</div>
+            ${rows.length ? `<div class="student-details">${rows.join('')}</div>` : ''}
+            ${actionsHtml}
+        </div>
+    `;
+        return div;
+    }
+
+    const photoSrc = member.photo || './members_img/f4.png';
     div.innerHTML = `
         <img src="${escHtml(photoSrc)}" class="student-photo" alt="${escHtml(member.name)}" loading="lazy" onerror="this.src='./members_img/f4.png'">
         <div class="student-info">
@@ -322,14 +355,7 @@ function createStudentCard(section, key, member) {
                     <span class="detail-value degree">${escHtml(member.degree)}</span>
                 </div>
             </div>
-            <div class="member-actions" style="display:${showActions ? 'flex' : 'none'}; gap:8px; margin-top:12px; flex-wrap:wrap;">
-                <button class="admin-btn edit" style="display:${showEdit ? 'flex' : 'none'}; padding:6px 12px; font-size:0.85em;" onclick="openEditModal('${section}', '${key}')">
-                    <i class="fas fa-edit"></i> 수정
-                </button>
-                <button class="admin-btn delete" style="display:${showDelete ? 'flex' : 'none'}; padding:6px 12px; font-size:0.85em;" onclick="deleteMember('${section}', '${key}')">
-                    <i class="fas fa-trash"></i> 삭제
-                </button>
-            </div>
+            ${actionsHtml}
         </div>
     `;
     return div;
