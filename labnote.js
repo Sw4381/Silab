@@ -489,18 +489,27 @@ function setEdFontSize(px) {
 
 function showBody() {
     if (!bodyEl) return;
+    // 임베드 전체 폭 상태 초기화 (메뉴 열림 상태는 링크 전환 시 유지)
+    const app = document.getElementById('lnApp');
+    const menuWasOpen = !!(app && app.classList.contains('ln-menu-open'));
+    if (app) app.classList.remove('ln-embed-full', 'ln-menu-open');
+    document.body.classList.remove('ln-embed-body');
     if (cur && cur.type === 'calendar') { renderCalendar(); return; }
     const b = bodyOf();
     if (!b) { bodyEl.innerHTML = '<div class="ln-placeholder">왼쪽 메뉴에서 항목을 선택하세요.</div>'; return; }
 
-    // 링크 항목: 기본은 본문에 iframe 임베드, openNew면 바로가기 카드('열기' 버튼)
+    // 링크 항목: 기본은 본문에 iframe 임베드(브라우저 전체 폭), openNew면 바로가기 카드('열기' 버튼)
     if (b.link && !b.openNew) {
+        if (app) { app.classList.add('ln-embed-full'); if (menuWasOpen) app.classList.add('ln-menu-open'); }
+        document.body.classList.add('ln-embed-body');
         bodyEl.innerHTML =
-            (b.crumb ? '<div class="ln-crumb">' + esc(b.crumb) + '</div>' : '') +
-            '<div class="ln-title ln-title-row"><span>' + esc(b.title) + '</span>' +
-            '<button class="wl-btn" id="lnNewTab" title="새 탭으로 크게 보기"><i class="fas fa-external-link-alt"></i> 새 탭</button></div>' +
+            '<div class="ln-title ln-title-row">' +
+            '<button class="wl-btn" id="lnMenuToggle" title="왼쪽 메뉴 보기/숨기기"><i class="fas fa-bars"></i> 메뉴</button>' +
+            '<span>' + esc(b.title) + '</span>' +
+            '<button class="wl-btn" id="lnNewTab" title="새 탭으로 열기"><i class="fas fa-external-link-alt"></i> 새 탭</button></div>' +
             '<div class="ln-embed-wrap"><iframe class="ln-embed" id="lnEmbed" src="' + esc(embedSrc(b.link)) + '" referrerpolicy="no-referrer-when-downgrade"></iframe></div>' +
             '<div class="ln-embed-note">화면이 비어 있으면(외부 사이트 보안 정책) <a href="#" id="lnNote">새 탭으로 열기</a>를 눌러주세요.</div>';
+        document.getElementById('lnMenuToggle').onclick = () => { if (app) app.classList.toggle('ln-menu-open'); };
         document.getElementById('lnNewTab').onclick = () => openLink(b.link);
         document.getElementById('lnNote').onclick = e => { e.preventDefault(); openLink(b.link); };
         return;
