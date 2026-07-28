@@ -17,7 +17,7 @@ var ALLOWED_USERS = ADMIN_EMAILS;
 // 목록에 'project page' 링크가 자동으로 표시된다. (DB에 projectUrl 을 넣으면 그 값이 우선)
 // 새 논문 페이지를 만들면 여기에 { match, url } 한 줄만 추가하면 된다.
 var PROJECT_PAGE_MAP = [
-    { match: 'enhancing incident response through effective ttps', url: 'project.html?id=ttps' }
+    { match: 'enhancing incident response through effective ttps', url: '/project/project.html?id=ttps' }
 ];
 
 function resolveProjectPageUrl(title) {

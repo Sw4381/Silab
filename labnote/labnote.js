@@ -6,7 +6,14 @@
 // ==================== 상수 ====================
 const LN_ALLOWED = [ADMIN_UID, ROOT_UID];
 const LN_PATH = 'labnote';
-const LN_BUILD = '12';   // 임베드 iframe 캐시 무력화용 버전 (배포 시 올림)
+const LN_BUILD = '13';   // 임베드 iframe 캐시 무력화용 버전 (배포 시 올림)
+// 폴더 구조 이전: 예전에 저장된 짧은 링크(budget.html 등)를 새 경로로 매핑
+const LN_PAGE_MOVES = {
+    'worklog.html': '/worklog/worklog.html', 'worklog-eval.html': '/worklog/worklog-eval.html',
+    'member-performance.html': '/member-performance/member-performance.html', 'members.html': '/members/members.html',
+    'payroll.html': '/payroll/payroll.html', 'budget.html': '/budget/budget.html', 'performance.html': '/performance/performance.html'
+};
+function resolveLink(url) { return (url && LN_PAGE_MOVES[url]) ? LN_PAGE_MOVES[url] : url; }
 const LN_COLORS = ['#4f46e5', '#0891b2', '#7c3aed', '#dc2626', '#d97706', '#059669', '#db2777', '#65a30d'];
 
 // 첫 사용 시 자동 생성되는 기본 메뉴 (이후 추가/이름변경/삭제/순서변경 자유)
@@ -23,14 +30,14 @@ const LN_DEFAULT_GROUPS = [
     ] },
     { name: 'Projects', color: '#059669', items: [] },
     { name: '실적평가', color: '#db2777', ownerOnly: true, items: [
-        { text: '개인별 평가', link: 'worklog-eval.html' },
-        { text: '개인별 실적 전반', link: 'member-performance.html' }
+        { text: '개인별 평가', link: '/worklog/worklog-eval.html' },
+        { text: '개인별 실적 전반', link: '/member-performance/member-performance.html' }
     ] },
     { name: '기타관리', color: '#65a30d', items: [
         { text: 'Lab 운영정책' },
-        { text: 'Lab 구성원', link: 'members.html' },
-        { text: '학생 인건비', link: 'payroll.html' },
-        { text: 'Lab 예산관리', link: 'budget.html' },
+        { text: 'Lab 구성원', link: '/members/members.html' },
+        { text: '학생 인건비', link: '/payroll/payroll.html' },
+        { text: 'Lab 예산관리', link: '/budget/budget.html' },
         { text: 'Lab 주소록' }
     ] }
 ];
@@ -315,12 +322,14 @@ function rowEl(o) {
 
 // 링크 열기: 외부(http)는 새 탭, 내부 페이지는 현재 탭에서 이동
 function openLink(url) {
+    url = resolveLink(url);
     if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
     else window.location.href = url;
 }
 
 // 임베드용 주소: 외부는 그대로, 내부 페이지는 ?embed=1(네비/푸터 숨김) + _v(캐시 무력화)
 function embedSrc(url) {
+    url = resolveLink(url);
     if (/^https?:\/\//i.test(url)) return url;
     const sep = url.indexOf('?') >= 0 ? '&' : '?';
     const q = 'embed=1&_v=' + LN_BUILD;

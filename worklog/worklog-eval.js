@@ -120,7 +120,7 @@ function render() {
 
     if (!names.length) {
         board.innerHTML = `<div class="ev-none">등록된 인원이 없습니다.<br>
-            <a href="worklog.html">업무 보드</a>의 [담당자 명단]에서 인원을 등록하면 여기에 카드가 생깁니다.</div>`;
+            <a href="/worklog/worklog.html">업무 보드</a>의 [담당자 명단]에서 인원을 등록하면 여기에 카드가 생깁니다.</div>`;
         return;
     }
 

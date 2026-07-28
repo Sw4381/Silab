@@ -380,7 +380,7 @@
         }).then(function () {
             alertMsg('프로젝트 페이지가 저장되었습니다.', 'success');
             close();
-            if (typeof onSavedCb === 'function') onSavedCb('project.html?id=' + currentPageId);
+            if (typeof onSavedCb === 'function') onSavedCb('/project/project.html?id=' + currentPageId);
         }).catch(function (error) {
             console.error('프로젝트 페이지 저장 실패:', error);
             alertMsg('저장 실패: ' + error.message, 'error');

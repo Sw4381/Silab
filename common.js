@@ -174,7 +174,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var navAlias = { 'member-performance.html': 'performance.html', 'team-performance.html': 'performance.html', 'payroll.html': 'budget.html', 'activity.html': 'budget.html' };
     var activePage = navAlias[currentPage] || currentPage;
     document.querySelectorAll('.menu a').forEach(function (link) {
-        var href = link.getAttribute('href').replace('./', '');
+        // 폴더 구조(/members/members.html)·평면(members.html) 모두 파일명으로 비교
+        var href = (link.getAttribute('href') || '').split('/').pop();
         link.classList.toggle('active', href === activePage);
     });
     // 업무관리 드롭다운: 하위 메뉴가 활성이면 부모 버튼도 강조
@@ -205,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var logo = document.querySelector('.logo a') || document.querySelector('.logo');
         if (!logo) return;
         var NEED = 5, WINDOW = 1500, NAV_DELAY = 320;
-        var href = (logo.getAttribute && logo.getAttribute('href')) || 'index.html';
+        var href = (logo.getAttribute && logo.getAttribute('href')) || '/index.html';
         var clicks = [];
         var navTimer = null;
         logo.addEventListener('click', function (e) {

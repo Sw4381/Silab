@@ -225,7 +225,7 @@ function renderContent(data) {
 
     const links = [];
     if (data.paperUrl) links.push(`<a href="${escHtml(data.paperUrl)}" target="_blank" rel="noopener"><i class="fas fa-file-alt"></i> Paper</a>`);
-    links.push(`<a href="./Publication.html"><i class="fas fa-list"></i> 전체 논문 목록</a>`);
+    links.push(`<a href="/Publication/Publication.html"><i class="fas fa-list"></i> 전체 논문 목록</a>`);
 
     let html = `
         <section class="project-hero">

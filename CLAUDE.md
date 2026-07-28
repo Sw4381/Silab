@@ -24,22 +24,29 @@
 
 ## 파일 구조
 
+**2026-07 개편: 페이지별 폴더 구조.** 각 페이지는 자기 폴더 안에 `.html/.css/.js`를 둔다(예: `members/members.html`). **홈(index)·공유파일·CNAME은 root 유지.** 페이지 URL은 `silab.ai.kr/members/members.html` 형태다(기존 평면 `members.html`에서 변경됨 → 옛 외부 링크·북마크는 깨질 수 있음).
+
+⚠**모든 경로는 root 절대경로**(`/members/members.html`, `/common.css`)로 작성한다. 상대경로(`./x.html`)를 쓰면 폴더 깊이 때문에 깨진다. 새 페이지 추가 시에도 nav·자산·교차CSS를 전부 `/폴더/파일` 형태로.
+
 ```
 Silab/
-├── index.html / index.css / index.js       # 홈 (슬라이더, 연구분야 카드)
-├── members.html / members.css / members.js  # 연구원 소개
-├── research.html / research.css / research.js # 연구 소개
-├── projects.html / projects.css / projects.js # 프로젝트 목록
-├── Publication.html / Publication.css / Publication.js # 논문 목록
-├── photo.html / photo.css / photo.js       # 기타 활동 사진
-├── news.html / news.css / news.js           # 보안 뉴스 검색 (네이버 API, Worker 중계)
-├── worker/news-proxy.js + README.md         # Cloudflare Worker 프록시 (네이버 키 보관, 배포 가이드)
-├── common.css                               # 공통 스타일 (헤더, 푸터, 모달 등)
-├── styles.css                               # 전역 기본 스타일
-├── batch_upload.html                        # 관리자용 일괄 업로드 도구
-├── image.png                                # 연구실 로고
-└── CNAME                                    # GitHub Pages 도메인 설정
+├── index.html / index.css / index.js       # 홈 (root 필수 — Pages 진입점)
+├── common.css / common.js / config.js       # 전 페이지 공유 (root, /common.css 로 참조)
+├── image.png                                # 연구실 로고 (root, /image.png)
+├── CNAME                                    # GitHub Pages 도메인 설정 (root 필수)
+├── members/    (members.html/.css/.js)      # 연구원 소개 (파트타임 카드는 사진·연구분야 생략)
+├── research/   · projects/ · project/       # 연구/프로젝트 목록·상세(project-editor.js 포함)
+├── Publication/ · photo/ · news/            # 논문 / 활동사진 / 뉴스검색
+├── budget/ · payroll/ · activity/           # 예산 / 학생인건비 / 연구활동비
+├── performance/ · member-performance/ · team-performance/   # 실적
+├── worklog/    (worklog·worklog-eval)       # 업무보드 + 개인별 평가
+├── labnote/    (SILab 업무관리 허브)         # 트리 메뉴·텍스트창·캘린더·임베드
+├── index_preview/ · batch_upload/           # 홈 미리보기 / 일괄 업로드 도구
+└── worker/     (news-proxy.js + README)     # Cloudflare Worker 프록시 (네이버 키 보관)
 ```
+
+- **nav 활성화**(common.js)는 URL의 **파일명**으로 판정(`pathname.split('/').pop()`)하므로 폴더 구조에서도 동작. navAlias 키도 파일명 기준.
+- **labnote 내부 링크**: 기본값은 새 절대경로. 예전에 저장된 짧은 링크(`budget.html` 등)는 `LN_PAGE_MOVES` 매핑(`resolveLink()`)으로 자동 변환.
 
 ---
 
