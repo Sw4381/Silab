@@ -9,7 +9,7 @@ const LN_PATH = 'labnote';
 const LN_COLORS = ['#4f46e5', '#0891b2', '#7c3aed', '#dc2626', '#d97706', '#059669', '#db2777', '#65a30d'];
 
 // 첫 사용 시 자동 생성되는 기본 메뉴 (이후 추가/이름변경/삭제/순서변경 자유)
-// link: 바깥/내부 페이지 주소 | embed:true 이면 클릭 시 새 창 대신 오른쪽 본문에 임베드
+// link: 바깥/내부 페이지 주소 (기본은 클릭 시 오른쪽 본문에 iframe 임베드, openNew:true 면 새 창)
 // 상위 계정(ROOT)만 편집 가능한 기본 잠금 메뉴 (이름 기준 최초 1회 마이그레이션)
 const LN_OWNER_DEFAULT = ['Lab 세미나', 'Lab 연구논의', '실적평가'];
 const LN_DEFAULT_GROUPS = [
@@ -22,13 +22,13 @@ const LN_DEFAULT_GROUPS = [
     ] },
     { name: 'Projects', color: '#059669', items: [] },
     { name: '실적평가', color: '#db2777', ownerOnly: true, items: [
-        { text: '개인별 평가', link: 'worklog-eval.html', embed: true },
-        { text: '개인별 실적 전반', link: 'member-performance.html', embed: true }
+        { text: '개인별 평가', link: 'worklog-eval.html' },
+        { text: '개인별 실적 전반', link: 'member-performance.html' }
     ] },
     { name: '기타관리', color: '#65a30d', items: [
         { text: 'Lab 운영정책' },
         { text: 'Lab 구성원', link: 'members.html' },
-        { text: '학생 인건비', link: 'payroll.html', embed: true },
+        { text: '학생 인건비', link: 'payroll.html' },
         { text: 'Lab 예산관리', link: 'budget.html' },
         { text: 'Lab 주소록' }
     ] }
@@ -111,10 +111,13 @@ function normalize() {
             o.text = String(o.text || '제목 없음');
             if (typeof o.body !== 'string') o.body = '';
             if (typeof o.link !== 'string') o.link = '';
-            o.embed = !!o.embed;
+            // 링크는 기본적으로 본문(iframe)에 표시. openNew=true 인 것만 새 창으로 이동.
+            // (구버전 embed 플래그: embed=false 였던 것도 이제 본문 표시가 기본이라 무시)
+            o.openNew = !!o.openNew;
+            delete o.embed;
             o.subs = toArr(o.subs).map(s => {
                 const x = (typeof s === 'string') ? { text: s } : s;
-                return { id: x.id || newId('s'), text: String(x.text || ''), name: x.name ? String(x.name) : '', link: (typeof x.link === 'string') ? x.link : '', embed: !!x.embed };
+                return { id: x.id || newId('s'), text: String(x.text || ''), name: x.name ? String(x.name) : '', link: (typeof x.link === 'string') ? x.link : '', openNew: !!x.openNew };
             });
             return o;
         });
@@ -220,14 +223,14 @@ function render() {
             const iEl = document.createElement('div'); iEl.className = 'ln-itm' + (openN[it.id] ? ' open' : '');
             iEl.appendChild(rowEl({
                 type: 'item', node: it, cls: 'ln-i-head', sel: cur && cur.type === 'item' && cur.id === it.id,
-                label: it.text, num: (gi + 1) + '-' + (ii + 1), count: it.subs.length, link: it.link, embed: it.embed, locked: gLocked,
+                label: it.text, num: (gi + 1) + '-' + (ii + 1), count: it.subs.length, link: it.link, openNew: it.openNew, locked: gLocked,
                 onToggle: () => toggleN(it.id), onSelect: () => select('item', it.id)
             }));
             const ci = document.createElement('div'); ci.className = 'ln-children-i';
             it.subs.forEach((s, si) => {
                 ci.appendChild(rowEl({
                     type: 'sub', node: s, cls: 'ln-s-head', sel: cur && cur.type === 'sub' && cur.id === s.id,
-                    label: subName(s), num: (gi + 1) + '-' + (ii + 1) + '-' + (si + 1), leaf: true, link: s.link, embed: s.embed, locked: gLocked,
+                    label: subName(s), num: (gi + 1) + '-' + (ii + 1) + '-' + (si + 1), leaf: true, link: s.link, openNew: s.openNew, locked: gLocked,
                     onSelect: () => select('sub', s.id)
                 }));
             });
@@ -279,9 +282,9 @@ function rowEl(o) {
     } else {
         const lb = document.createElement('span'); lb.className = 'label';
         lb.textContent = o.label;
-        if (o.link) { const ic = document.createElement('i'); ic.className = o.embed ? 'fas fa-desktop' : 'fas fa-external-link-alt'; lb.appendChild(ic); }
-        // 링크: embed면 본문에 표시(select), 아니면 새 창/페이지 이동
-        lb.onclick = () => { if (o.link && !o.embed) openLink(o.link); else o.onSelect(); };
+        if (o.link) { const ic = document.createElement('i'); ic.className = o.openNew ? 'fas fa-external-link-alt' : 'fas fa-desktop'; lb.appendChild(ic); }
+        // 링크: 기본은 본문에 표시(select), openNew면 새 창/페이지 이동
+        lb.onclick = () => { if (o.link && o.openNew) openLink(o.link); else o.onSelect(); };
         row.appendChild(lb);
         if (o.count !== undefined) { const cnt = document.createElement('span'); cnt.className = 'cnt'; cnt.textContent = o.count; cnt.onclick = o.onSelect; row.appendChild(cnt); }
     }
@@ -350,10 +353,10 @@ function openPop(btn, type, id) {
     if (type !== 'group') {
         add(node.link ? '🔗 링크 수정' : '🔗 링크 지정', () => setLink(type, id));
         if (node.link) {
-            add(node.embed ? '↗️ 새 창으로 열기로 전환' : '🖥️ 본문에 표시(임베드)', () => {
-                node.embed = !node.embed; touch(); render(); if (cur && cur.id === id) showBody();
+            add(node.openNew ? '🖥️ 본문에 표시로 전환' : '↗️ 새 창으로 열기로 전환', () => {
+                node.openNew = !node.openNew; touch(); render(); if (cur && cur.id === id) showBody();
             });
-            add('⛓️ 링크 해제', () => { node.link = ''; node.embed = false; touch(); render(); if (cur && cur.id === id) showBody(); });
+            add('⛓️ 링크 해제', () => { node.link = ''; node.openNew = false; touch(); render(); if (cur && cur.id === id) showBody(); });
         }
     }
     sep();
@@ -468,9 +471,9 @@ function select(type, id) { cur = { type, id }; showBody(); render(); }
 
 function bodyOf() {
     if (!cur || cur.type === 'calendar') return null;
-    if (cur.type === 'group') { const g = findGroup(cur.id); return g && { crumb: '', title: g.name, link: '', embed: false, val: g.body || '', set: v => g.body = v }; }
-    if (cur.type === 'item') { const r = findItem(cur.id); return r && { crumb: r.g.name, title: r.it.text, link: r.it.link, embed: r.it.embed, val: r.it.body || '', set: v => r.it.body = v }; }
-    const r = findSub(cur.id); return r && { crumb: r.g.name + ' › ' + r.it.text, title: subName(r.s), link: r.s.link, embed: r.s.embed, val: r.s.text || '', set: v => r.s.text = v };
+    if (cur.type === 'group') { const g = findGroup(cur.id); return g && { crumb: '', title: g.name, link: '', openNew: false, val: g.body || '', set: v => g.body = v }; }
+    if (cur.type === 'item') { const r = findItem(cur.id); return r && { crumb: r.g.name, title: r.it.text, link: r.it.link, openNew: r.it.openNew, val: r.it.body || '', set: v => r.it.body = v }; }
+    const r = findSub(cur.id); return r && { crumb: r.g.name + ' › ' + r.it.text, title: subName(r.s), link: r.s.link, openNew: r.s.openNew, val: r.s.text || '', set: v => r.s.text = v };
 }
 
 // 편집창 글자 크기 (브라우저 확대/축소와 별개로 편집창만 조절, 기기별 저장)
@@ -490,8 +493,8 @@ function showBody() {
     const b = bodyOf();
     if (!b) { bodyEl.innerHTML = '<div class="ln-placeholder">왼쪽 메뉴에서 항목을 선택하세요.</div>'; return; }
 
-    // 링크 항목: embed면 본문에 iframe 임베드, 아니면 바로가기 카드
-    if (b.link && b.embed) {
+    // 링크 항목: 기본은 본문에 iframe 임베드, openNew면 바로가기 카드('열기' 버튼)
+    if (b.link && !b.openNew) {
         bodyEl.innerHTML =
             (b.crumb ? '<div class="ln-crumb">' + esc(b.crumb) + '</div>' : '') +
             '<div class="ln-title ln-title-row"><span>' + esc(b.title) + '</span>' +
