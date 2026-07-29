@@ -288,6 +288,21 @@ function mergeBodies(bodies) {
         });
     });
 }
+// 전환기 안전벨트: 구버전 클라이언트가 groups 안에 직접 쓴 본문(=bodies에 없는 본문)을 bodies로 구제.
+// bodies에 이미 있는 노드는 건드리지 않으므로 남의 최신 내용을 덮어쓸 위험이 없고, 없는 것만 채운다.
+async function rescueNestedBodies(bodies) {
+    bodies = (bodies && typeof bodies === 'object') ? bodies : {};
+    const upd = {};
+    const pick = (id, txt) => { if (bodies[id] === undefined && (txt || '') !== '') upd['bodies/' + id] = txt; };
+    data.groups.forEach(g => {
+        pick(g.id, g.body);
+        g.items.forEach(it => { pick(it.id, it.body); it.subs.forEach(s => pick(s.id, s.text)); });
+    });
+    if (Object.keys(upd).length) {
+        try { await database.ref(LN_PATH).update(upd); }
+        catch (e) { console.error('본문 구제 실패', e); }
+    }
+}
 
 async function loadData() {
     setSaveStat('', '불러오는 중...');
@@ -303,6 +318,7 @@ async function loadData() {
     mergeBodies(bSnap.val());
     // 아직 마이그레이션 전이면 현재 본문을 bodies 경로로 1회 복사 (이후 구조 저장이 본문을 지워도 안전)
     if (!mSnap.val()) await migrateBodies();
+    else await rescueNestedBodies(bSnap.val());   // 전환기: 구버전이 groups에 직접 쓴 본문을 bodies로 구제
     dirty = false;
     setSaveStat('linked', '동기화됨');
     // 처음엔 메뉴(그룹)만 펼쳐 전체가 한눈에 들어오게
