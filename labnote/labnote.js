@@ -6,7 +6,7 @@
 // ==================== 상수 ====================
 const LN_ALLOWED = [ADMIN_UID, ROOT_UID];
 const LN_PATH = 'labnote';
-const LN_BUILD = '13';   // 임베드 iframe 캐시 무력화용 버전 (배포 시 올림)
+const LN_BUILD = '14';   // 임베드 iframe 캐시 무력화용 버전 (배포 시 올림)
 // 폴더 구조 이전: 예전에 저장된 짧은 링크(budget.html 등)를 새 경로로 매핑
 const LN_PAGE_MOVES = {
     'worklog.html': '/worklog/worklog.html', 'worklog-eval.html': '/worklog/worklog-eval.html',
@@ -163,42 +163,146 @@ function isLocked(type, id) {
 function subName(s) { return s.name || stripHtml(s.text).split('\n')[0].trim() || '세부'; }
 
 // ==================== 저장 / 불러오기 ====================
+// [동시편집 충돌 방지] 본문 내용은 노드 id별 경로(labnote/bodies/{id})에 개별 저장한다.
+// 여러 명이 서로 다른 서브탭을 편집해도 서로 다른 경로에 기록되므로 덮어쓰기가 없다.
+//  - 본문(그룹/서브탭 body, 세부 text)  → touchBody(id) → labnote/bodies/{id}
+//  - 트리 뼈대(이름·순서·색·링크·잠금)   → touchStruct() → labnote/groups (본문 텍스트 제외)
+//  - 캘린더                              → touchCal()   → labnote/calendar
+const pendingBodies = new Set();   // 저장 대기 중인 본문 노드 id
+let structDirty = false;           // 트리 뼈대 변경 대기
+let calDirty = false;              // 캘린더 변경 대기
+
 function setSaveStat(state, text) {
     const dot = document.getElementById('saveDot');
     const t = document.getElementById('saveText');
     if (dot) dot.className = 'wl-dot' + (state ? ' ' + state : '');
     if (t) t.textContent = text;
 }
+function hhmm(n) { return String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0'); }
 
-function touch() {
-    dirty = true;
-    setSaveStat('dirty', '저장 중...');
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveNow, 800);
+// 본문 텍스트를 뺀 트리 뼈대 (구조 저장용) — 본문은 bodies 경로에 따로 있으므로 여기서 제외
+function skeleton() {
+    return data.groups.map(g => ({
+        id: g.id, name: g.name, color: g.color, ownerOnly: !!g.ownerOnly,
+        items: g.items.map(it => ({
+            id: it.id, text: it.text, link: it.link || '', openNew: !!it.openNew,
+            subs: it.subs.map(s => ({ id: s.id, name: s.name || '', link: s.link || '', openNew: !!s.openNew }))
+        }))
+    }));
+}
+// 노드 id → 현재 본문 텍스트 (그룹/서브탭은 body, 세부는 text)
+function bodyText(id) {
+    for (const g of data.groups) {
+        if (g.id === id) return g.body || '';
+        for (const it of g.items) {
+            if (it.id === id) return it.body || '';
+            for (const s of it.subs) if (s.id === id) return s.text || '';
+        }
+    }
+    return null;
+}
+// 전체 본문 맵 (마이그레이션·불러오기 교체용)
+function bodiesMap() {
+    const m = {};
+    data.groups.forEach(g => {
+        m[g.id] = g.body || '';
+        g.items.forEach(it => { m[it.id] = it.body || ''; it.subs.forEach(s => m[s.id] = s.text || ''); });
+    });
+    return m;
+}
+// 삭제될 노드와 그 하위의 모든 id (bodies 정리용) — 삭제 전에 호출
+function subtreeIds(type, id) {
+    const ids = [];
+    if (type === 'group') { const g = findGroup(id); if (g) { ids.push(g.id); g.items.forEach(it => { ids.push(it.id); it.subs.forEach(s => ids.push(s.id)); }); } }
+    else if (type === 'item') { const r = findItem(id); if (r) { ids.push(r.it.id); r.it.subs.forEach(s => ids.push(s.id)); } }
+    else { const r = findSub(id); if (r) ids.push(r.s.id); }
+    return ids;
 }
 
-async function saveNow() {
+function scheduleSave() {
+    dirty = pendingBodies.size > 0 || structDirty || calDirty;
+    if (dirty) setSaveStat('dirty', '저장 중...');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flushSave, 800);
+}
+function touchBody(id) { if (id) pendingBodies.add(id); scheduleSave(); }   // 본문 내용 편집
+function touchStruct() { structDirty = true; scheduleSave(); }               // 트리 구조 변경
+function touchCal() { calDirty = true; scheduleSave(); }                     // 캘린더 변경
+function touch() { touchStruct(); }   // 구조 변경 호출부 호환용 별칭
+
+// 예약된 변경분을 경로별로 한 번의 update로 기록 (본문은 id별 경로라 서로 안 덮어씀)
+async function flushSave() {
     if (!currentUser || !data || saving) return;
+    if (!pendingBodies.size && !structDirty && !calDirty) return;
     saving = true;
+    const bodyIds = [...pendingBodies]; pendingBodies.clear();
+    const doStruct = structDirty; structDirty = false;
+    const doCal = calDirty; calDirty = false;
+    const upd = {};
+    bodyIds.forEach(id => { const t = bodyText(id); if (t !== null) upd['bodies/' + id] = t; });
+    if (doStruct) upd['groups'] = skeleton();
+    if (doCal) upd['calendar'] = data.calendar || [];
     try {
-        await database.ref(LN_PATH).update({ groups: data.groups, calendar: data.calendar });
-        dirty = false;
-        const now = new Date();
-        setSaveStat('linked', '저장됨 ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
+        await database.ref(LN_PATH).update(upd);
+        dirty = pendingBodies.size > 0 || structDirty || calDirty;   // 저장 중 새로 생긴 변경분
+        if (!dirty) setSaveStat('linked', '저장됨 ' + hhmm(new Date()));
     } catch (err) {
+        bodyIds.forEach(id => pendingBodies.add(id));   // 실패분 되돌려 재시도
+        if (doStruct) structDirty = true;
+        if (doCal) calDirty = true;
+        dirty = true;
         setSaveStat('dirty', '저장 실패');
         lnAlert('저장 실패: ' + err.message, 'error');
     } finally {
         saving = false;
-        if (dirty) { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 800); }
+        if (dirty) { clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 800); }
     }
+}
+
+// 불러오기로 전체 교체 시: 뼈대·본문·캘린더를 통째로 기록 (구버전 데이터 정리 포함)
+async function saveEverything() {
+    if (!currentUser || !data) return;
+    try {
+        await database.ref(LN_PATH).update({ groups: skeleton(), bodies: bodiesMap(), calendar: data.calendar || [], bodiesMigrated: true });
+        pendingBodies.clear(); structDirty = false; calDirty = false; dirty = false;
+        setSaveStat('linked', '저장됨 ' + hhmm(new Date()));
+    } catch (err) {
+        setSaveStat('dirty', '저장 실패');
+        lnAlert('저장 실패: ' + err.message, 'error');
+    }
+}
+
+// 최초 1회: 트리 안에 들어있던 본문을 id별 bodies 경로로 안전 복사 (데이터 손실 없음)
+async function migrateBodies() {
+    try { await database.ref(LN_PATH).update({ bodies: bodiesMap(), bodiesMigrated: true }); }
+    catch (e) { console.error('bodies 마이그레이션 실패', e); }
+}
+// bodies 맵을 인메모리 노드 본문에 병합 (id별 본문 우선, 없으면 뼈대에 남은 구버전 본문 유지)
+function mergeBodies(bodies) {
+    if (!bodies || typeof bodies !== 'object') return;
+    data.groups.forEach(g => {
+        if (typeof bodies[g.id] === 'string') g.body = bodies[g.id];
+        g.items.forEach(it => {
+            if (typeof bodies[it.id] === 'string') it.body = bodies[it.id];
+            it.subs.forEach(s => { if (typeof bodies[s.id] === 'string') s.text = bodies[s.id]; });
+        });
+    });
 }
 
 async function loadData() {
     setSaveStat('', '불러오는 중...');
-    const snap = await database.ref(LN_PATH).once('value');
-    data = snap.val() || {};
+    // 경로별 개별 읽기 — 본문(bodies)은 id별로 저장되므로 groups(뼈대)와 나눠 읽고 병합
+    const [gSnap, bSnap, cSnap, mSnap] = await Promise.all([
+        database.ref(LN_PATH + '/groups').once('value'),
+        database.ref(LN_PATH + '/bodies').once('value'),
+        database.ref(LN_PATH + '/calendar').once('value'),
+        database.ref(LN_PATH + '/bodiesMigrated').once('value')
+    ]);
+    data = { groups: gSnap.val(), calendar: cSnap.val() };
     normalize();
+    mergeBodies(bSnap.val());
+    // 아직 마이그레이션 전이면 현재 본문을 bodies 경로로 1회 복사 (이후 구조 저장이 본문을 지워도 안전)
+    if (!mSnap.val()) await migrateBodies();
     dirty = false;
     setSaveStat('linked', '동기화됨');
     // 처음엔 메뉴(그룹)만 펼쳐 전체가 한눈에 들어오게
@@ -424,9 +528,12 @@ function commitRename(type, id, val) {
 function del(type, id) {
     const kind = type === 'group' ? '메뉴' : type === 'item' ? '서브탭' : '세부';
     if (!confirm('이 ' + kind + '을(를) 삭제할까요? 하위 내용과 본문도 함께 삭제됩니다.')) return;
+    const gone = subtreeIds(type, id);   // 삭제 전에 하위 id 수집 (bodies 정리용)
     if (type === 'group') data.groups = data.groups.filter(g => g.id !== id);
     else if (type === 'item') { const r = findItem(id); r.g.items = r.g.items.filter(x => x.id !== id); }
     else { const r = findSub(id); r.it.subs = r.it.subs.filter(x => x.id !== id); }
+    // 삭제된 노드들의 본문(bodies/{id})도 제거해 잔여 데이터가 남지 않게
+    gone.forEach(bid => { pendingBodies.delete(bid); database.ref(LN_PATH + '/bodies/' + bid).remove().catch(() => {}); });
     if (cur && cur.id === id) { cur = null; showBody(); }
     touch(); render();
 }
@@ -550,7 +657,9 @@ function showBody() {
 
     bodyEl.innerHTML =
         (b.crumb ? '<div class="ln-crumb">' + esc(b.crumb) + '</div>' : '') +
-        '<div class="ln-title">' + esc(b.title) + '</div>' +
+        '<div class="ln-title ln-title-row"><span>' + esc(b.title) + '</span>' +
+        '  <span class="wl-savestat" id="bodySaveStat"></span>' +
+        '  <button class="wl-btn primary" id="lnSaveOne" title="이 항목 내용만 저장 (다른 사람 작업과 충돌 없이)"><i class="fas fa-save"></i> 저장</button></div>' +
         '<div class="ln-toolbar">' +
         '  <button class="ln-tb date-btn" title="맨 위에 오늘 날짜 머리글 추가 (최근 날짜가 위로)" data-cmd="date">📅 오늘 날짜</button>' +
         '  <span class="ln-sep"></span>' +
@@ -586,7 +695,21 @@ function showBody() {
     ed.innerHTML = b.val || '';
     ed.style.fontSize = edFontSize() + 'px';
     setEdFontSize(edFontSize());
-    ed.oninput = () => { b.set(ed.innerHTML); touch(); if (cur && cur.type === 'sub') refreshLabel(); };
+    ed.oninput = () => { b.set(ed.innerHTML); touchBody(cur && cur.id); if (cur && cur.type === 'sub') refreshLabel(); };
+
+    // 이 항목만 저장 (해당 노드의 본문 경로만 기록 — 다른 사람이 편집 중인 서브탭과 충돌 없음)
+    const saveOne = document.getElementById('lnSaveOne');
+    if (saveOne) saveOne.onclick = async () => {
+        if (!currentUser || !cur || !cur.id) return;
+        b.set(ed.innerHTML);
+        pendingBodies.add(cur.id);
+        clearTimeout(saveTimer);
+        const stat = document.getElementById('bodySaveStat');
+        if (stat) stat.textContent = '저장 중...';
+        await flushSave();
+        if (stat) stat.textContent = pendingBodies.has(cur.id) ? '저장 실패' : '저장됨 ' + hhmm(new Date());
+        if (!pendingBodies.has(cur.id)) lnAlert('저장되었습니다.', 'success');
+    };
 
     // 툴바 동작
     bodyEl.querySelector('.ln-toolbar').addEventListener('mousedown', e => {
@@ -637,7 +760,7 @@ function insertDateHeading() {
 
 function rtSync() {
     const ed = document.getElementById('lnEditor'); const b = bodyOf();
-    if (ed && b) { b.set(ed.innerHTML); touch(); if (cur && cur.type === 'sub') refreshLabel(); }
+    if (ed && b) { b.set(ed.innerHTML); touchBody(cur && cur.id); if (cur && cur.type === 'sub') refreshLabel(); }
 }
 
 // 세부 이름이 본문 첫 줄에서 파생될 때 메뉴 라벨만 갱신 (에디터 포커스 유지)
@@ -770,7 +893,7 @@ function openEvPop(anchor, mode, key) {
     if (delBtn) delBtn.onclick = () => {
         if (!confirm('이 일정을 삭제할까요?')) return;
         data.calendar = data.calendar.filter(x => x.id !== evPopCtx.id);
-        closeEvPop(); touch(); renderCalendar();
+        closeEvPop(); touchCal(); renderCalendar();
     };
     setTimeout(() => document.getElementById('evTitle').focus(), 0);
 }
@@ -789,7 +912,7 @@ function saveEvPop() {
     } else {
         data.calendar.push({ id: newId('e'), date, end, title, type });
     }
-    closeEvPop(); touch(); renderCalendar();
+    closeEvPop(); touchCal(); renderCalendar();
 }
 function closeEvPop() { document.getElementById('evPop').style.display = 'none'; evPopCtx = null; }
 
@@ -810,7 +933,8 @@ function importData(e) {
             if (!confirm('현재 내용을 불러온 파일로 교체할까요? (교수님 초안 test.json 형식도 지원)')) return;
             // 교수님 초안(test.html)의 {knowledge:{groups}} 형식 호환
             data = parsed.knowledge ? { groups: parsed.knowledge.groups, calendar: (data && data.calendar) || [] } : parsed;
-            normalize(); cur = null; touch(); render(); showBody();
+            normalize(); cur = null; render(); showBody();
+            saveEverything();   // 전체 교체이므로 뼈대·본문·캘린더를 통째로 기록
             lnAlert('불러오기 완료!', 'success');
         } catch (err) { lnAlert('불러오기 실패: ' + err.message, 'error'); }
     };
@@ -898,8 +1022,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // 상단 바
     document.getElementById('saveBtn').addEventListener('click', async () => {
         if (!currentUser) return;
+        if (cur && cur.type !== 'calendar' && cur.id) pendingBodies.add(cur.id);   // 현재 편집 중인 본문도 함께
         clearTimeout(saveTimer);
-        await saveNow();
+        await flushSave();
         if (!dirty) lnAlert('저장되었습니다.', 'success');
     });
     document.getElementById('expandAllBtn').addEventListener('click', () => expandAll(true));
