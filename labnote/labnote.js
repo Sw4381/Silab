@@ -1020,13 +1020,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 상단 바
-    document.getElementById('saveBtn').addEventListener('click', async () => {
-        if (!currentUser) return;
-        if (cur && cur.type !== 'calendar' && cur.id) pendingBodies.add(cur.id);   // 현재 편집 중인 본문도 함께
-        clearTimeout(saveTimer);
-        await flushSave();
-        if (!dirty) lnAlert('저장되었습니다.', 'success');
-    });
+    // 상단 전체 저장 버튼은 제거됨 — 본문은 서브탭별 [저장] 버튼, 나머지는 자동 저장(디바운스)으로 처리
     document.getElementById('expandAllBtn').addEventListener('click', () => expandAll(true));
     document.getElementById('collapseAllBtn').addEventListener('click', () => expandAll(false));
     document.getElementById('exportBtn').addEventListener('click', exportData);
