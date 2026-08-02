@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보안 지능 연구실 - Lab 인원 기본 정보</title>
+    <link rel="icon" href="/image.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/common.css?v=32">
+    <link rel="stylesheet" href="/photo/photo.css?v=30">
+    <link rel="stylesheet" href="/performance/performance.css?v=30">
+    <link rel="stylesheet" href="/roster/roster.css?v=1">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <header class="navbar">
+        <div class="logo">
+            <a href="/index.html">
+                <img class="logo-picture" src="/image.png" alt="보안 지능 연구실 로고">
+            </a>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="menu">
+            <a href="/index.html"><i class="fas fa-graduation-cap"></i> Home</a>
+            <a href="/members/members.html"><i class="fas fa-users"></i> Members</a>
+            <a href="/research/research.html"><i class="fas fa-flask"></i> Research</a>
+            <a href="/projects/projects.html"><i class="fas fa-file-alt"></i> Projects</a>
+            <a href="/Publication/Publication.html"><i class="fas fa-copy"></i> Publications</a>
+            <a href="/photo/photo.html"><i class="fas fa-image"></i> Other Activities</a>
+            <a href="/news/news.html"><i class="fas fa-newspaper"></i> News</a>
+            <div class="nav-drop nav-perf" style="display:none;">
+                <a href="/worklog/worklog.html" class="nav-drop-btn"><i class="fas fa-tasks"></i> 업무관리 <i class="fas fa-caret-down nav-drop-caret"></i></a>
+                <div class="nav-drop-menu">
+                    <a href="/labnote/labnote.html"><i class="fas fa-book"></i> SILab 업무관리</a>
+                    <a href="/worklog/worklog.html"><i class="fas fa-clipboard-list"></i> 업무보드</a>
+                    <a href="/worklog/worklog-eval.html"><i class="fas fa-user-check"></i> 개인별 평가</a>
+                    <a href="/performance/performance.html"><i class="fas fa-chart-line"></i> Performance</a>
+                    <a href="/budget/budget.html"><i class="fas fa-coins"></i> 예산관리</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="auth-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인
+            </button>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> 로그아웃
+            </button>
+        </div>
+    </header>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="login-modal">
+        <div class="login-modal-content">
+            <span class="login-close" id="loginClose">&times;</span>
+            <form class="login-form" id="loginForm">
+                <h2><i class="fas fa-lock"></i> 연구실 로그인</h2>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" name="email" required placeholder="example@gachon.ac.kr">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-submit">
+                    <i class="fas fa-sign-in-alt"></i> 로그인
+                </button>
+                <div class="login-help">연구실 멤버만 접근 가능합니다.</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- 로그아웃 상태 게이트 -->
+        <div id="authGate" class="auth-gate">
+            <i class="fas fa-user-lock"></i>
+            <h2>Lab 인원 기본 정보</h2>
+            <p>개인정보가 포함된 페이지입니다. 연구실 관리자 로그인 후에만 볼 수 있습니다.</p>
+            <button class="login-btn gate-btn" id="gateLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> 로그인하기
+            </button>
+        </div>
+
+        <!-- 로그인 상태 본문 -->
+        <div id="rsApp" style="display:none;">
+            <div class="page-hero">
+                <h1><i class="fas fa-id-card"></i> Lab 인원 기본 정보</h1>
+                <p>연구실 구성원의 기본 인적사항입니다. 개인정보가 포함되어 있으니 화면 공유·외부 반출에 주의해 주세요.</p>
+            </div>
+
+            <!-- 툴바 -->
+            <div class="rs-toolbar">
+                <div class="rs-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="rsSearch" placeholder="이름 · 학번 · 이메일 · 지도교수 검색">
+                </div>
+                <span class="rs-count" id="rsCount"></span>
+                <span class="rs-spacer"></span>
+                <span class="rs-save" id="rsSave"></span>
+                <button class="tb-btn" id="rsMaskBtn" title="전화번호·생년월일·과학기술인번호 가리기"><i class="fas fa-eye-slash"></i> 민감정보 가리기</button>
+                <button class="tb-btn" id="rsColBtn" title="표시할 항목 전환"><i class="fas fa-table-columns"></i> 전체 항목</button>
+                <button class="tb-btn" id="rsExportBtn"><i class="fas fa-file-arrow-down"></i> CSV 내보내기</button>
+                <button class="tb-btn" id="rsImportBtn"><i class="fas fa-file-arrow-up"></i> CSV 가져오기</button>
+                <button class="tb-btn primary" id="rsAddBtn"><i class="fas fa-user-plus"></i> 인원 추가</button>
+            </div>
+
+            <!-- 직위 필터 -->
+            <div class="rs-chips" id="rsChips"></div>
+
+            <!-- 표 -->
+            <div class="rs-table-wrap">
+                <table class="rs-table">
+                    <thead id="rsHead"></thead>
+                    <tbody id="rsBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 빈 상태 -->
+            <div id="rsEmpty" class="rs-empty" style="display:none;">
+                <i class="fas fa-address-book"></i>
+                <h3>아직 등록된 인원 정보가 없습니다</h3>
+                <p>노션에서 내려받은 <b>학생 기본 정보 CSV</b>를 가져오면 표가 채워집니다.<br>
+                   데이터는 코드가 아니라 <b>로그인으로 보호되는 데이터베이스</b>에만 저장됩니다.</p>
+                <button class="tb-btn primary" id="rsEmptyImport"><i class="fas fa-file-arrow-up"></i> CSV 가져오기</button>
+            </div>
+        </div>
+
+        <!-- 푸터 -->
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="/image.png" alt="SILAB" class="footer-logo">
+                    <div>
+                        <span class="footer-lab-name">SILAB</span>
+                        <span class="footer-lab-sub">보안 지능 연구실</span>
+                    </div>
+                </div>
+                <div class="footer-info">
+                    <div class="footer-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>가천대학교 AI소프트웨어학부 스마트보안학과</span>
+                    </div>
+                </div>
+                <div class="footer-copy">© 2025 SILAB · Gachon University</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ===== 인원 추가/수정 모달 ===== -->
+    <div id="rsFormModal" class="perf-modal">
+        <div class="perf-modal-box wide">
+            <div class="perf-modal-head">
+                <h3 id="rsFormTitle"><i class="fas fa-user-pen"></i> 인원 정보</h3>
+                <button class="perf-modal-close" data-close="rsFormModal">&times;</button>
+            </div>
+            <form id="rsForm">
+                <div id="rsFormFields" class="rs-form-grid"></div>
+                <div class="perf-modal-actions">
+                    <button type="button" class="tb-btn danger" id="rsDeleteBtn"><i class="fas fa-trash"></i> 삭제</button>
+                    <span style="flex:1;"></span>
+                    <button type="button" class="tb-btn" data-close="rsFormModal">취소</button>
+                    <button type="submit" class="tb-btn primary"><i class="fas fa-save"></i> 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== CSV 가져오기 모달 ===== -->
+    <div id="rsImportModal" class="perf-modal">
+        <div class="perf-modal-box wide">
+            <div class="perf-modal-head">
+                <h3><i class="fas fa-file-arrow-up"></i> CSV 가져오기</h3>
+                <button class="perf-modal-close" data-close="rsImportModal">&times;</button>
+            </div>
+            <div class="rs-import-body">
+                <p class="target-hint">
+                    노션 <b>학생 기본 정보</b> 표를 CSV로 내려받아 그대로 넣으면 됩니다.
+                    첫 줄이 머리글(이름 · 직위 · 이메일 …)이면 열 순서는 달라도 자동으로 맞춥니다.
+                </p>
+
+                <label class="rs-file">
+                    <input type="file" id="rsFile" accept=".csv,text/csv">
+                    <i class="fas fa-folder-open"></i> <span id="rsFileName">CSV 파일 선택</span>
+                </label>
+
+                <div class="rs-or">또는 아래에 직접 붙여넣기</div>
+                <textarea id="rsPaste" rows="7" placeholder="이름,직위,이메일,전화번호,...&#10;홍길동,석사과정,hong@example.com,010-0000-0000,..."></textarea>
+
+                <div class="rs-mode">
+                    <label><input type="radio" name="rsMode" value="merge" checked> <b>병합</b> — 같은 이름은 갱신, 새 이름은 추가 (기존 정보 유지)</label>
+                    <label><input type="radio" name="rsMode" value="replace"> <b>전체 교체</b> — 기존 목록을 지우고 CSV 내용으로 대체</label>
+                </div>
+
+                <div id="rsPreview" class="rs-preview" style="display:none;"></div>
+            </div>
+            <div class="perf-modal-actions">
+                <button type="button" class="tb-btn" data-close="rsImportModal">취소</button>
+                <button type="button" class="tb-btn primary" id="rsApplyImport"><i class="fas fa-check"></i> 가져오기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/config.js?v=30"></script>
+    <script src="/common.js?v=38"></script>
+    <script src="/roster/roster.js?v=1"></script>
+</body>
+</html>

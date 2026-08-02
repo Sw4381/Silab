@@ -6,7 +6,7 @@
 // ==================== 상수 ====================
 const LN_ALLOWED = [ADMIN_UID, ROOT_UID];
 const LN_PATH = 'labnote';
-const LN_BUILD = '14';   // 임베드 iframe 캐시 무력화용 버전 (배포 시 올림)
+const LN_BUILD = '15';   // 임베드 iframe 캐시 무력화용 버전 (배포 시 올림)
 // 폴더 구조 이전: 예전에 저장된 짧은 링크(budget.html 등)를 새 경로로 매핑
 const LN_PAGE_MOVES = {
     'worklog.html': '/worklog/worklog.html', 'worklog-eval.html': '/worklog/worklog-eval.html',
@@ -19,6 +19,9 @@ const LN_COLORS = ['#4f46e5', '#0891b2', '#7c3aed', '#dc2626', '#d97706', '#0596
 const LN_ADDRBOOK_URL = 'https://docs.google.com/spreadsheets/d/1jTL5TSCeSygYeF_cfwTjHCUplHhkRg7zOlKIqnmV5bk/edit?usp=sharing';
 // 이름에 '주소록'이 들어가고 링크가 비어 있으면 주소록 시트를 연결 (서브탭·세부 모두)
 function addrRetro(name, link) { return (!link && /주소록/.test(name || '')) ? LN_ADDRBOOK_URL : link; }
+// Lab 인원 기본 정보 (로그인 전용 페이지 — 개인정보라 Firebase 에만 저장)
+const LN_ROSTER_TEXT = 'Lab 인원 기본 정보';
+const LN_ROSTER_LINK = '/roster/roster.html';
 
 // 첫 사용 시 자동 생성되는 기본 메뉴 (이후 추가/이름변경/삭제/순서변경 자유)
 // link: 바깥/내부 페이지 주소 (기본은 클릭 시 오른쪽 본문에 iframe 임베드, openNew:true 면 새 창)
@@ -42,7 +45,8 @@ const LN_DEFAULT_GROUPS = [
         { text: 'Lab 구성원', link: '/members/members.html' },
         { text: '학생 인건비', link: '/payroll/payroll.html' },
         { text: 'Lab 예산관리', link: '/budget/budget.html' },
-        { text: 'Lab 주소록', link: LN_ADDRBOOK_URL }
+        { text: 'Lab 주소록', link: LN_ADDRBOOK_URL },
+        { text: LN_ROSTER_TEXT, link: LN_ROSTER_LINK }
     ] }
 ];
 
@@ -284,6 +288,16 @@ async function migrateBodies() {
     try { await database.ref(LN_PATH).update({ bodies: bodiesMap(), bodiesMigrated: true }); }
     catch (e) { console.error('bodies 마이그레이션 실패', e); }
 }
+// 최초 1회: 기존 트리의 '기타관리' 메뉴에 'Lab 인원 기본 정보' 항목을 넣는다.
+// 플래그(labnote/rosterItemAdded)로 한 번만 수행 — 나중에 직접 지우면 다시 생기지 않는다.
+function ensureRosterItem() {
+    const has = data.groups.some(g => g.items.some(it => (it.link || '') === LN_ROSTER_LINK || it.text === LN_ROSTER_TEXT));
+    if (has) return false;
+    const g = data.groups.find(x => x.name === '기타관리') || data.groups[data.groups.length - 1];
+    if (!g) return false;
+    g.items.push({ id: newId('i'), text: LN_ROSTER_TEXT, body: '', link: LN_ROSTER_LINK, openNew: false, subs: [] });
+    return true;
+}
 // bodies 맵을 인메모리 노드 본문에 병합 (id별 본문 우선, 없으면 뼈대에 남은 구버전 본문 유지)
 function mergeBodies(bodies) {
     if (!bodies || typeof bodies !== 'object') return;
@@ -314,11 +328,12 @@ async function rescueNestedBodies(bodies) {
 async function loadData() {
     setSaveStat('', '불러오는 중...');
     // 경로별 개별 읽기 — 본문(bodies)은 id별로 저장되므로 groups(뼈대)와 나눠 읽고 병합
-    const [gSnap, bSnap, cSnap, mSnap] = await Promise.all([
+    const [gSnap, bSnap, cSnap, mSnap, rSnap] = await Promise.all([
         database.ref(LN_PATH + '/groups').once('value'),
         database.ref(LN_PATH + '/bodies').once('value'),
         database.ref(LN_PATH + '/calendar').once('value'),
-        database.ref(LN_PATH + '/bodiesMigrated').once('value')
+        database.ref(LN_PATH + '/bodiesMigrated').once('value'),
+        database.ref(LN_PATH + '/rosterItemAdded').once('value')
     ]);
     data = { groups: gSnap.val(), calendar: cSnap.val() };
     normalize();
@@ -326,6 +341,14 @@ async function loadData() {
     // 아직 마이그레이션 전이면 현재 본문을 bodies 경로로 1회 복사 (이후 구조 저장이 본문을 지워도 안전)
     if (!mSnap.val()) await migrateBodies();
     else await rescueNestedBodies(bSnap.val());   // 전환기: 구버전이 groups에 직접 쓴 본문을 bodies로 구제
+    // 최초 1회: 기타관리에 'Lab 인원 기본 정보' 항목 추가 (본문은 bodies 경로라 뼈대만 기록해도 안전)
+    if (!rSnap.val()) {
+        const added = ensureRosterItem();
+        const upd = { rosterItemAdded: true };
+        if (added) upd.groups = skeleton();
+        try { await database.ref(LN_PATH).update(upd); }
+        catch (e) { console.error('인원 정보 항목 추가 실패', e); }
+    }
     dirty = false;
     setSaveStat('linked', '동기화됨');
     // 처음엔 메뉴(그룹)만 펼쳐 전체가 한눈에 들어오게
