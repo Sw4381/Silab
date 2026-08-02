@@ -5,10 +5,8 @@
 //   → labnote 노드의 규칙(ADMIN_UID + ROOT_UID)을 그대로 상속하므로 Firebase 규칙 추가 작업이 필요 없다.
 //   → labnote.js 는 groups/bodies/calendar 만 update() 하므로 roster 를 건드리지 않는다.
 //
-// 입력 방식: CSV 파일이 아니라 **열 단위 붙여넣기**.
-//   머리글 ⋯ 메뉴 > '열 일괄 입력' 에 엑셀/노션에서 복사한 열을 그대로 붙여넣으면
-//   현재 보이는 순서대로 채워진다. 이름 열은 줄 수가 더 많으면 인원을 새로 만든다.
-//   탭(\t)이 섞인 여러 열을 붙여넣으면 그 열부터 오른쪽으로 차례대로 채운다.
+// 구분: 한 페이지 안에서 재학 / 졸업 / 파트 탭으로 나눈다 (멤버의 group 필드).
+// 입력: ① CSV 가져오기(노션 표 내보내기) ② 열 일괄 입력(엑셀·노션 열 붙여넣기) ③ 인원 추가 모달
 //
 // ⚠ 개인정보(전화번호·생년월일·과학기술인번호)가 들어가는 페이지다.
 //   저장소는 공개(GitHub Pages)이므로 실제 데이터는 절대 코드에 넣지 않는다. Firebase 에만 둔다.
@@ -17,26 +15,38 @@
 const RS_ALLOWED = [ADMIN_UID, ROOT_UID];   // labnote 와 동일 권한
 const RS_PATH = 'labnote/roster';
 
+// 인원 구분 탭
+const RS_GROUPS = [
+    { key: 'current', label: '재학', ic: 'fa-user-graduate' },
+    { key: 'alumni',  label: '졸업', ic: 'fa-user-check' },
+    { key: 'part',    label: '파트', ic: 'fa-user-clock' }
+];
+const RS_GKEYS = RS_GROUPS.map(g => g.key);
+function groupLabel(k) { const g = RS_GROUPS.find(x => x.key === k); return g ? g.label : k; }
+
 // 기본 열. core:true 는 '주요 항목만' 보기에서도 보이는 열
+//   csv  : CSV 가져오기에서 인식할 머리글 이름들(별칭 포함)
+//   only : 해당 탭에서만 보이는 열 (파트 CSV 의 '소속!' = 파견 나간 기관)
 const RS_FIELDS = [
-    { key: 'name',       label: '이름',           core: true },
-    { key: 'nameEn',     label: '영문이름' },
-    { key: 'position',   label: '직위',           core: true },
-    { key: 'dept',       label: '소속' },
-    { key: 'advisor',    label: '지도교수',       core: true },
-    { key: 'sid',        label: '학번',           core: true },
-    { key: 'email',      label: '이메일',         core: true },
-    { key: 'phone',      label: '전화번호',       core: true, sensitive: true },
-    { key: 'birth',      label: '생년월일',       sensitive: true },
-    { key: 'sciNo',      label: '과학기술인번호', sensitive: true },
-    { key: 'period',     label: 'Lab 활동기간',   core: true },
-    { key: 'school',     label: '최종학교/전공' },
-    { key: 'degreeYear', label: '학위취득' },
-    { key: 'status',     label: '상태' }
+    { key: 'name',       label: '이름',           csv: ['이름'],                                 core: true },
+    { key: 'nameEn',     label: '영문이름',       csv: ['영문이름', 'English Name'] },
+    { key: 'position',   label: '직위',           csv: ['직위'],                                 core: true },
+    { key: 'dept',       label: '소속',           csv: ['소속'] },
+    { key: 'org',        label: '소속기관',       csv: ['소속!', '소속기관', '기관'], core: true, only: 'part' },
+    { key: 'advisor',    label: '지도교수',       csv: ['지도교수'],                             core: true },
+    { key: 'sid',        label: '학번',           csv: ['학번'],                                 core: true },
+    { key: 'email',      label: '이메일',         csv: ['이메일', 'email'],                      core: true },
+    { key: 'phone',      label: '전화번호',       csv: ['전화번호', '연락처'], core: true, sensitive: true },
+    { key: 'birth',      label: '생년월일',       csv: ['생일', '생년월일'],                     sensitive: true },
+    { key: 'sciNo',      label: '과학기술인번호', csv: ['과학기술인번호'],                       sensitive: true },
+    { key: 'period',     label: 'Lab 활동기간',   csv: ['Lab 활동기간', '활동기간'],             core: true },
+    { key: 'school',     label: '최종학교/전공',  csv: ['최종학교/전공명', '최종학교/전공'] },
+    { key: 'degreeYear', label: '학위취득',       csv: ['학위취득연도', '학위취득'] },
+    { key: 'status',     label: '상태',           csv: ['기본개인정보', '상태', '재학여부'] }
 ];
 
 // 직위 정렬 순서 + 배지 색 구분
-const RS_POS_ORDER = ['교수', '박사후연구원', '박사과정', '석사과정', '학부과정', '연구원'];
+const RS_POS_ORDER = ['교수', '박사후연구원', '박사과정', '석박사과정', '학석사과정', '석사과정', '학부과정', '연구원', '졸업'];
 function posClass(p) {
     p = String(p || '');
     if (p.indexOf('박사') >= 0) return 'phd';
@@ -50,8 +60,8 @@ function posRank(p) {
 }
 
 // Lab 활동기간 정렬용 키 — 시작 시점을 YYYYMM 숫자로 뽑는다.
-// 표기가 제각각이라(2023.06 ~ / 2023.03~ / 2024 ~ / 26.06~) 문자열 비교로는 안 맞는다.
-// 값이 없으면 맨 뒤로 보낸다.
+// 표기가 제각각이라(2023.06 ~ / 2024 ~ / 26.06~ / 2021 ~ 2023 / 석박사과정 (2022.3~))
+// 문자열 비교로는 안 맞는다. 값이 없으면 맨 뒤로 보낸다.
 function periodKey(v) {
     const m = String(v || '').match(/(\d{2,4})\s*[.\-\/년]?\s*(\d{1,2})?/);
     if (!m) return 999999;
@@ -64,9 +74,10 @@ function periodKey(v) {
 // ==================== 전역 상태 ====================
 let auth, database, currentUser = null;
 const state = {
-    members: [],        // [{id, name, ..., ext:{추가열id: 값}}]
+    members: [],        // [{id, group, name, ..., ext:{추가열id: 값}}]
     columns: [],        // 사용자가 추가한 열 [{id, label}]
     updatedAt: '',
+    group: 'current',   // 지금 보고 있는 탭
     q: '',              // 검색어
     posFilter: '',      // 직위 필터 ('' = 전체)
     sortKey: 'period',  // 기본 정렬: Lab 활동기간(먼저 들어온 사람이 위)
@@ -75,12 +86,13 @@ const state = {
     compact: false,     // false = 전체 항목(기본), true = 주요 항목만
     editId: null,       // 수정 중인 인원 id (null = 신규)
     bulkKey: '',        // 일괄 입력 중인 열 key
-    colEditId: null     // 이름 변경 중인 추가 열 id (null = 새 열 추가)
+    colEditId: null,    // 이름 변경 중인 추가 열 id (null = 새 열 추가)
+    parsed: null        // CSV 가져오기 미리보기 결과
 };
 
 // DOM refs
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm, userInfo, userName;
-let authGate, rsApp, rsHead, rsBody, rsChips, rsCount, rsEmpty, rsSave, rsSearch, rsColMenu;
+let authGate, rsApp, rsHead, rsBody, rsChips, rsTabs, rsCount, rsEmpty, rsSave, rsSearch, rsColMenu;
 
 // ==================== 유틸 ====================
 function esc(s) {
@@ -100,14 +112,14 @@ function showAlert(message, type) {
     el.className = 'perf-alert ' + (type || 'info');
     el.textContent = message;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
+    setTimeout(() => el.remove(), 3400);
 }
 function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
 function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
 function hhmm(d) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
 
 // ---- 값 정리 ----
-// 노션에서 복사하면 이메일에 'mailto:' 접두어가 붙어 오는 경우가 있다.
+// 노션에서 내보내면 이메일에 'mailto:' 접두어가 붙어 오는 경우가 있다.
 function cleanEmail(v) {
     let s = String(v == null ? '' : v).trim();
     if (/^mailto:/i.test(s)) s = s.slice(7).trim();
@@ -139,7 +151,7 @@ function normVal(key, v) {
     const s = clean(v);
     if (key === 'email') return cleanEmail(s);
     if (key === 'phone') return cleanPhone(s);
-    if (key === 'birth' || key === 'sciNo' || key === 'sid') return s.replace(/\s/g, '');
+    if (key === 'birth' || key === 'sciNo') return s.replace(/\s/g, '');
     return s;
 }
 
@@ -163,13 +175,17 @@ function dispVal(key, raw) {
 }
 
 // ==================== 열 / 값 접근 ====================
+// 지금 탭에서 쓰는 기본 열 (only 가 걸린 열은 해당 탭에서만)
+function baseFields() {
+    return RS_FIELDS.filter(f => !f.only || f.only === state.group);
+}
 // 기본 열 + 사용자가 추가한 열
 function allFields() {
-    return RS_FIELDS.concat(state.columns.map(c => ({ key: c.id, label: c.label, custom: true })));
+    return baseFields().concat(state.columns.map(c => ({ key: c.id, label: c.label, custom: true })));
 }
 // 지금 표에 보이는 열 ('주요 항목만' 이어도 추가한 열은 항상 보인다)
 function visibleFields() {
-    const base = state.compact ? RS_FIELDS.filter(f => f.core) : RS_FIELDS;
+    const base = state.compact ? baseFields().filter(f => f.core) : baseFields();
     return base.concat(state.columns.map(c => ({ key: c.id, label: c.label, custom: true })));
 }
 function fieldOf(key) { return allFields().find(f => f.key === key) || null; }
@@ -182,6 +198,12 @@ function setVal(m, f, v) {
     if (!m || !f) return;
     if (f.custom) { if (!m.ext) m.ext = {}; m.ext[f.key] = v; }
     else m[f.key] = v;
+}
+// 빈 멤버 한 명
+function blankMember(group) {
+    const m = { id: newId(), group: group || state.group, ext: {} };
+    RS_FIELDS.forEach(f => { m[f.key] = ''; });
+    return m;
 }
 
 // ==================== 인증 ====================
@@ -210,6 +232,8 @@ function normalizeMembers(list) {
     return toArr(list).map(m => {
         const o = (m && typeof m === 'object') ? m : {};
         const out = { id: o.id || newId(), ext: {} };
+        // group 이 없던 시절 데이터는 재학으로 본다
+        out.group = RS_GKEYS.indexOf(o.group) >= 0 ? o.group : 'current';
         RS_FIELDS.forEach(f => { out[f.key] = String(o[f.key] == null ? '' : o[f.key]).trim(); });
         if (o.ext && typeof o.ext === 'object') {
             Object.keys(o.ext).forEach(k => { out.ext[k] = String(o.ext[k] == null ? '' : o.ext[k]).trim(); });
@@ -257,18 +281,153 @@ function setSaveStat(cls, text) {
     rsSave.textContent = text || '';
 }
 
+// ==================== CSV ====================
+// 따옴표 안의 쉼표·줄바꿈까지 처리하는 CSV 파서
+function parseCsv(text) {
+    text = String(text || '').replace(/^﻿/, '');
+    const rows = [];
+    let row = [], cell = '', inQ = false;
+    for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQ) {
+            if (c === '"') {
+                if (text[i + 1] === '"') { cell += '"'; i++; }
+                else inQ = false;
+            } else cell += c;
+        } else if (c === '"') inQ = true;
+        else if (c === ',') { row.push(cell); cell = ''; }
+        else if (c === '\r') { /* CRLF 무시 */ }
+        else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+        else cell += c;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.some(x => String(x).trim() !== ''));
+}
+
+// 머리글 → 필드 키 매핑. 인식 못한 열은 무시한다.
+// '소속' 과 '소속!' 처럼 비슷한 이름이 같이 오므로 정확 일치로만 판정한다.
+function mapHeader(headerRow) {
+    const map = {};
+    const used = {};
+    headerRow.forEach((h, i) => {
+        const t = clean(h);
+        if (!t) return;
+        const f = RS_FIELDS.find(f => f.csv.some(c => c.toLowerCase() === t.toLowerCase()));
+        if (f && !used[f.key]) { map[i] = f.key; used[f.key] = true; }
+    });
+    return map;
+}
+
+// CSV 텍스트 → 인원 배열 { ok, members, cols, error }
+function csvToMembers(text) {
+    const rows = parseCsv(text);
+    if (rows.length < 2) return { ok: false, error: '내용이 없거나 머리글만 있습니다. 머리글 한 줄 + 인원 줄이 필요합니다.' };
+
+    const map = mapHeader(rows[0]);
+    const cols = Object.values(map);
+    if (cols.indexOf('name') < 0) {
+        return { ok: false, error: '‘이름’ 열을 찾지 못했습니다. 첫 줄이 머리글(이름 · 직위 · 이메일 …)인지 확인해 주세요.' };
+    }
+
+    const members = [];
+    for (let r = 1; r < rows.length; r++) {
+        const o = {};
+        Object.keys(map).forEach(i => { o[map[i]] = normVal(map[i], rows[r][i]); });
+        if (!o.name) continue;   // 이름 없는 줄은 건너뜀
+        members.push(o);
+    }
+    if (!members.length) return { ok: false, error: '이름이 있는 줄을 찾지 못했습니다.' };
+    return { ok: true, members, cols };
+}
+
+function openImport() {
+    document.getElementById('rsFile').value = '';
+    document.getElementById('rsFileName').textContent = 'CSV 파일 선택';
+    document.getElementById('rsPaste').value = '';
+    document.getElementById('rsPreview').style.display = 'none';
+    state.parsed = null;
+
+    // 대상 탭은 지금 보고 있는 탭이 기본값
+    document.getElementById('rsImpGroup').innerHTML = RS_GROUPS.map(g =>
+        '<label><input type="radio" name="rsImpG" value="' + g.key + '"' + (g.key === state.group ? ' checked' : '') + '> ' +
+        esc(g.label) + '</label>').join('');
+
+    openModal('rsImportModal');
+}
+
+function previewImport(text) {
+    const box = document.getElementById('rsPreview');
+    if (!String(text || '').trim()) { box.style.display = 'none'; state.parsed = null; return; }
+
+    const res = csvToMembers(text);
+    box.style.display = 'block';
+    if (!res.ok) {
+        box.className = 'rs-preview bad';
+        box.innerHTML = '<i class="fas fa-triangle-exclamation"></i> ' + esc(res.error);
+        state.parsed = null;
+        return;
+    }
+    state.parsed = res.members;
+    const labels = res.cols.map(k => (RS_FIELDS.find(f => f.key === k) || {}).label).filter(Boolean);
+    const heads = parseCsv(text)[0].map(clean).filter(Boolean);
+    const unknown = heads.filter(h => !RS_FIELDS.some(f => f.csv.some(c => c.toLowerCase() === h.toLowerCase())));
+
+    box.className = 'rs-preview ok';
+    box.innerHTML = '<i class="fas fa-circle-check"></i> <b>' + res.members.length + '명</b> 인식됨' +
+        '<br>인식된 항목: ' + esc(labels.join(' · ')) +
+        (unknown.length ? '<br><span class="rs-warn">무시된 열: ' + esc(unknown.join(' · ')) + '</span>' : '') +
+        '<br>첫 번째: <b>' + esc(res.members[0].name) + '</b>' +
+        (res.members[0].position ? ' (' + esc(res.members[0].position) + ')' : '');
+}
+
+async function applyImport() {
+    if (!state.parsed || !state.parsed.length) { showAlert('먼저 CSV 파일을 선택하거나 붙여넣어 주세요.', 'warning'); return; }
+    const g = (document.querySelector('input[name="rsImpG"]:checked') || {}).value || 'current';
+    const mode = (document.querySelector('input[name="rsMode"]:checked') || {}).value || 'merge';
+    const inG = state.members.filter(m => m.group === g);
+
+    let added = 0, updated = 0;
+    if (mode === 'replace') {
+        if (!confirm(groupLabel(g) + ' 탭의 기존 ' + inG.length + '명을 지우고 CSV의 ' + state.parsed.length + '명으로 교체합니다.\n다른 탭은 그대로 둡니다. 진행할까요?')) return;
+        const others = state.members.filter(m => m.group !== g);
+        const fresh = state.parsed.map(o => Object.assign(blankMember(g), o, { group: g }));
+        state.members = others.concat(fresh);
+        added = fresh.length;
+    } else {
+        // 병합: 같은 탭 안에서 이름이 같으면 값이 있는 항목만 덮어쓰고, 없으면 새로 추가
+        state.parsed.forEach(o => {
+            const hit = state.members.find(m => m.group === g && clean(m.name) === clean(o.name));
+            if (hit) {
+                Object.keys(o).forEach(k => { if (o[k]) hit[k] = o[k]; });
+                updated++;
+            } else {
+                state.members.push(Object.assign(blankMember(g), o, { group: g }));
+                added++;
+            }
+        });
+    }
+
+    if (await saveData()) {
+        closeModal('rsImportModal');
+        state.group = g;                                     // 방금 넣은 탭으로 이동
+        state.q = ''; rsSearch.value = ''; state.posFilter = '';
+        render();
+        showAlert(groupLabel(g) + ' 탭 · 추가 ' + added + '명' + (updated ? ' · 갱신 ' + updated + '명' : ''), 'success');
+    }
+}
+
 // ==================== 표 렌더 ====================
+function inGroup() { return state.members.filter(m => m.group === state.group); }
+
 function filtered() {
     const q = state.q.trim().toLowerCase();
     const fields = allFields();
-    let list = state.members.filter(m => {
+    const list = inGroup().filter(m => {
         if (state.posFilter && clean(m.position) !== state.posFilter) return false;
         if (!q) return true;
         return fields.some(f => getVal(m, f).toLowerCase().indexOf(q) >= 0);
     });
 
-    // 정렬을 고르지 않았으면 **입력 순서 그대로** 둔다.
-    // 열 단위로 값을 붙여넣는 방식이라, 화면 순서가 제멋대로 바뀌면 값이 엉뚱한 사람에게 들어간다.
     const kf = state.sortKey ? fieldOf(state.sortKey) : null;
     if (!kf) return list;
 
@@ -285,15 +444,34 @@ function filtered() {
     });
 }
 
+function renderTabs() {
+    rsTabs.innerHTML = RS_GROUPS.map(g => {
+        const n = state.members.filter(m => m.group === g.key).length;
+        return '<button class="rs-tab' + (state.group === g.key ? ' active' : '') + '" data-g="' + g.key + '">' +
+               '<i class="fas ' + g.ic + '"></i> ' + esc(g.label) + '<span class="n">' + n + '</span></button>';
+    }).join('');
+    rsTabs.querySelectorAll('.rs-tab').forEach(b => {
+        b.addEventListener('click', () => {
+            if (state.group === b.dataset.g) return;
+            state.group = b.dataset.g;
+            state.posFilter = '';
+            if (state.sortKey && !fieldOf(state.sortKey)) state.sortKey = 'period';   // 탭 전용 열로 정렬 중이었다면 복귀
+            render();
+        });
+    });
+}
+
 function renderChips() {
     const counts = {};
-    state.members.forEach(m => {
+    inGroup().forEach(m => {
         const p = clean(m.position) || '미지정';
         counts[p] = (counts[p] || 0) + 1;
     });
     const keys = Object.keys(counts).sort((a, b) => posRank(a) - posRank(b) || a.localeCompare(b, 'ko'));
+    if (keys.length < 2) { rsChips.innerHTML = ''; rsChips.style.display = 'none'; return; }
 
-    let html = '<button class="rs-chip' + (state.posFilter ? '' : ' active') + '" data-pos="">전체<span class="n">' + state.members.length + '</span></button>';
+    rsChips.style.display = 'flex';
+    let html = '<button class="rs-chip' + (state.posFilter ? '' : ' active') + '" data-pos="">전체<span class="n">' + inGroup().length + '</span></button>';
     keys.forEach(p => {
         html += '<button class="rs-chip' + (state.posFilter === p ? ' active' : '') + '" data-pos="' + esc(p) + '">' +
                 esc(p) + '<span class="n">' + counts[p] + '</span></button>';
@@ -302,6 +480,16 @@ function renderChips() {
     rsChips.querySelectorAll('.rs-chip').forEach(b => {
         b.addEventListener('click', () => { state.posFilter = b.dataset.pos; render(); });
     });
+}
+
+// 이메일 칸: 'a@x / b@y' 처럼 여러 개가 들어 있는 경우가 있어 각각 링크로 만든다.
+function emailHtml(disp) {
+    if (/^https?:\/\//i.test(disp)) {
+        return '<a href="' + esc(disp) + '" target="_blank" rel="noopener noreferrer">링크 <i class="fas fa-external-link-alt" style="font-size:.8em"></i></a>';
+    }
+    const parts = disp.split(/\s*\/\s*/).filter(s => s !== '');
+    return parts.map(p => p.indexOf('@') >= 0 ? '<a href="mailto:' + esc(p) + '">' + esc(p) + '</a>' : esc(p))
+                .join('<span class="rs-dim"> / </span>');
 }
 
 function cellHtml(m, f) {
@@ -314,15 +502,12 @@ function cellHtml(m, f) {
     if (f.key === 'name') return '<span class="rs-name">' + esc(disp) + '</span>';
     if (f.key === 'nameEn') return '<span class="rs-en">' + esc(disp) + '</span>';
     if (f.key === 'position') return '<span class="rs-pos ' + posClass(disp) + '">' + esc(disp) + '</span>';
+    if (f.key === 'org') return '<span class="rs-org">' + esc(disp) + '</span>';
     if (f.key === 'status') {
         const off = disp.indexOf('재학') < 0;
         return '<span class="rs-st' + (off ? ' off' : '') + '">' + esc(disp) + '</span>';
     }
-    if (f.key === 'email') {
-        if (disp.indexOf('@') >= 0) return '<a href="mailto:' + esc(disp) + '">' + esc(disp) + '</a>';
-        if (/^https?:\/\//i.test(disp)) return '<a href="' + esc(disp) + '" target="_blank" rel="noopener noreferrer">링크 <i class="fas fa-external-link-alt" style="font-size:.8em"></i></a>';
-        return esc(disp);
-    }
+    if (f.key === 'email') return emailHtml(disp);
     if (f.key === 'phone' || f.key === 'birth' || f.key === 'sciNo' || f.key === 'sid') {
         return '<span class="rs-mono">' + esc(disp) + '</span>';
     }
@@ -332,6 +517,9 @@ function cellHtml(m, f) {
 function render() {
     const fields = visibleFields();
     const list = filtered();
+    const total = inGroup().length;
+
+    renderTabs();
 
     // 머리글 (클릭=정렬, ⋯=열 메뉴)
     rsHead.innerHTML = '<tr>' + fields.map(f => {
@@ -358,13 +546,12 @@ function render() {
     });
 
     // 본문
-    const hasAny = state.members.length > 0;
-    rsChips.style.display = hasAny ? 'flex' : 'none';
-    rsEmpty.style.display = hasAny ? 'none' : 'block';
-
-    if (!hasAny) {
+    rsEmpty.style.display = total ? 'none' : 'block';
+    document.getElementById('rsEmptyTab').textContent = groupLabel(state.group);
+    if (!total) {
+        rsChips.innerHTML = ''; rsChips.style.display = 'none';
         rsBody.innerHTML = '<tr class="rs-none"><td colspan="' + (fields.length + 1) + '">' +
-            '아직 인원이 없습니다. <b>이름</b> 열의 ⋯ 메뉴에서 <b>열 일괄 입력</b>으로 한 번에 만들 수 있습니다.</td></tr>';
+            esc(groupLabel(state.group)) + ' 탭에 등록된 인원이 없습니다.</td></tr>';
         rsCount.textContent = '';
         return;
     }
@@ -381,9 +568,9 @@ function render() {
         });
     }
 
-    rsCount.textContent = (list.length === state.members.length)
-        ? '총 ' + state.members.length + '명'
-        : list.length + ' / ' + state.members.length + '명';
+    rsCount.textContent = (list.length === total)
+        ? groupLabel(state.group) + ' ' + total + '명'
+        : list.length + ' / ' + total + '명';
 
     renderChips();
 }
@@ -395,9 +582,7 @@ function openColMenu(btn, key) {
     const f = fieldOf(key);
     if (!f) return;
 
-    const items = [
-        { ic: 'fa-paste', text: '열 일괄 입력', fn: () => openBulk(key) }
-    ];
+    const items = [{ ic: 'fa-paste', text: '열 일괄 입력', fn: () => openBulk(key) }];
     if (f.custom) {
         items.push({ ic: 'fa-pen', text: '열 이름 변경', fn: () => openColForm(key) });
         items.push({ ic: 'fa-trash', text: '열 삭제', danger: true, fn: () => deleteColumn(key) });
@@ -410,7 +595,6 @@ function openColMenu(btn, key) {
 
     const r = btn.getBoundingClientRect();
     rsColMenu.style.display = 'block';
-    // 화면 오른쪽으로 넘치지 않게 보정
     const w = rsColMenu.offsetWidth || 170;
     rsColMenu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
     rsColMenu.style.top = (r.bottom + 4) + 'px';
@@ -436,7 +620,8 @@ async function submitColForm(e) {
     const label = document.getElementById('rsColName').value.trim();
     if (!label) { showAlert('열 이름을 입력해 주세요.', 'warning'); return; }
 
-    const dup = allFields().some(f => f.label === label && f.key !== state.colEditId);
+    const dup = RS_FIELDS.concat(state.columns.map(c => ({ key: c.id, label: c.label })))
+        .some(f => f.label === label && f.key !== state.colEditId);
     if (dup) { showAlert('같은 이름의 열이 이미 있습니다.', 'warning'); return; }
 
     if (state.colEditId) {
@@ -462,7 +647,7 @@ async function deleteColumn(colId) {
 
     state.columns = state.columns.filter(x => x.id !== colId);
     state.members.forEach(m => { if (m.ext) delete m.ext[colId]; });
-    if (state.sortKey === colId) state.sortKey = 'period';   // 기본 정렬로 복귀
+    if (state.sortKey === colId) state.sortKey = 'period';
 
     if (await saveData()) { showAlert('열을 삭제했습니다.', 'success'); render(); }
 }
@@ -486,6 +671,7 @@ function openBulk(key) {
 
     document.getElementById('rsBulkTitle').textContent = f.label + ' 열 일괄 입력';
     document.getElementById('rsBulkHint').innerHTML =
+        '<b>' + esc(groupLabel(state.group)) + '</b> 탭에 적용됩니다. ' +
         '엑셀·노션에서 <b>' + esc(f.label) + '</b> 열을 복사해 그대로 붙여넣으세요. ' +
         '<b>한 줄에 한 명</b>씩, 지금 표에 보이는 <b>위에서 아래 순서</b>대로 채워집니다.' +
         (isName
@@ -512,7 +698,7 @@ function updateBulkStat() {
     if (isName && lines.length > rows.length) {
         msg += ' · <b style="color:#1e6b31">인원 ' + Math.max(0, nonEmpty - rows.length) + '명 새로 추가</b>';
     } else if (!isName && lines.length > rows.length) {
-        msg += ' · <b style="color:#b45309">넘치는 ' + (lines.length - rows.length) + '줄 무시</b>';
+        msg += ' · <b class="rs-warn">넘치는 ' + (lines.length - rows.length) + '줄 무시</b>';
     }
     const cols = lines.reduce((mx, l) => Math.max(mx, l.split('\t').length), 1);
     if (cols > 1) {
@@ -553,8 +739,7 @@ async function applyBulk() {
         if (!m) {
             // 줄이 남는 경우: 이름 열일 때만 새 인원을 만든다
             if (!isName || clean(cells[0]) === '') { ignored++; return; }
-            m = { id: newId(), ext: {} };
-            RS_FIELDS.forEach(x => { m[x.key] = ''; });
+            m = blankMember(state.group);
             state.members.push(m);
             added++;
         }
@@ -585,9 +770,15 @@ function openForm(id) {
 
     document.getElementById('rsFormTitle').innerHTML = m
         ? '<i class="fas fa-user-pen"></i> ' + esc(m.name) + ' 정보 수정'
-        : '<i class="fas fa-user-plus"></i> 인원 추가';
+        : '<i class="fas fa-user-plus"></i> ' + esc(groupLabel(state.group)) + ' 인원 추가';
 
-    document.getElementById('rsFormFields').innerHTML = allFields().map(f => {
+    // 구분(탭) 선택 + 나머지 항목
+    const gSel = '<div class="form-group"><label for="rf_group">구분</label>' +
+        '<select id="rf_group">' + RS_GROUPS.map(g =>
+            '<option value="' + g.key + '"' + ((m ? m.group : state.group) === g.key ? ' selected' : '') + '>' + esc(g.label) + '</option>'
+        ).join('') + '</select></div>';
+
+    document.getElementById('rsFormFields').innerHTML = gSel + allFields().map(f => {
         const wide = (f.key === 'school' || f.key === 'dept') ? ' wide' : '';
         const ph = f.key === 'birth' ? '예: 030110' : (f.key === 'period' ? '예: 2023.03 ~' : '');
         return '<div class="form-group' + wide + '">' +
@@ -605,23 +796,24 @@ function openForm(id) {
 
 async function submitForm(e) {
     e.preventDefault();
-    const target = state.editId
-        ? state.members.find(x => x.id === state.editId)
-        : Object.assign({ id: newId(), ext: {} }, RS_FIELDS.reduce((a, f) => (a[f.key] = '', a), {}));
-    if (!target) return;
-
     const nameInput = document.getElementById('rf_name');
     if (!nameInput.value.trim()) { showAlert('이름은 반드시 입력해야 합니다.', 'warning'); return; }
+
+    const target = state.editId ? state.members.find(x => x.id === state.editId) : blankMember(state.group);
+    if (!target) return;
 
     document.querySelectorAll('#rsFormFields input[data-key]').forEach(i => {
         const f = fieldOf(i.dataset.key);
         if (f) setVal(target, f, normVal(f.key, i.value));
     });
+    const gv = document.getElementById('rf_group').value;
+    if (RS_GKEYS.indexOf(gv) >= 0) target.group = gv;
 
     if (!state.editId) state.members.push(target);
 
     if (await saveData()) {
         closeModal('rsFormModal');
+        if (target.group !== state.group) state.group = target.group;   // 다른 탭으로 옮겼으면 따라간다
         showAlert(state.editId ? '수정되었습니다.' : '추가되었습니다.', 'success');
         render();
     }
@@ -653,6 +845,7 @@ document.addEventListener('DOMContentLoaded', function () {
     rsHead = document.getElementById('rsHead');
     rsBody = document.getElementById('rsBody');
     rsChips = document.getElementById('rsChips');
+    rsTabs = document.getElementById('rsTabs');
     rsCount = document.getElementById('rsCount');
     rsEmpty = document.getElementById('rsEmpty');
     rsSave = document.getElementById('rsSave');
@@ -696,10 +889,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             closeColMenu();
-            ['rsFormModal', 'rsBulkModal', 'rsColModal', 'loginModal'].forEach(closeModal);
+            ['rsFormModal', 'rsBulkModal', 'rsColModal', 'rsImportModal', 'loginModal'].forEach(closeModal);
         }
     });
-    // 바깥을 누르면 열 메뉴 닫기
     document.addEventListener('click', e => {
         if (rsColMenu && !rsColMenu.contains(e.target)) closeColMenu();
     });
@@ -728,6 +920,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('rsAddColBtn').addEventListener('click', () => openColForm(null));
     document.getElementById('rsAddBtn').addEventListener('click', () => openForm(null));
+    document.getElementById('rsImportBtn').addEventListener('click', openImport);
+    document.getElementById('rsEmptyImport').addEventListener('click', openImport);
     document.getElementById('rsEmptyFill').addEventListener('click', () => openBulk('name'));
 
     // 인원 입력 폼
@@ -740,4 +934,20 @@ document.addEventListener('DOMContentLoaded', function () {
     // 열 일괄 입력
     document.getElementById('rsBulkText').addEventListener('input', updateBulkStat);
     document.getElementById('rsBulkApply').addEventListener('click', applyBulk);
+
+    // CSV 가져오기
+    document.getElementById('rsFile').addEventListener('change', function () {
+        const f = this.files && this.files[0];
+        if (!f) return;
+        document.getElementById('rsFileName').textContent = f.name;
+        const reader = new FileReader();
+        reader.onload = () => {
+            document.getElementById('rsPaste').value = reader.result;
+            previewImport(reader.result);
+        };
+        reader.onerror = () => showAlert('파일을 읽지 못했습니다.', 'error');
+        reader.readAsText(f, 'utf-8');
+    });
+    document.getElementById('rsPaste').addEventListener('input', function () { previewImport(this.value); });
+    document.getElementById('rsApplyImport').addEventListener('click', applyImport);
 });

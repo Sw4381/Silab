@@ -100,8 +100,11 @@
             <div class="page-hero">
                 <h1><i class="fas fa-id-card"></i> Lab 인원 기본 정보</h1>
                 <p>연구실 구성원의 기본 인적사항입니다. 개인정보가 포함되어 있으니 화면 공유·외부 반출에 주의해 주세요.<br>
-                   열 머리글의 <b>⋯</b> 에서 <b>열 일괄 입력</b>을 쓰면 엑셀·노션의 열을 통째로 붙여넣을 수 있고, 머리글을 클릭하면 그 열 기준으로 정렬됩니다.</p>
+                   <b>재학 · 졸업 · 파트</b> 탭으로 나뉘며, 각 탭은 따로 관리됩니다. 열 머리글을 클릭하면 정렬, <b>⋯</b> 에서 열 단위 붙여넣기를 할 수 있습니다.</p>
             </div>
+
+            <!-- 구분 탭 (재학 / 졸업 / 파트) -->
+            <div class="rs-tabs" id="rsTabs"></div>
 
             <!-- 툴바 -->
             <div class="rs-toolbar">
@@ -115,6 +118,7 @@
                 <button class="tb-btn" id="rsMaskBtn" title="전화번호·생년월일·과학기술인번호 가리기"><i class="fas fa-eye-slash"></i> 민감정보 가리기</button>
                 <button class="tb-btn on" id="rsColBtn" title="표시할 항목 전환"><i class="fas fa-table-columns"></i> 주요 항목만</button>
                 <button class="tb-btn" id="rsAddColBtn"><i class="fas fa-plus"></i> 열 추가</button>
+                <button class="tb-btn" id="rsImportBtn"><i class="fas fa-file-arrow-up"></i> CSV 가져오기</button>
                 <button class="tb-btn primary" id="rsAddBtn"><i class="fas fa-user-plus"></i> 인원 추가</button>
             </div>
 
@@ -132,10 +136,13 @@
             <!-- 빈 상태 -->
             <div id="rsEmpty" class="rs-empty" style="display:none;">
                 <i class="fas fa-address-book"></i>
-                <h3>아직 등록된 인원이 없습니다</h3>
-                <p>노션·엑셀에서 <b>이름 열을 통째로 복사</b>해 붙여넣으면 인원이 한 번에 만들어집니다.<br>
-                   그다음 전화번호·이메일 같은 다른 열도 같은 방법으로 채우면 됩니다.</p>
-                <button class="tb-btn primary" id="rsEmptyFill"><i class="fas fa-paste"></i> 이름 붙여넣어 시작하기</button>
+                <h3><span id="rsEmptyTab">재학</span> 탭에 등록된 인원이 없습니다</h3>
+                <p>노션 표를 CSV로 내려받아 <b>CSV 가져오기</b>를 하면 한 번에 채워집니다.<br>
+                   또는 <b>이름 열을 통째로 복사</b>해 붙여넣어 인원을 먼저 만들 수도 있습니다.</p>
+                <div class="rs-empty-btns">
+                    <button class="tb-btn primary" id="rsEmptyImport"><i class="fas fa-file-arrow-up"></i> CSV 가져오기</button>
+                    <button class="tb-btn" id="rsEmptyFill"><i class="fas fa-paste"></i> 이름 붙여넣기</button>
+                </div>
             </div>
         </div>
 
@@ -215,6 +222,47 @@
                     <button type="submit" class="tb-btn primary"><i class="fas fa-check"></i> 확인</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ===== CSV 가져오기 모달 ===== -->
+    <div id="rsImportModal" class="perf-modal">
+        <div class="perf-modal-box wide">
+            <div class="perf-modal-head">
+                <h3><i class="fas fa-file-arrow-up"></i> CSV 가져오기</h3>
+                <button class="perf-modal-close" data-close="rsImportModal">&times;</button>
+            </div>
+            <div class="rs-import-body">
+                <p class="target-hint">
+                    노션 표를 <b>CSV로 내보내기</b> 한 파일을 그대로 넣으면 됩니다.
+                    첫 줄이 머리글(이름 · 직위 · 이메일 …)이면 <b>열 순서가 달라도 자동으로 맞춥니다.</b>
+                    파트 표의 <b>소속!</b> 열은 <b>소속기관</b>으로 들어갑니다.
+                </p>
+
+                <div class="rs-imp-group">
+                    <span class="rs-imp-label">어느 탭으로?</span>
+                    <span id="rsImpGroup" class="rs-imp-radios"></span>
+                </div>
+
+                <label class="rs-file">
+                    <input type="file" id="rsFile" accept=".csv,text/csv">
+                    <i class="fas fa-folder-open"></i> <span id="rsFileName">CSV 파일 선택</span>
+                </label>
+
+                <div class="rs-or">또는 아래에 직접 붙여넣기</div>
+                <textarea id="rsPaste" rows="6" spellcheck="false" placeholder="이름,직위,이메일,전화번호,...&#10;홍길동,석사과정,hong@example.com,010-0000-0000,..."></textarea>
+
+                <div class="rs-mode">
+                    <label><input type="radio" name="rsMode" value="merge" checked> <b>병합</b> — 그 탭에서 같은 이름은 갱신, 새 이름은 추가</label>
+                    <label><input type="radio" name="rsMode" value="replace"> <b>전체 교체</b> — 그 탭의 기존 인원을 지우고 CSV로 대체 (다른 탭은 그대로)</label>
+                </div>
+
+                <div id="rsPreview" class="rs-preview" style="display:none;"></div>
+            </div>
+            <div class="perf-modal-actions">
+                <button type="button" class="tb-btn" data-close="rsImportModal">취소</button>
+                <button type="button" class="tb-btn primary" id="rsApplyImport"><i class="fas fa-check"></i> 가져오기</button>
+            </div>
         </div>
     </div>
 
