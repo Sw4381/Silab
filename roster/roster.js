@@ -49,6 +49,18 @@ function posRank(p) {
     return i < 0 ? 900 : i;
 }
 
+// Lab 활동기간 정렬용 키 — 시작 시점을 YYYYMM 숫자로 뽑는다.
+// 표기가 제각각이라(2023.06 ~ / 2023.03~ / 2024 ~ / 26.06~) 문자열 비교로는 안 맞는다.
+// 값이 없으면 맨 뒤로 보낸다.
+function periodKey(v) {
+    const m = String(v || '').match(/(\d{2,4})\s*[.\-\/년]?\s*(\d{1,2})?/);
+    if (!m) return 999999;
+    let y = parseInt(m[1], 10);
+    if (m[1].length <= 2) y = (y >= 50 ? 1900 : 2000) + y;   // 26 → 2026
+    const mo = m[2] ? Math.min(12, Math.max(1, parseInt(m[2], 10))) : 0;
+    return y * 100 + mo;
+}
+
 // ==================== 전역 상태 ====================
 let auth, database, currentUser = null;
 const state = {
@@ -57,10 +69,10 @@ const state = {
     updatedAt: '',
     q: '',              // 검색어
     posFilter: '',      // 직위 필터 ('' = 전체)
-    sortKey: '',        // '' = 기본(직위 → 이름)
+    sortKey: 'period',  // 기본 정렬: Lab 활동기간(먼저 들어온 사람이 위)
     sortAsc: true,
     masked: false,      // 민감정보 가리기
-    compact: true,      // true = 주요 항목만, false = 전체 항목
+    compact: false,     // false = 전체 항목(기본), true = 주요 항목만
     editId: null,       // 수정 중인 인원 id (null = 신규)
     bulkKey: '',        // 일괄 입력 중인 열 key
     colEditId: null     // 이름 변경 중인 추가 열 id (null = 새 열 추가)
@@ -261,9 +273,14 @@ function filtered() {
     if (!kf) return list;
 
     return list.slice().sort((a, b) => {
-        const r = (state.sortKey === 'position')
-            ? (posRank(a.position) - posRank(b.position)) || String(a.name).localeCompare(String(b.name), 'ko')
-            : getVal(a, kf).localeCompare(getVal(b, kf), 'ko', { numeric: true });
+        let r;
+        if (state.sortKey === 'period') r = periodKey(a.period) - periodKey(b.period);
+        else if (state.sortKey === 'position') r = posRank(a.position) - posRank(b.position);
+        else r = getVal(a, kf).localeCompare(getVal(b, kf), 'ko', { numeric: true });
+        // 값이 같으면 입력 순서 그대로 둔다(정렬이 안정적이라 0을 돌려주면 유지됨).
+        // 이름만 붙여넣은 직후엔 활동기간이 모두 비어 동점이 되는데, 여기서 이름순으로
+        // 다시 늘어놓으면 다음 열을 붙여넣을 때 값이 엉뚱한 사람에게 들어간다.
+        if (r === 0) return 0;
         return state.sortAsc ? r : -r;
     });
 }
@@ -445,7 +462,7 @@ async function deleteColumn(colId) {
 
     state.columns = state.columns.filter(x => x.id !== colId);
     state.members.forEach(m => { if (m.ext) delete m.ext[colId]; });
-    if (state.sortKey === colId) state.sortKey = '';
+    if (state.sortKey === colId) state.sortKey = 'period';   // 기본 정렬로 복귀
 
     if (await saveData()) { showAlert('열을 삭제했습니다.', 'success'); render(); }
 }
@@ -475,9 +492,9 @@ function openBulk(key) {
             ? '<br>줄이 현재 인원보다 많으면 <b>그만큼 인원이 새로 만들어집니다.</b> (빈 줄은 건너뜁니다)'
             : '<br>줄이 현재 인원보다 많으면 넘치는 줄은 무시됩니다. 빈 줄은 그 칸을 비웁니다.') +
         '<br>탭이 포함된 <b>여러 열</b>을 한꺼번에 붙여넣으면 이 열부터 오른쪽으로 차례대로 채웁니다.' +
-        (narrowed ? '<br><b class="rs-warn">지금 검색·필터가 걸려 있어 보이는 ' + rows.length + '명에만 적용됩니다.</b>' : '') +
-        (state.sortKey ? '<br><b class="rs-warn">지금 표가 ‘' + esc((fieldOf(state.sortKey) || {}).label || '') +
-            '’ 기준으로 정렬돼 있습니다. 아래 순서를 꼭 확인하세요.</b>' : '');
+        (state.sortKey ? '<br>지금 표는 <b>' + esc((fieldOf(state.sortKey) || {}).label || '') +
+            '</b> 순서입니다. 아래 <b>적용 미리보기</b>로 누구에게 어떤 값이 들어가는지 확인하세요.' : '') +
+        (narrowed ? '<br><b class="rs-warn">지금 검색·필터가 걸려 있어 보이는 ' + rows.length + '명에만 적용됩니다.</b>' : '');
 
     document.getElementById('rsBulkText').value = rows.map(m => getVal(m, f)).join('\n');
     updateBulkStat();
@@ -506,7 +523,7 @@ function updateBulkStat() {
     }
 
     // 어느 줄이 누구에게 들어가는지 미리 보여준다 (붙여넣기 순서 어긋남 방지)
-    if (rows.length && !isName) {
+    if (rows.length) {
         const pairs = rows.slice(0, 4).map((m, i) => {
             const v = clean((lines[i] || '').split('\t')[0]);
             return esc(m.name) + ' ← ' + (v ? '<b>' + esc(v) + '</b>' : '<span class="rs-dim">(비움)</span>');
