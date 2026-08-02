@@ -98,7 +98,9 @@ body.ln-embed-body .container { max-width: 100% !important; padding-left: 8px; p
 .ln-tb { border: 1px solid var(--ln-line); background: #fff; color: var(--ln-ink); font-size: 13px; font-weight: 700; min-width: 30px; height: 30px; padding: 0 8px; border-radius: 7px; cursor: pointer; }
 .ln-tb:hover { background: var(--ln-soft); border-color: var(--ln-accent); }
 .ln-tb.swatch { width: 24px; min-width: 24px; padding: 0; font-size: 0; }
-.ln-tb-sel { border: 1px solid var(--ln-line); background: #fff; color: var(--ln-ink); font-size: 12.5px; font-weight: 700; height: 30px; border-radius: 7px; cursor: pointer; padding: 0 4px; }
+.ln-tb-sel { border: 1px solid var(--ln-line); background: #fff; color: var(--ln-ink); font-size: 12.5px; font-weight: 700; height: 30px; min-width: 72px; border-radius: 7px; cursor: pointer; padding: 0 4px; }
+/* 예전 방식(<font size>)으로 지정된 글자 위에 커서가 있을 때 — 다시 고르면 px 로 바뀜을 알림 */
+.ln-tb-sel.legacy { border-color: #f0b429; background: #fffbeb; }
 .ln-sep { width: 1px; height: 20px; background: var(--ln-line); margin: 0 3px; }
 .ln-lbl { font-size: 11px; font-weight: 700; color: var(--ln-sub); margin: 0 2px; }
 .ln-tb.date-btn { color: var(--ln-accent); border-color: #c7d2fe; background: var(--ln-soft); }

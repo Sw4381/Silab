@@ -640,7 +640,86 @@ function bodyOf() {
     const r = findSub(cur.id); return r && { crumb: r.g.name + ' › ' + r.it.text, title: subName(r.s), link: r.s.link, openNew: r.s.openNew, val: r.s.text || '', set: v => r.s.text = v };
 }
 
-// 편집창 글자 크기 (브라우저 확대/축소와 별개로 편집창만 조절, 기기별 저장)
+// ===== 글자 크기 =====
+// 선택한 글자에 px 을 직접 박는다(절대 기준).
+// 예전에는 execCommand('fontSize', 1~7) 를 썼는데, 그건 브라우저 기본 크기에 대한 상대 단계라
+// 편집창 기본 크기(A±)와 따로 놀고 단계 폭도 들쭉날쭉했다. 이제 고른 px 이 그대로 들어간다.
+const LN_FONT_SIZES = [11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 40];
+
+// 선택 영역만 <span> 으로 감싸 돌려준다.
+// execCommand 의 fontSize 7 은 '선택 영역을 정확히 감싸주는' 용도로만 쓰고 크기값은 바로 지운다.
+// (부분 선택이면 브라우저가 바깥 서식 span 을 알아서 쪼개주므로 이웃 글자는 안 건드린다)
+function markSelection() {
+    const ed = document.getElementById('lnEditor');
+    if (!ed) return [];
+    document.execCommand('styleWithCSS', false, true);
+    document.execCommand('fontSize', false, '7');
+    const marks = [];
+    ed.querySelectorAll('font[size="7"]').forEach(el => {
+        const s = document.createElement('span');
+        while (el.firstChild) s.appendChild(el.firstChild);
+        el.parentNode.replaceChild(s, el);
+        marks.push(s);
+    });
+    Array.prototype.slice.call(ed.querySelectorAll('span')).forEach(s => {
+        if (/xxx-large/.test(s.style.fontSize || '')) { s.style.fontSize = ''; marks.push(s); }
+    });
+    return marks;
+}
+// 안쪽에 남아 있는 크기 지정 제거 (예전 <font size> 태그 포함) — 새로 정한 크기가 이기도록
+function stripSizeInside(root) {
+    root.querySelectorAll('[style*="font-size"]').forEach(x => {
+        x.style.fontSize = '';
+        if (!x.getAttribute('style')) x.removeAttribute('style');
+    });
+    root.querySelectorAll('font[size]').forEach(x => x.removeAttribute('size'));
+}
+function unwrap(el) {
+    const p = el.parentNode; if (!p) return;
+    while (el.firstChild) p.insertBefore(el.firstChild, el);
+    p.removeChild(el);
+}
+function applyFontSizePx(px) {
+    markSelection().forEach(s => { stripSizeInside(s); s.style.fontSize = px + 'px'; });
+}
+// '기본'으로 되돌리기 — 크기 지정을 걷어내 편집창 기본 크기(A±)를 따르게 한다
+function clearFontSize() {
+    markSelection().forEach(s => {
+        stripSizeInside(s);
+        s.style.fontSize = '';
+        if (!s.getAttribute('style') && !s.className) unwrap(s);
+    });
+}
+// 커서 위치 글자의 크기를 크기 선택칸에 반영
+function syncFontSel() {
+    const fs = document.getElementById('fontSel');
+    const ed = document.getElementById('lnEditor');
+    const sel = window.getSelection();
+    if (!fs || !ed || !sel || !sel.rangeCount) return;
+    let n = sel.anchorNode;
+    if (!n || !ed.contains(n)) return;
+    if (n.nodeType === 3) n = n.parentNode;
+
+    let px = 0, legacy = false;
+    for (let x = n; x && x !== ed; x = x.parentNode) {
+        if (x.style && x.style.fontSize) { px = Math.round(parseFloat(x.style.fontSize)) || 0; break; }
+        if (x.tagName === 'FONT' && x.getAttribute('size')) { legacy = true; break; }
+    }
+    // 목록에 없는 크기(붙여넣은 글 등)도 그대로 보여주도록 임시 항목을 둔다
+    let tmp = fs.querySelector('option[data-tmp]');
+    if (px && LN_FONT_SIZES.indexOf(px) < 0) {
+        if (!tmp) { tmp = document.createElement('option'); tmp.dataset.tmp = '1'; fs.appendChild(tmp); }
+        tmp.value = String(px); tmp.textContent = px + 'px';
+    } else if (tmp) { tmp.remove(); }
+
+    fs.value = px ? String(px) : '';
+    fs.classList.toggle('legacy', legacy);
+    fs.title = legacy
+        ? '예전 방식으로 지정된 크기입니다. 크기를 다시 고르면 px 기준으로 바뀝니다.'
+        : '선택한 글자의 크기를 px 로 지정합니다';
+}
+
+// 편집창 기본 글자 크기 — 크기를 따로 지정하지 않은 글자에만 적용 (기기별 저장)
 function edFontSize() { const v = Number(localStorage.getItem('ln_edfs')); return (v >= 12 && v <= 24) ? v : 15; }
 function setEdFontSize(px) {
     px = Math.min(24, Math.max(12, px));
@@ -714,8 +793,9 @@ function showBody() {
         '  <button class="ln-tb" title="취소선" data-cmd="strikeThrough"><s>S</s></button>' +
         '  <span class="ln-sep"></span>' +
         '  <span class="ln-lbl">크기</span>' +
-        '  <select class="ln-tb-sel" id="fontSel" title="선택한 글자 크기">' +
-        '    <option value="2">작게</option><option value="3" selected>보통</option><option value="4">크게</option><option value="5">아주 크게</option>' +
+        '  <select class="ln-tb-sel" id="fontSel" title="선택한 글자의 크기를 px 로 지정합니다">' +
+        '    <option value="">기본</option>' +
+        LN_FONT_SIZES.map(n => '<option value="' + n + '">' + n + 'px</option>').join('') +
         '  </select>' +
         '  <span class="ln-sep"></span>' +
         '  <span class="ln-lbl">글자</span>' +
@@ -730,10 +810,10 @@ function showBody() {
         '  <span class="ln-sep"></span>' +
         '  <button class="ln-tb" title="서식 지우기" data-cmd="removeFormat">서식↺</button>' +
         '  <span class="wl-spacer"></span>' +
-        '  <span class="ln-lbl">편집창</span>' +
-        '  <button class="ln-tb" title="편집창 글자 작게" data-cmd="zoomOut">A−</button>' +
+        '  <span class="ln-lbl">기본 크기</span>' +
+        '  <button class="ln-tb" title="크기를 따로 지정하지 않은 글자의 기본 크기를 줄입니다 (이 기기에서만, 내용은 안 바뀜)" data-cmd="zoomOut">A−</button>' +
         '  <span class="ln-lbl" id="edFsLbl"></span>' +
-        '  <button class="ln-tb" title="편집창 글자 크게" data-cmd="zoomIn">A＋</button>' +
+        '  <button class="ln-tb" title="크기를 따로 지정하지 않은 글자의 기본 크기를 키웁니다 (이 기기에서만, 내용은 안 바뀜)" data-cmd="zoomIn">A＋</button>' +
         '</div>' +
         '<div class="ln-editor" id="lnEditor" contenteditable="true" spellcheck="false" data-ph="내용을 자유롭게 기재하세요. (서식·글자크기는 붙여넣기 시에도 유지됩니다)"></div>';
 
@@ -773,12 +853,32 @@ function showBody() {
         else if (cmd) document.execCommand(cmd, false, null);
         rtSync();
     });
-    document.getElementById('fontSel').addEventListener('change', e => {
+    const fontSel = document.getElementById('fontSel');
+    fontSel.addEventListener('mousedown', () => { fontSel._sel = saveSel(); });   // 목록을 열면 선택이 풀리므로 미리 기억
+    fontSel.addEventListener('change', e => {
         ed.focus();
-        document.execCommand('styleWithCSS', false, false);
-        document.execCommand('fontSize', false, e.target.value);
-        rtSync();
+        restoreSel(fontSel._sel);
+        const v = e.target.value;
+        if (v) applyFontSizePx(Number(v)); else clearFontSize();
+        rtSync();          // 직접 DOM 을 고쳤으므로 input 이벤트가 안 뜬다 → 수동 저장 예약
+        syncFontSel();
     });
+
+    // 커서를 옮길 때마다 그 자리 글자 크기를 선택칸에 반영
+    ed.addEventListener('keyup', syncFontSel);
+    ed.addEventListener('mouseup', syncFontSel);
+    ed.addEventListener('focus', syncFontSel);
+}
+
+// 선택 영역 임시 보관 (select 를 클릭하면 편집창 선택이 사라진다)
+function saveSel() {
+    const s = window.getSelection();
+    return (s && s.rangeCount) ? s.getRangeAt(0).cloneRange() : null;
+}
+function restoreSel(r) {
+    if (!r) return;
+    const s = window.getSelection();
+    s.removeAllRanges(); s.addRange(r);
 }
 
 // 오늘 날짜 머리글을 본문 맨 위에 삽입 — 주간보고 등에서 '최근 날짜가 위로' 규칙 유지용
