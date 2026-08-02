@@ -17,6 +17,8 @@ function resolveLink(url) { return (url && LN_PAGE_MOVES[url]) ? LN_PAGE_MOVES[u
 const LN_COLORS = ['#4f46e5', '#0891b2', '#7c3aed', '#dc2626', '#d97706', '#059669', '#db2777', '#65a30d'];
 // Lab 주소록 구글시트 — 기본 메뉴와, 링크가 비어 있는 기존 '주소록' 항목에 소급 적용
 const LN_ADDRBOOK_URL = 'https://docs.google.com/spreadsheets/d/1jTL5TSCeSygYeF_cfwTjHCUplHhkRg7zOlKIqnmV5bk/edit?usp=sharing';
+// 이름에 '주소록'이 들어가고 링크가 비어 있으면 주소록 시트를 연결 (서브탭·세부 모두)
+function addrRetro(name, link) { return (!link && /주소록/.test(name || '')) ? LN_ADDRBOOK_URL : link; }
 
 // 첫 사용 시 자동 생성되는 기본 메뉴 (이후 추가/이름변경/삭제/순서변경 자유)
 // link: 바깥/내부 페이지 주소 (기본은 클릭 시 오른쪽 본문에 iframe 임베드, openNew:true 면 새 창)
@@ -121,15 +123,16 @@ function normalize() {
             o.text = String(o.text || '제목 없음');
             if (typeof o.body !== 'string') o.body = '';
             if (typeof o.link !== 'string') o.link = '';
-            // 기존 데이터의 'Lab 주소록'에 링크가 비어 있으면 주소록 시트를 채움 (다음 구조 저장 시 DB에도 반영)
-            if (!o.link && o.text === 'Lab 주소록') o.link = LN_ADDRBOOK_URL;
+            // 기존 데이터의 '주소록' 항목에 링크가 비어 있으면 주소록 시트를 채움 (다음 구조 저장 시 DB에도 반영)
+            o.link = addrRetro(o.text, o.link);
             // 링크는 기본적으로 본문(iframe)에 표시. openNew=true 인 것만 새 창으로 이동.
             // (구버전 embed 플래그: embed=false 였던 것도 이제 본문 표시가 기본이라 무시)
             o.openNew = !!o.openNew;
             delete o.embed;
             o.subs = toArr(o.subs).map(s => {
                 const x = (typeof s === 'string') ? { text: s } : s;
-                return { id: x.id || newId('s'), text: String(x.text || ''), name: x.name ? String(x.name) : '', link: (typeof x.link === 'string') ? x.link : '', openNew: !!x.openNew };
+                const sLink = addrRetro(x.name || stripHtml(x.text).split('\n')[0], (typeof x.link === 'string') ? x.link : '');
+                return { id: x.id || newId('s'), text: String(x.text || ''), name: x.name ? String(x.name) : '', link: sLink, openNew: !!x.openNew };
             });
             return o;
         });
