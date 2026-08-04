@@ -731,25 +731,20 @@ function setEdFontSize(px) {
 }
 
 // ===== 링크 임베드 화면 맞춤 =====
-// 임베드가 화면보다 길어 바깥 페이지 전체가 스크롤되던 문제 해결:
-// (snap) 제목줄을 네비 바로 아래로 올리고, 임베드 높이를 화면에 남은 공간에 딱 맞춰
-// 스크롤이 임베드 "안에서" 일어나게 한다. (전체화면 fs 모드는 CSS 100vh 가 우선)
+// 임베드 안쪽 스크롤이 끝에 닿으면 바깥 페이지로 이어져(체이닝) 화면이 오르내리던 문제:
+// 임베드를 보는 동안은 바깥 페이지 스크롤을 아예 잠그고(ln-embed-lock: 상단바/푸터 숨김 + overflow hidden),
+// 임베드 높이를 화면에 남은 공간에 딱 맞춰 모든 스크롤이 임베드 "안에서만" 일어나게 한다.
+// (전체화면 fs 모드는 CSS 100vh !important 가 우선. 잠금 해제는 showBody 시작부에서)
 function fitEmbed(snap) {
     const wrap = document.getElementById('lnEmbedWrap');
     const ifr = document.getElementById('lnEmbed');
     if (!wrap || !ifr || wrap.classList.contains('fs')) return;
-    const nav = document.querySelector('.navbar');
-    const navH = (nav && getComputedStyle(nav).position === 'fixed') ? nav.offsetHeight : 0;
     if (snap) {
-        const title = bodyEl && bodyEl.querySelector('.ln-title-row');
-        if (title) {
-            const y = title.getBoundingClientRect().top + window.scrollY - navH - 10;
-            window.scrollTo(0, Math.max(0, y));
-        }
+        document.body.classList.add('ln-embed-lock');
+        window.scrollTo(0, 0);
     }
-    // 현재 위치 기준으로 화면 아래끝까지 채움 (이미 지나쳐 올라갔으면 네비 아래 기준으로 고정)
-    const top = Math.max(wrap.getBoundingClientRect().top, navH + 8);
-    ifr.style.height = Math.max(320, window.innerHeight - top - 12) + 'px';
+    const top = wrap.getBoundingClientRect().top;
+    ifr.style.height = Math.max(320, window.innerHeight - top - 10) + 'px';
 }
 window.addEventListener('resize', () => fitEmbed(false));
 
@@ -759,6 +754,7 @@ function showBody() {
     const app = document.getElementById('lnApp');
     if (app) app.classList.remove('ln-embed-full');
     document.body.classList.remove('ln-embed-body');
+    document.body.classList.remove('ln-embed-lock');   // 임베드 스크롤 잠금 해제 (상단바/푸터 복귀)
     if (cur && cur.type === 'calendar') { renderCalendar(); return; }
     const b = bodyOf();
     if (!b) { bodyEl.innerHTML = '<div class="ln-placeholder">왼쪽 메뉴에서 항목을 선택하세요.</div>'; return; }
@@ -771,11 +767,11 @@ function showBody() {
             '<div class="ln-title ln-title-row"><span>' + esc(b.title) + '</span>' +
             '<button class="wl-btn" id="lnFs" title="브라우저 전체 화면으로 크게 보기"><i class="fas fa-expand"></i> 전체화면</button>' +
             '<button class="wl-btn" id="lnNewTab" title="새 탭으로 열기"><i class="fas fa-external-link-alt"></i> 새 탭</button></div>' +
+            '<div class="ln-embed-note">화면이 비어 있으면(외부 사이트 보안 정책) <a href="#" id="lnNote">새 탭으로 열기</a>를 눌러주세요.</div>' +
             '<div class="ln-embed-wrap" id="lnEmbedWrap">' +
             '  <button class="wl-btn ln-fs-close" id="lnFsClose" title="전체화면 닫기"><i class="fas fa-compress"></i> 닫기</button>' +
             '  <iframe class="ln-embed" id="lnEmbed" src="' + esc(embedSrc(b.link)) + '" referrerpolicy="no-referrer-when-downgrade"></iframe>' +
-            '</div>' +
-            '<div class="ln-embed-note">화면이 비어 있으면(외부 사이트 보안 정책) <a href="#" id="lnNote">새 탭으로 열기</a>를 눌러주세요.</div>';
+            '</div>';
         const wrap = document.getElementById('lnEmbedWrap');
         document.getElementById('lnFs').onclick = () => wrap.classList.add('fs');
         document.getElementById('lnFsClose').onclick = () => { wrap.classList.remove('fs'); fitEmbed(true); };
@@ -1136,6 +1132,7 @@ function updateAuthUI() {
     if (userName && currentUser) userName.textContent = currentUser.email;
     if (authGate) authGate.style.display = authed ? 'none' : 'flex';
     if (lnApp) lnApp.style.display = authed ? 'block' : 'none';
+    if (!authed) document.body.classList.remove('ln-embed-lock');   // 로그아웃 시 스크롤 잠금 해제
 }
 
 // ==================== 초기화 ====================

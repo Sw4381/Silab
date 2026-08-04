@@ -10,6 +10,10 @@
 
 /* 링크 임베드를 볼 때: 메뉴는 유지, 바깥 컨테이너까지 브라우저 전체 폭으로 확장 (메뉴는 살짝 좁게) */
 body.ln-embed-body .container { max-width: 100% !important; padding-left: 8px; padding-right: 8px; }
+/* 임베드 표시 중: 바깥 페이지 스크롤을 잠가 위/아래 스크롤이 임베드 "안에서만" 일어나게 (상단바/푸터는 잠시 숨겨 화면 확보) */
+body.ln-embed-lock { overflow: hidden; }
+body.ln-embed-lock .wl-topbar, body.ln-embed-lock footer { display: none; }
+@media (max-width: 860px) { body.ln-embed-lock { overflow: auto; } }   /* 모바일(1단 배치)은 잠그면 메뉴 접근 불가라 잠금 없음 */
 #lnApp.ln-embed-full { max-width: 100%; }
 #lnApp.ln-embed-full .ln-layout { grid-template-columns: 240px 1fr; gap: 10px; }
 @media (max-width: 860px) { #lnApp.ln-embed-full .ln-layout { grid-template-columns: 1fr; } }
@@ -130,7 +134,7 @@ body.ln-embed-body .container { max-width: 100% !important; padding-left: 8px; p
 .ln-embed-wrap.fs { position: fixed; inset: 0; z-index: 6000; border: 0; border-radius: 0; }
 .ln-embed-wrap.fs .ln-embed { height: 100vh !important; min-height: 0; }
 .ln-embed-wrap.fs .ln-fs-close { display: inline-flex; }
-.ln-embed-note { font-size: 12px; color: var(--ln-sub); margin-top: 8px; }
+.ln-embed-note { font-size: 12px; color: var(--ln-sub); margin: 0 0 8px; }   /* 임베드 위에 표시 (아래는 스크롤 잠금으로 안 보임) */
 .ln-embed-note a { color: var(--ln-accent); font-weight: 700; }
 
 /* 캘린더 일정 팝오버의 시작/종료일 라벨 */
