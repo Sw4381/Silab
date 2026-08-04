@@ -730,6 +730,29 @@ function setEdFontSize(px) {
     if (lb) lb.textContent = px + 'px';
 }
 
+// ===== 링크 임베드 화면 맞춤 =====
+// 임베드가 화면보다 길어 바깥 페이지 전체가 스크롤되던 문제 해결:
+// (snap) 제목줄을 네비 바로 아래로 올리고, 임베드 높이를 화면에 남은 공간에 딱 맞춰
+// 스크롤이 임베드 "안에서" 일어나게 한다. (전체화면 fs 모드는 CSS 100vh 가 우선)
+function fitEmbed(snap) {
+    const wrap = document.getElementById('lnEmbedWrap');
+    const ifr = document.getElementById('lnEmbed');
+    if (!wrap || !ifr || wrap.classList.contains('fs')) return;
+    const nav = document.querySelector('.navbar');
+    const navH = (nav && getComputedStyle(nav).position === 'fixed') ? nav.offsetHeight : 0;
+    if (snap) {
+        const title = bodyEl && bodyEl.querySelector('.ln-title-row');
+        if (title) {
+            const y = title.getBoundingClientRect().top + window.scrollY - navH - 10;
+            window.scrollTo(0, Math.max(0, y));
+        }
+    }
+    // 현재 위치 기준으로 화면 아래끝까지 채움 (이미 지나쳐 올라갔으면 네비 아래 기준으로 고정)
+    const top = Math.max(wrap.getBoundingClientRect().top, navH + 8);
+    ifr.style.height = Math.max(320, window.innerHeight - top - 12) + 'px';
+}
+window.addEventListener('resize', () => fitEmbed(false));
+
 function showBody() {
     if (!bodyEl) return;
     // 임베드 전체 폭 상태 초기화 (텍스트/캘린더로 가면 원래 폭 복귀)
@@ -755,9 +778,10 @@ function showBody() {
             '<div class="ln-embed-note">화면이 비어 있으면(외부 사이트 보안 정책) <a href="#" id="lnNote">새 탭으로 열기</a>를 눌러주세요.</div>';
         const wrap = document.getElementById('lnEmbedWrap');
         document.getElementById('lnFs').onclick = () => wrap.classList.add('fs');
-        document.getElementById('lnFsClose').onclick = () => wrap.classList.remove('fs');
+        document.getElementById('lnFsClose').onclick = () => { wrap.classList.remove('fs'); fitEmbed(true); };
         document.getElementById('lnNewTab').onclick = () => openLink(b.link);
         document.getElementById('lnNote').onclick = e => { e.preventDefault(); openLink(b.link); };
+        requestAnimationFrame(() => fitEmbed(true));   // 제목을 네비 아래로 올리고 임베드를 남은 화면에 딱 맞춤
         return;
     }
     if (b.link) {
