@@ -652,6 +652,12 @@ const LN_FONT_SIZES = [11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 40];
 function markSelection() {
     const ed = document.getElementById('lnEditor');
     if (!ed) return [];
+    // ⚠ 커서만 있을 때(선택 없음) execCommand 를 부르면 감쌀 게 없어 아무 일도 안 일어난 것처럼
+    // 보이지만, 브라우저가 '다음 입력 스타일'로 xxx-large 를 기억해 뒀다가 이어서 타이핑하는
+    // 글자를 48px 로 만들어 버린다. 커서 전용 경로(caretSpanWithSize 등)를 따로 타야 한다.
+    const sel0 = window.getSelection();
+    if (!sel0 || !sel0.rangeCount || sel0.getRangeAt(0).collapsed) return [];
+    if (!ed.contains(sel0.getRangeAt(0).commonAncestorContainer)) return [];
     document.execCommand('styleWithCSS', false, true);
     document.execCommand('fontSize', false, '7');
     const marks = [];
@@ -689,6 +695,52 @@ function clearFontSize() {
         s.style.fontSize = '';
         if (!s.getAttribute('style') && !s.className) unwrap(s);
     });
+}
+
+// ===== 커서 전용 경로 (선택 없이 크기를 고른 경우) =====
+// "크기 고르고 이어서 타이핑" 이 그 크기로 써지도록, 폭 0짜리 보이지 않는 공백(U+200B)을
+// 크기 span 으로 넣고 커서를 그 안에 둔다. 공백 자체는 저장할 때 걸러낸다(cleanHtml).
+function caretSpanWithSize(px) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const r = sel.getRangeAt(0);
+    const s = document.createElement('span');
+    s.style.fontSize = px + 'px';
+    s.appendChild(document.createTextNode('\u200B'));
+    r.insertNode(s);
+    const nr = document.createRange();
+    nr.setStart(s.firstChild, 1); nr.collapse(true);
+    sel.removeAllRanges(); sel.addRange(nr);
+}
+// 커서가 크기 지정 글자 안에 있을 때 '기본'을 고르면: 그 span 을 커서 자리에서 둘로 쪼개고
+// 사이에 폭 0 공백을 둬서, 이어서 타이핑하는 글자가 기본 크기(A±)로 써지게 한다.
+function caretEscapeSize(ed) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const r = sel.getRangeAt(0);
+    let node = r.startContainer.nodeType === 3 ? r.startContainer.parentNode : r.startContainer;
+    let top = null;   // 크기가 걸린 가장 바깥 조상
+    for (let x = node; x && x !== ed; x = x.parentNode) {
+        if ((x.style && x.style.fontSize) || (x.tagName === 'FONT' && x.getAttribute('size'))) top = x;
+    }
+    if (!top) return;   // 이미 기본 크기 위치
+    const after = r.cloneRange();
+    after.setEndAfter(top);
+    const tail = after.extractContents();   // 커서 뒤쪽 절반 (top 의 복제로 감싸져 나옴)
+    const zw = document.createTextNode('\u200B');
+    top.parentNode.insertBefore(zw, top.nextSibling);
+    if ((tail.textContent || '').length) top.parentNode.insertBefore(tail, zw.nextSibling);
+    if (!(top.textContent || '').length) top.parentNode.removeChild(top);   // 앞쪽 절반이 비면 정리
+    const nr = document.createRange();
+    nr.setStart(zw, 1); nr.collapse(true);
+    sel.removeAllRanges(); sel.addRange(nr);
+}
+
+// 저장용 HTML 정리 — 커서 유지용 폭 0 공백과 그로 인해 빈 span 을 걷어낸다 (화면 DOM 은 안 건드림)
+function cleanHtml(h) {
+    return String(h == null ? '' : h)
+        .replace(/\u200B/g, '')
+        .replace(/<span[^>]*>\s*<\/span>/g, '');
 }
 // 커서 위치 글자의 크기를 크기 선택칸에 반영
 function syncFontSel() {
@@ -841,13 +893,13 @@ function showBody() {
     ed.innerHTML = b.val || '';
     ed.style.fontSize = edFontSize() + 'px';
     setEdFontSize(edFontSize());
-    ed.oninput = () => { b.set(ed.innerHTML); touchBody(cur && cur.id); if (cur && cur.type === 'sub') refreshLabel(); };
+    ed.oninput = () => { b.set(cleanHtml(ed.innerHTML)); touchBody(cur && cur.id); if (cur && cur.type === 'sub') refreshLabel(); };
 
     // 이 항목만 저장 (해당 노드의 본문 경로만 기록 — 다른 사람이 편집 중인 서브탭과 충돌 없음)
     const saveOne = document.getElementById('lnSaveOne');
     if (saveOne) saveOne.onclick = async () => {
         if (!currentUser || !cur || !cur.id) return;
-        b.set(ed.innerHTML);
+        b.set(cleanHtml(ed.innerHTML));
         pendingBodies.add(cur.id);
         clearTimeout(saveTimer);
         const stat = document.getElementById('bodySaveStat');
@@ -879,7 +931,20 @@ function showBody() {
         ed.focus();
         restoreSel(fontSel._sel);
         const v = e.target.value;
-        if (v) applyFontSizePx(Number(v)); else clearFontSize();
+        const sel = window.getSelection();
+        const collapsed = !sel || !sel.rangeCount || sel.getRangeAt(0).collapsed
+            || !ed.contains(sel.getRangeAt(0).commonAncestorContainer);
+        if (collapsed) {
+            // 선택 없이 커서만: "고른 크기로 이어서 쓰기" — 이후 타이핑에 적용
+            if (!sel || !sel.rangeCount || !ed.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+                // 커서가 편집창 밖이면 끝으로 이동
+                const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false);
+                sel.removeAllRanges(); sel.addRange(r);
+            }
+            if (v) caretSpanWithSize(Number(v)); else caretEscapeSize(ed);
+        } else {
+            if (v) applyFontSizePx(Number(v)); else clearFontSize();
+        }
         rtSync();          // 직접 DOM 을 고쳤으므로 input 이벤트가 안 뜬다 → 수동 저장 예약
         syncFontSel();
     });
@@ -888,6 +953,19 @@ function showBody() {
     ed.addEventListener('keyup', syncFontSel);
     ed.addEventListener('mouseup', syncFontSel);
     ed.addEventListener('focus', syncFontSel);
+
+    // 백스페이스가 커서 유지용 폭 0 공백(U+200B)에 걸려 헛도는 것 방지:
+    // 커서 바로 앞이 폭 0 공백이면 먼저 지워서, 한 번에 실제 글자가 지워지게 한다.
+    ed.addEventListener('keydown', e => {
+        if (e.key !== 'Backspace') return;
+        const s = window.getSelection();
+        if (!s || !s.rangeCount || !s.getRangeAt(0).collapsed) return;
+        const r = s.getRangeAt(0);
+        const n = r.startContainer;
+        if (n.nodeType === 3 && r.startOffset > 0 && n.data.charAt(r.startOffset - 1) === '\u200B') {
+            n.deleteData(r.startOffset - 1, 1);
+        }
+    });
 }
 
 // 선택 영역 임시 보관 (select 를 클릭하면 편집창 선택이 사라진다)
@@ -926,7 +1004,7 @@ function insertDateHeading() {
 
 function rtSync() {
     const ed = document.getElementById('lnEditor'); const b = bodyOf();
-    if (ed && b) { b.set(ed.innerHTML); touchBody(cur && cur.id); if (cur && cur.type === 'sub') refreshLabel(); }
+    if (ed && b) { b.set(cleanHtml(ed.innerHTML)); touchBody(cur && cur.id); if (cur && cur.type === 'sub') refreshLabel(); }
 }
 
 // 세부 이름이 본문 첫 줄에서 파생될 때 메뉴 라벨만 갱신 (에디터 포커스 유지)
