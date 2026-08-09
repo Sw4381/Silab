@@ -641,66 +641,81 @@ function bodyOf() {
 }
 
 // ===== 글자 크기 =====
-// 선택한 글자에 px 을 직접 박는다(절대 기준).
-// 예전에는 execCommand('fontSize', 1~7) 를 썼는데, 그건 브라우저 기본 크기에 대한 상대 단계라
-// 편집창 기본 크기(A±)와 따로 놀고 단계 폭도 들쭉날쭉했다. 이제 고른 px 이 그대로 들어간다.
-const LN_FONT_SIZES = [11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 40];
+// 크기는 작게(12px) / 중간(기본) / 크게(20px) 3단계.
+// ⚠ execCommand('fontSize') 는 절대 쓰지 말 것: 브라우저가 마킹을 어느 태그에 얹을지
+//   (새 span / 기존 <b> / <font> …) 예측이 안 돼 서식 조합에 따라 되다 안 되다 했고,
+//   커서만 있을 때는 '다음 입력 스타일'(48px)이 새는 버그까지 있었다.
+//   지금은 선택 경계를 쪼개고 텍스트 노드마다 전용 span 에 직접 style 을 넣는다 —
+//   어떤 서식(굵게·색·옛 <font size>·중첩)에서도 항상 같은 결과가 나온다.
+const LN_SIZE_SMALL = 12, LN_SIZE_LARGE = 20;
+// 옛 execCommand 시절 <font size="1~7"> 이 실제로 그려지던 px (크기 판정용)
+const LN_LEGACY_PX = { 1: 10, 2: 13, 3: 16, 4: 18, 5: 24, 6: 32, 7: 48 };
 
-// 선택 영역만 <span> 으로 감싸 돌려준다.
-// execCommand 의 fontSize 7 은 '선택 영역을 정확히 감싸주는' 용도로만 쓰고 크기값은 바로 지운다.
-// (부분 선택이면 브라우저가 바깥 서식 span 을 알아서 쪼개주므로 이웃 글자는 안 건드린다)
-function markSelection() {
+// 이 텍스트 노드 위(편집창까지)에 크기 지정이 걸린 조상이 있는가
+function hasSizedAncestor(node, ed) {
+    for (let x = node.parentNode; x && x !== ed; x = x.parentNode) {
+        if (x.style && x.style.fontSize) return true;
+        if (x.tagName === 'FONT' && x.getAttribute('size')) return true;
+    }
+    return false;
+}
+
+// 선택 영역의 텍스트에 크기를 지정한다. px=null 이면 중간(=크기 지정 제거).
+function applySizeToSelection(px) {
     const ed = document.getElementById('lnEditor');
-    if (!ed) return [];
-    // ⚠ 커서만 있을 때(선택 없음) execCommand 를 부르면 감쌀 게 없어 아무 일도 안 일어난 것처럼
-    // 보이지만, 브라우저가 '다음 입력 스타일'로 xxx-large 를 기억해 뒀다가 이어서 타이핑하는
-    // 글자를 48px 로 만들어 버린다. 커서 전용 경로(caretSpanWithSize 등)를 따로 타야 한다.
-    const sel0 = window.getSelection();
-    if (!sel0 || !sel0.rangeCount || sel0.getRangeAt(0).collapsed) return [];
-    if (!ed.contains(sel0.getRangeAt(0).commonAncestorContainer)) return [];
-    document.execCommand('styleWithCSS', false, true);
-    document.execCommand('fontSize', false, '7');
-    const marks = [];
-    // 옛 <font> 태그가 size=7 로 갱신된 경우: color 등 다른 속성을 보존해야 하므로
-    // span 으로 바꾸지 않고 그 요소를 그대로 마크로 쓴다
-    ed.querySelectorAll('font[size="7"]').forEach(el => { el.removeAttribute('size'); marks.push(el); });
-    // xxx-large 로 표시된 모든 요소 — ⚠span 만 오는 게 아니다. 선택 영역이 <b>·<font color>
-    // 같은 태그와 정확히 겹치면 브라우저가 그 태그에 직접 style 을 얹는다.
-    // (span 만 찾던 시절엔 이 마크를 놓쳐 굵은/색 글자가 48px 로 커지는 버그가 있었다)
-    ed.querySelectorAll('[style*="font-size"]').forEach(el => {
-        if (/xxx-large/.test(el.style.fontSize || '')) {
-            el.style.fontSize = '';
-            if (marks.indexOf(el) < 0) marks.push(el);
+    const sel = window.getSelection();
+    if (!ed || !sel || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed || !ed.contains(range.commonAncestorContainer)) return;
+
+    // 1) 선택 경계가 글자 중간이면 그 자리에서 텍스트 노드를 쪼갠다 (선택 밖 글자 보호)
+    if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
+        range.setStart(range.startContainer.splitText(range.startOffset), 0);
+    }
+    if (range.endContainer.nodeType === 3 && range.endOffset < range.endContainer.data.length) {
+        range.endContainer.splitText(range.endOffset);
+    }
+
+    // 2) 선택에 완전히 들어온 텍스트 노드 수집 (공백뿐인 노드는 제외)
+    const texts = [];
+    const walker = document.createTreeWalker(ed, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (!/\S/.test(n.data)) continue;
+        const nr = document.createRange();
+        nr.setStart(n, 0); nr.setEnd(n, n.data.length);
+        if (range.compareBoundaryPoints(Range.START_TO_START, nr) <= 0 &&
+            range.compareBoundaryPoints(Range.END_TO_END, nr) >= 0) texts.push(n);
+    }
+    if (!texts.length) return;
+
+    // 3) 텍스트 노드마다 전용 span 을 확보해 크기를 직접 지정
+    const wraps = texts.map(t => {
+        const el = t.parentNode;
+        let span;
+        if (el !== ed && el.childNodes.length === 1 && (el.tagName === 'SPAN' || el.tagName === 'FONT')) {
+            span = el;                      // 이미 단독으로 감싸고 있으면 재사용
+            span.removeAttribute('size');   // 옛 <font size> 제거 (color 등은 보존)
+        } else {
+            span = document.createElement('span');   // <b>/<div> 등은 안 건드리고 안에 새 span
+            el.insertBefore(span, t);
+            span.appendChild(t);
         }
+        if (px) {
+            span.style.fontSize = px + 'px';   // 명시 px 은 조상 크기를 항상 이긴다
+        } else {
+            // 중간: 크기 지정을 걷어낸다. 조상(부분 선택으로 쪼개지 못한 바깥 태그)에 크기가
+            // 남아 있으면 물려받아 버리므로, 그때만 이 기기의 기본 크기를 명시한다.
+            span.style.fontSize = hasSizedAncestor(span, ed) ? edFontSize() + 'px' : '';
+            if (!span.getAttribute('style')) span.removeAttribute('style');
+        }
+        return span;
     });
-    return marks;
-}
-// 안쪽에 남아 있는 크기 지정 제거 (예전 <font size> 태그 포함) — 새로 정한 크기가 이기도록
-function stripSizeInside(root) {
-    root.querySelectorAll('[style*="font-size"]').forEach(x => {
-        x.style.fontSize = '';
-        if (!x.getAttribute('style')) x.removeAttribute('style');
-    });
-    root.querySelectorAll('font[size]').forEach(x => x.removeAttribute('size'));
-}
-function unwrap(el) {
-    const p = el.parentNode; if (!p) return;
-    while (el.firstChild) p.insertBefore(el.firstChild, el);
-    p.removeChild(el);
-}
-function applyFontSizePx(px) {
-    markSelection().forEach(s => { stripSizeInside(s); s.style.fontSize = px + 'px'; });
-}
-// '기본'으로 되돌리기 — 크기 지정을 걷어내 편집창 기본 크기(A±)를 따르게 한다
-function clearFontSize() {
-    markSelection().forEach(s => {
-        stripSizeInside(s);
-        s.style.fontSize = '';
-        if (!s.getAttribute('style')) s.removeAttribute('style');
-        // 빈 껍데기가 된 span/font 만 벗겨낸다 — <b> 같은 서식 태그가 마크였으면 유지해야 굵기가 안 사라진다
-        const bare = (s.tagName === 'SPAN' || s.tagName === 'FONT') && !s.attributes.length;
-        if (bare) unwrap(s);
-    });
+
+    // 4) 선택 복원 — 연달아 다른 크기를 골라볼 수 있게
+    const nr = document.createRange();
+    nr.setStartBefore(wraps[0]);
+    nr.setEndAfter(wraps[wraps.length - 1]);
+    sel.removeAllRanges(); sel.addRange(nr);
 }
 
 // ===== 커서 전용 경로 (선택 없이 크기를 고른 경우) =====
@@ -748,7 +763,8 @@ function cleanHtml(h) {
         .replace(/\u200B/g, '')
         .replace(/<span[^>]*>\s*<\/span>/g, '');
 }
-// 커서 위치 글자의 크기를 크기 선택칸에 반영
+// 커서 위치 글자의 크기를 크기 선택칸(작게/중간/크게)에 반영
+// 어떤 px 로 저장돼 있든(옛 <font size>·붙여넣은 글 포함) 가장 가까운 3단계로 보여준다.
 function syncFontSel() {
     const fs = document.getElementById('fontSel');
     const ed = document.getElementById('lnEditor');
@@ -758,23 +774,12 @@ function syncFontSel() {
     if (!n || !ed.contains(n)) return;
     if (n.nodeType === 3) n = n.parentNode;
 
-    let px = 0, legacy = false;
+    let px = 0;
     for (let x = n; x && x !== ed; x = x.parentNode) {
         if (x.style && x.style.fontSize) { px = Math.round(parseFloat(x.style.fontSize)) || 0; break; }
-        if (x.tagName === 'FONT' && x.getAttribute('size')) { legacy = true; break; }
+        if (x.tagName === 'FONT' && x.getAttribute('size')) { px = LN_LEGACY_PX[x.getAttribute('size')] || 0; break; }
     }
-    // 목록에 없는 크기(붙여넣은 글 등)도 그대로 보여주도록 임시 항목을 둔다
-    let tmp = fs.querySelector('option[data-tmp]');
-    if (px && LN_FONT_SIZES.indexOf(px) < 0) {
-        if (!tmp) { tmp = document.createElement('option'); tmp.dataset.tmp = '1'; fs.appendChild(tmp); }
-        tmp.value = String(px); tmp.textContent = px + 'px';
-    } else if (tmp) { tmp.remove(); }
-
-    fs.value = px ? String(px) : '';
-    fs.classList.toggle('legacy', legacy);
-    fs.title = legacy
-        ? '예전 방식으로 지정된 크기입니다. 크기를 다시 고르면 px 기준으로 바뀝니다.'
-        : '선택한 글자의 크기를 px 로 지정합니다';
+    fs.value = !px ? '' : (px <= 13 ? String(LN_SIZE_SMALL) : (px >= 18 ? String(LN_SIZE_LARGE) : ''));
 }
 
 // 편집창 기본 글자 크기 — 크기를 따로 지정하지 않은 글자에만 적용 (기기별 저장)
@@ -871,9 +876,10 @@ function showBody() {
         '  <button class="ln-tb" title="취소선" data-cmd="strikeThrough"><s>S</s></button>' +
         '  <span class="ln-sep"></span>' +
         '  <span class="ln-lbl">크기</span>' +
-        '  <select class="ln-tb-sel" id="fontSel" title="선택한 글자의 크기를 px 로 지정합니다">' +
-        '    <option value="">기본</option>' +
-        LN_FONT_SIZES.map(n => '<option value="' + n + '">' + n + 'px</option>').join('') +
+        '  <select class="ln-tb-sel" id="fontSel" title="선택한 글자의 크기 (중간 = 기본 크기)">' +
+        '    <option value="' + LN_SIZE_SMALL + '">작게</option>' +
+        '    <option value="" selected>중간</option>' +
+        '    <option value="' + LN_SIZE_LARGE + '">크게</option>' +
         '  </select>' +
         '  <span class="ln-sep"></span>' +
         '  <span class="ln-lbl">글자</span>' +
@@ -949,7 +955,7 @@ function showBody() {
             }
             if (v) caretSpanWithSize(Number(v)); else caretEscapeSize(ed);
         } else {
-            if (v) applyFontSizePx(Number(v)); else clearFontSize();
+            applySizeToSelection(v ? Number(v) : null);
         }
         rtSync();          // 직접 DOM 을 고쳤으므로 input 이벤트가 안 뜬다 → 수동 저장 예약
         syncFontSel();
