@@ -763,23 +763,28 @@ function cleanHtml(h) {
         .replace(/\u200B/g, '')
         .replace(/<span[^>]*>\s*<\/span>/g, '');
 }
-// 커서 위치 글자의 크기를 크기 선택칸(작게/중간/크게)에 반영
+// 커서 위치 글자의 크기를 크기 버튼(작게/중간/크게)의 눌림 표시로 반영
 // 어떤 px 로 저장돼 있든(옛 <font size>·붙여넣은 글 포함) 가장 가까운 3단계로 보여준다.
 function syncFontSel() {
-    const fs = document.getElementById('fontSel');
     const ed = document.getElementById('lnEditor');
+    const btns = document.querySelectorAll('.ln-tb.size-btn');
     const sel = window.getSelection();
-    if (!fs || !ed || !sel || !sel.rangeCount) return;
+    if (!ed || !btns.length || !sel || !sel.rangeCount) return;
     let n = sel.anchorNode;
     if (!n || !ed.contains(n)) return;
-    if (n.nodeType === 3) n = n.parentNode;
+    // 기준점이 요소(전체 선택 등)면 그 지점의 첫 텍스트까지 내려가 실제 글자를 본다
+    if (n.nodeType === 1 && n.childNodes.length) n = n.childNodes[Math.min(sel.anchorOffset, n.childNodes.length - 1)];
+    while (n && n.nodeType === 1 && n.firstChild) n = n.firstChild;
+    if (n && n.nodeType === 3) n = n.parentNode;
+    if (!n || !ed.contains(n)) return;
 
     let px = 0;
     for (let x = n; x && x !== ed; x = x.parentNode) {
         if (x.style && x.style.fontSize) { px = Math.round(parseFloat(x.style.fontSize)) || 0; break; }
         if (x.tagName === 'FONT' && x.getAttribute('size')) { px = LN_LEGACY_PX[x.getAttribute('size')] || 0; break; }
     }
-    fs.value = !px ? '' : (px <= 13 ? String(LN_SIZE_SMALL) : (px >= 18 ? String(LN_SIZE_LARGE) : ''));
+    const val = !px ? '' : (px <= 13 ? String(LN_SIZE_SMALL) : (px >= 18 ? String(LN_SIZE_LARGE) : ''));
+    btns.forEach(b => b.classList.toggle('on', b.dataset.size === val));
 }
 
 // 편집창 기본 글자 크기 — 크기를 따로 지정하지 않은 글자에만 적용 (기기별 저장)
@@ -876,11 +881,9 @@ function showBody() {
         '  <button class="ln-tb" title="취소선" data-cmd="strikeThrough"><s>S</s></button>' +
         '  <span class="ln-sep"></span>' +
         '  <span class="ln-lbl">크기</span>' +
-        '  <select class="ln-tb-sel" id="fontSel" title="선택한 글자의 크기 (중간 = 기본 크기)">' +
-        '    <option value="' + LN_SIZE_SMALL + '">작게</option>' +
-        '    <option value="" selected>중간</option>' +
-        '    <option value="' + LN_SIZE_LARGE + '">크게</option>' +
-        '  </select>' +
+        '  <button class="ln-tb size-btn" data-size="' + LN_SIZE_SMALL + '" title="선택한 글자를 작게 (12px)"><span style="font-size:11px">가</span></button>' +
+        '  <button class="ln-tb size-btn" data-size="" title="선택한 글자를 중간(기본 크기)으로">가</button>' +
+        '  <button class="ln-tb size-btn" data-size="' + LN_SIZE_LARGE + '" title="선택한 글자를 크게 (20px)"><span style="font-size:16px">가</span></button>' +
         '  <span class="ln-sep"></span>' +
         '  <span class="ln-lbl">글자</span>' +
         '  <button class="ln-tb swatch" style="background:#1f2328" title="검정" data-color="#1f2328">.</button>' +
@@ -932,33 +935,31 @@ function showBody() {
         if (cmd === 'zoomIn') return setEdFontSize(edFontSize() + 1);
         if (cmd === 'zoomOut') return setEdFontSize(edFontSize() - 1);
         ed.focus();
+        // 크기 버튼(작게/중간/크게) — 드롭다운은 같은 값을 다시 고르면 change 가 안 떠서
+        // '뭐는 되고 뭐는 안 되는' 증상이 났다. 버튼은 몇 번을 눌러도 항상 적용된다.
+        // (툴바 mousedown 의 preventDefault 덕에 누르는 순간 편집창 선택도 안 풀린다)
+        if (btn.dataset.size !== undefined) {
+            const v = btn.dataset.size;
+            const sel = window.getSelection();
+            const inEd = sel && sel.rangeCount && ed.contains(sel.getRangeAt(0).commonAncestorContainer);
+            if (!inEd) {   // 커서가 편집창 밖이면 끝으로
+                const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false);
+                sel.removeAllRanges(); sel.addRange(r);
+            }
+            if (sel.getRangeAt(0).collapsed) {
+                // 선택 없이 커서만: "고른 크기로 이어서 쓰기"
+                if (v) caretSpanWithSize(Number(v)); else caretEscapeSize(ed);
+            } else {
+                applySizeToSelection(v ? Number(v) : null);
+            }
+            rtSync();          // 직접 DOM 을 고쳤으므로 input 이벤트가 안 뜬다 → 수동 저장 예약
+            syncFontSel();
+            return;
+        }
         if (btn.dataset.color) { document.execCommand('styleWithCSS', false, true); document.execCommand('foreColor', false, btn.dataset.color); }
         else if (btn.dataset.bg) { document.execCommand('styleWithCSS', false, true); if (!document.execCommand('hiliteColor', false, btn.dataset.bg)) document.execCommand('backColor', false, btn.dataset.bg); }
         else if (cmd) document.execCommand(cmd, false, null);
         rtSync();
-    });
-    const fontSel = document.getElementById('fontSel');
-    fontSel.addEventListener('mousedown', () => { fontSel._sel = saveSel(); });   // 목록을 열면 선택이 풀리므로 미리 기억
-    fontSel.addEventListener('change', e => {
-        ed.focus();
-        restoreSel(fontSel._sel);
-        const v = e.target.value;
-        const sel = window.getSelection();
-        const collapsed = !sel || !sel.rangeCount || sel.getRangeAt(0).collapsed
-            || !ed.contains(sel.getRangeAt(0).commonAncestorContainer);
-        if (collapsed) {
-            // 선택 없이 커서만: "고른 크기로 이어서 쓰기" — 이후 타이핑에 적용
-            if (!sel || !sel.rangeCount || !ed.contains(sel.getRangeAt(0).commonAncestorContainer)) {
-                // 커서가 편집창 밖이면 끝으로 이동
-                const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false);
-                sel.removeAllRanges(); sel.addRange(r);
-            }
-            if (v) caretSpanWithSize(Number(v)); else caretEscapeSize(ed);
-        } else {
-            applySizeToSelection(v ? Number(v) : null);
-        }
-        rtSync();          // 직접 DOM 을 고쳤으므로 input 이벤트가 안 뜬다 → 수동 저장 예약
-        syncFontSel();
     });
 
     // 커서를 옮길 때마다 그 자리 글자 크기를 선택칸에 반영
@@ -978,17 +979,6 @@ function showBody() {
             n.deleteData(r.startOffset - 1, 1);
         }
     });
-}
-
-// 선택 영역 임시 보관 (select 를 클릭하면 편집창 선택이 사라진다)
-function saveSel() {
-    const s = window.getSelection();
-    return (s && s.rangeCount) ? s.getRangeAt(0).cloneRange() : null;
-}
-function restoreSel(r) {
-    if (!r) return;
-    const s = window.getSelection();
-    s.removeAllRanges(); s.addRange(r);
 }
 
 // 오늘 날짜 머리글을 본문 맨 위에 삽입 — 주간보고 등에서 '최근 날짜가 위로' 규칙 유지용

@@ -104,6 +104,9 @@ body.ln-embed-lock .wl-topbar, body.ln-embed-lock footer { display: none; }
 .ln-tb:hover { background: var(--ln-soft); border-color: var(--ln-accent); }
 .ln-tb.swatch { width: 24px; min-width: 24px; padding: 0; font-size: 0; }
 .ln-tb-sel { border: 1px solid var(--ln-line); background: #fff; color: var(--ln-ink); font-size: 12.5px; font-weight: 700; height: 30px; min-width: 64px; border-radius: 7px; cursor: pointer; padding: 0 4px; }
+/* 크기 버튼(작게/중간/크게): 커서 위치 글자의 단계가 눌림 표시된다 */
+.ln-tb.size-btn { min-width: 30px; font-weight: 700; }
+.ln-tb.size-btn.on { background: var(--ln-soft); border-color: var(--ln-accent); color: var(--ln-accent); }
 .ln-sep { width: 1px; height: 20px; background: var(--ln-line); margin: 0 3px; }
 .ln-lbl { font-size: 11px; font-weight: 700; color: var(--ln-sub); margin: 0 2px; }
 .ln-tb.date-btn { color: var(--ln-accent); border-color: #c7d2fe; background: var(--ln-soft); }
