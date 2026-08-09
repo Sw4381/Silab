@@ -661,14 +661,17 @@ function markSelection() {
     document.execCommand('styleWithCSS', false, true);
     document.execCommand('fontSize', false, '7');
     const marks = [];
-    ed.querySelectorAll('font[size="7"]').forEach(el => {
-        const s = document.createElement('span');
-        while (el.firstChild) s.appendChild(el.firstChild);
-        el.parentNode.replaceChild(s, el);
-        marks.push(s);
-    });
-    Array.prototype.slice.call(ed.querySelectorAll('span')).forEach(s => {
-        if (/xxx-large/.test(s.style.fontSize || '')) { s.style.fontSize = ''; marks.push(s); }
+    // 옛 <font> 태그가 size=7 로 갱신된 경우: color 등 다른 속성을 보존해야 하므로
+    // span 으로 바꾸지 않고 그 요소를 그대로 마크로 쓴다
+    ed.querySelectorAll('font[size="7"]').forEach(el => { el.removeAttribute('size'); marks.push(el); });
+    // xxx-large 로 표시된 모든 요소 — ⚠span 만 오는 게 아니다. 선택 영역이 <b>·<font color>
+    // 같은 태그와 정확히 겹치면 브라우저가 그 태그에 직접 style 을 얹는다.
+    // (span 만 찾던 시절엔 이 마크를 놓쳐 굵은/색 글자가 48px 로 커지는 버그가 있었다)
+    ed.querySelectorAll('[style*="font-size"]').forEach(el => {
+        if (/xxx-large/.test(el.style.fontSize || '')) {
+            el.style.fontSize = '';
+            if (marks.indexOf(el) < 0) marks.push(el);
+        }
     });
     return marks;
 }
@@ -693,7 +696,10 @@ function clearFontSize() {
     markSelection().forEach(s => {
         stripSizeInside(s);
         s.style.fontSize = '';
-        if (!s.getAttribute('style') && !s.className) unwrap(s);
+        if (!s.getAttribute('style')) s.removeAttribute('style');
+        // 빈 껍데기가 된 span/font 만 벗겨낸다 — <b> 같은 서식 태그가 마크였으면 유지해야 굵기가 안 사라진다
+        const bare = (s.tagName === 'SPAN' || s.tagName === 'FONT') && !s.attributes.length;
+        if (bare) unwrap(s);
     });
 }
 
