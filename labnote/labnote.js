@@ -1077,7 +1077,8 @@ function renderCalendar() {
                 const rangeTxt = multi ? ' (' + e.date + ' ~ ' + e.end + ')' : '';
                 cell += '<span class="ln-ev" data-ev="' + esc(e.id) + '" style="background:' + c.bg + ';color:' + c.fg + '" title="[' + esc(e.type) + '] ' + esc(e.title) + esc(rangeTxt) + '">' + esc(e.title) + '</span>';
             });
-            if (evs.length > 3) cell += '<span class="ln-ev-more">+' + (evs.length - 3) + '건 더</span>';
+            // 칸에는 3개까지만. 나머지는 클릭하면 그날 전체 목록이 열린다(openDayPop)
+            if (evs.length > 3) cell += '<span class="ln-ev-more" title="이 날 일정 전체 보기">+' + (evs.length - 3) + '건 더 보기</span>';
             html += '<td class="' + (out ? 'out ' : '') + (dow === 0 ? 'sun ' : dow === 6 ? 'sat ' : '') + (ds === today ? 'today' : '') + '" data-date="' + ds + '">' + cell + '</td>';
         }
         html += '</tr>';
@@ -1090,10 +1091,81 @@ function renderCalendar() {
     document.getElementById('calNext').onclick = () => calMove(1);
     document.getElementById('calToday').onclick = () => { const n = new Date(); calY = n.getFullYear(); calM = n.getMonth(); renderCalendar(); };
     bodyEl.querySelector('.ln-cal tbody').addEventListener('click', e => {
+        // '+N건 더 보기' — 칸에 안 들어간 일정까지 그날 전체를 목록으로 (td 핸들러보다 먼저 잡아야 함)
+        const more = e.target.closest('.ln-ev-more');
+        if (more) {
+            e.stopPropagation();
+            const cell = more.closest('td[data-date]');
+            if (cell) openDayPop(more, cell.dataset.date);
+            return;
+        }
         const chip = e.target.closest('.ln-ev');
         if (chip) { e.stopPropagation(); openEvPop(chip, 'edit', chip.dataset.ev); return; }
         const td = e.target.closest('td[data-date]');
         if (td) openEvPop(td, 'new', td.dataset.date);
+    });
+}
+
+// 팝오버를 기준 요소 아래에 띄우되 화면 밖으로 안 나가게 보정
+function placeEvPop(pop, anchor) {
+    const r = anchor.getBoundingClientRect();
+    pop.style.display = 'block';
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    const vw = window.innerWidth, vh = window.innerHeight;
+
+    let left = r.left;
+    if (left + pw > vw - 8) left = vw - pw - 8;
+    left = Math.max(8, left);
+
+    let top = r.bottom + 6;
+    if (top + ph > vh - 8) top = r.top - ph - 6;        // 아래가 좁으면 위로 뒤집기
+    top = Math.max(8, Math.min(top, vh - ph - 8));      // 그래도 넘치면 화면 안으로 밀어 넣기
+    if (ph > vh - 16) top = 8;                          // 팝오버가 화면보다 크면 위에 붙이고 내부 스크롤에 맡김
+
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+}
+
+// 하루치 일정 전체 목록 — 날짜 칸에 3개까지만 보이므로, 나머지를 여기서 다 본다.
+// 항목을 누르면 바로 수정 팝오버로 넘어간다.
+function openDayPop(anchor, ds) {
+    const pop = document.getElementById('evPop');
+    evPopCtx = { mode: 'day', date: ds };
+
+    const evs = (data.calendar || [])
+        .filter(e => e.date <= ds && e.end >= ds)
+        .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+    const dt = new Date(ds + 'T00:00:00');
+    const label = ds + ' (' + LN_DAYS[dt.getDay()] + ')';
+
+    pop.innerHTML =
+        '<h4>' + esc(label) + ' · 일정 ' + evs.length + '건</h4>' +
+        '<div class="ev-daylist">' +
+        evs.map(e => {
+            const c = LN_EV_TYPES[e.type] || LN_EV_TYPES['기타'];
+            const multi = e.date !== e.end;
+            const sub = e.type + (multi ? ' · ' + e.date + ' ~ ' + e.end : '');
+            return '<button type="button" class="ev-dayitem" data-ev="' + esc(e.id) + '">' +
+                   '<span class="ev-dot" style="background:' + c.bg + '"></span>' +
+                   '<span class="ev-daytxt"><b>' + esc(e.title) + '</b>' +
+                   '<span class="ev-daysub">' + esc(sub) + '</span></span></button>';
+        }).join('') +
+        '</div>' +
+        '<div class="ev-actions">' +
+        '  <span class="wl-spacer"></span>' +
+        '  <button class="wl-btn" id="evCancelBtn">닫기</button>' +
+        '  <button class="wl-btn primary" id="evAddBtn"><i class="fas fa-plus"></i> 추가</button>' +
+        '</div>';
+
+    placeEvPop(pop, anchor);
+    document.getElementById('evCancelBtn').onclick = closeEvPop;
+    // ⚠ stopPropagation 필수: 여기서 openEvPop 이 팝오버 내용을 통째로 갈아끼우면
+    //   눌린 버튼이 DOM 에서 떨어져 나가고, 계속 올라간 클릭을 바깥 클릭 감지가
+    //   '팝오버 밖을 눌렀다'고 판단해 방금 연 창을 그대로 닫아버린다.
+    document.getElementById('evAddBtn').onclick = e => { e.stopPropagation(); openEvPop(anchor, 'new', ds); };
+    pop.querySelectorAll('.ev-dayitem').forEach(b => {
+        b.onclick = e => { e.stopPropagation(); openEvPop(anchor, 'edit', b.dataset.ev); };
     });
 }
 
@@ -1124,13 +1196,7 @@ function openEvPop(anchor, mode, key) {
         '<button class="wl-btn primary" id="evOkBtn">' + (mode === 'edit' ? '수정' : '추가') + '</button>' +
         '</div>';
 
-    const r = anchor.getBoundingClientRect();
-    pop.style.display = 'block';
-    let left = r.left, top = r.bottom + 6;
-    const pw = pop.offsetWidth, ph = pop.offsetHeight;
-    if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
-    if (top + ph > window.innerHeight - 8) top = r.top - ph - 6;
-    pop.style.left = Math.max(8, left) + 'px'; pop.style.top = Math.max(8, top) + 'px';
+    placeEvPop(pop, anchor);
 
     document.getElementById('evCancelBtn').onclick = closeEvPop;
     document.getElementById('evOkBtn').onclick = saveEvPop;

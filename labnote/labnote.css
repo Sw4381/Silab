@@ -166,13 +166,24 @@ body.ln-embed-lock .wl-topbar, body.ln-embed-lock footer { display: none; }
 .ln-cal td.today .dnum { background: var(--ln-accent); color: #fff; }
 .ln-ev { display: block; font-size: 11px; font-weight: 700; color: #fff; border-radius: 5px; padding: 1px 5px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ln-ev:hover { filter: brightness(.92); }
-.ln-ev-more { display: block; font-size: 10.5px; font-weight: 700; color: var(--ln-sub); margin-top: 2px; }
+/* '+N건 더 보기' — 누르면 그날 전체 목록이 열린다 (클릭 가능함을 드러냄) */
+.ln-ev-more { display: block; font-size: 10.5px; font-weight: 700; color: var(--ln-accent); margin-top: 2px; cursor: pointer; border-radius: 4px; padding: 0 3px; }
+.ln-ev-more:hover { background: var(--ln-soft); text-decoration: underline; }
 
 /* 일정 팝오버 */
 .ln-evpop { position: fixed; z-index: 3000; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.18); padding: 13px 14px; width: 250px; display: none; }
 .ln-evpop h4 { font-size: 13px; font-weight: 800; color: #1f2328; margin-bottom: 9px; }
 .ln-evpop input[type="text"], .ln-evpop input[type="date"], .ln-evpop select { width: 100%; font: inherit; font-size: 13px; border: 1px solid #e5e7eb; border-radius: 7px; padding: 6px 8px; margin-bottom: 7px; }
 .ln-evpop input:focus, .ln-evpop select:focus { outline: none; border-color: #4f46e5; }
+/* 하루치 일정 목록 (날짜 칸의 '+N건 더 보기') */
+.ln-evpop .ev-daylist { max-height: 260px; overflow-y: auto; margin-bottom: 9px; }
+.ln-evpop .ev-dayitem { display: flex; align-items: flex-start; gap: 8px; width: 100%; text-align: left; background: none; border: none; border-radius: 8px; padding: 7px 8px; cursor: pointer; font: inherit; }
+.ln-evpop .ev-dayitem:hover { background: var(--ln-soft); }
+.ln-evpop .ev-dot { flex: none; width: 10px; height: 10px; border-radius: 3px; margin-top: 3px; }
+.ln-evpop .ev-daytxt { display: block; min-width: 0; }
+.ln-evpop .ev-daytxt b { display: block; font-size: 12.5px; font-weight: 700; color: var(--ln-ink); word-break: break-word; }
+.ln-evpop .ev-daysub { display: block; font-size: 11px; color: var(--ln-sub); margin-top: 1px; }
+
 .ln-evpop .ev-actions { display: flex; gap: 6px; margin-top: 2px; }
 .ln-evpop .ev-actions .wl-btn { padding: 6px 11px; font-size: 12.5px; }
 .ln-evpop .ev-del { margin-right: auto; color: #dc2626; }
