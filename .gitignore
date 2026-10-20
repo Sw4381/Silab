@@ -5,3 +5,5 @@ seed-backup-*.json
 # 임시/테스트 산출물
 _*.html
 _*.png
+# Firebase RTDB 전체 백업 (개인정보 포함 — 절대 커밋 금지)
+rtdb-backup-*.json

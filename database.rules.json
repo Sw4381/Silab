@@ -1,0 +1,185 @@
+{
+  "rules": {
+    "current projects": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      "$projectId": {
+        ".validate": "newData.hasChildren(['name', 'period', 'funding', 'description', 'type'])",
+        "name": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "period": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "funding": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "description": { ".validate": "newData.isString()" },
+        "type": { ".validate": "newData.val() == 'current'" },
+        "images": {
+          "$imageId": {
+            ".validate": "newData.hasChildren(['url', 'name', 'originalName'])",
+            "url": { ".validate": "newData.isString() && newData.val().beginsWith('https://firebasestorage.googleapis.com')" },
+            "name": { ".validate": "newData.isString()" },
+            "originalName": { ".validate": "newData.isString()" },
+            "uploadPath": { ".validate": "newData.isString()" }
+          }
+        }
+      }
+    },
+
+    "labnote": {
+      ".read": "auth != null && (auth.uid === 'vXGv4tLnkzUfNbKHMm8c8cGQ4Z03' || auth.uid === '3aEjEgu6XTa5DCBIUxt22wjKrnr2')",
+      ".write": "auth != null && (auth.uid === 'vXGv4tLnkzUfNbKHMm8c8cGQ4Z03' || auth.uid === '3aEjEgu6XTa5DCBIUxt22wjKrnr2')"
+    },
+
+    "news": {
+      ".read": true,
+      ".write": "auth != null && (auth.uid === 'vXGv4tLnkzUfNbKHMm8c8cGQ4Z03' || auth.uid === '3aEjEgu6XTa5DCBIUxt22wjKrnr2')"
+    },
+
+    "teams": {
+      ".read":  "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')"
+    },
+
+    "projectPages": {
+      ".read": true,
+      ".write": "auth != null && (auth.uid === 'vXGv4tLnkzUfNbKHMm8c8cGQ4Z03' || auth.uid === '3aEjEgu6XTa5DCBIUxt22wjKrnr2')"
+    },
+
+    "inquiries": {
+      ".read": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      "$id": {
+        ".write": "(!data.exists() && newData.exists()) || (auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com'))"
+      }
+    },
+
+    "memberPerfAliases": {
+      ".read":  "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')"
+    },
+
+    "past projects": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      "$projectId": {
+        ".validate": "newData.hasChildren(['name', 'period', 'funding', 'description', 'type'])",
+        "name": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "period": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "funding": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "description": { ".validate": "newData.isString()" },
+        "type": { ".validate": "newData.val() == 'past'" },
+        "images": { ".validate": "false" }
+      }
+    },
+
+    "publications": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      "sci": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+        "$publicationId": {
+          ".validate": "newData.hasChildren(['publicationId', 'title', 'authors', 'journal', 'type'])",
+          "publicationId": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "title": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "authors": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "journal": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "type": { ".validate": "newData.val() == 'sci'" },
+          "url": { ".validate": "newData.isString()" },
+          "award": { ".validate": "newData.isString()" },
+          "percentile": { ".validate": "newData.isNumber() || newData.isString()" },
+          "displayOrder": { ".validate": "newData.isNumber()" },
+          "createdAt": { ".validate": "newData.isNumber()" }
+        }
+      },
+      "kci": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+        "$publicationId": {
+          ".validate": "newData.hasChildren(['publicationId', 'title', 'authors', 'journal', 'type'])",
+          "publicationId": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "title": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "authors": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "journal": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "type": { ".validate": "newData.val() == 'kci'" },
+          "url": { ".validate": "newData.isString()" },
+          "award": { ".validate": "newData.isString()" },
+          "percentile": { ".validate": "newData.isNumber() || newData.isString()" },
+          "displayOrder": { ".validate": "newData.isNumber()" },
+          "createdAt": { ".validate": "newData.isNumber()" }
+        }
+      },
+      "other": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+        "$publicationId": {
+          ".validate": "newData.hasChildren(['publicationId', 'title', 'authors', 'journal', 'type'])",
+          "publicationId": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "title": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "authors": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "journal": { ".validate": "newData.isString() && newData.val().length > 0" },
+          "type": { ".validate": "newData.val() == 'other'" },
+          "url": { ".validate": "newData.isString()" },
+          "award": { ".validate": "newData.isString()" },
+          "percentile": { ".validate": "newData.isNumber() || newData.isString()" },
+          "displayOrder": { ".validate": "newData.isNumber()" },
+          "createdAt": { ".validate": "newData.isNumber()" }
+        }
+      }
+    },
+
+    "patents": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      "$patentId": {
+        ".validate": "newData.hasChildren(['patentNumber', 'content'])",
+        "patentNumber": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "content": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "createdAt": { ".validate": "newData.isNumber()" }
+      }
+    },
+
+    "awards": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      "$awardId": {
+        ".validate": "newData.hasChildren(['content', 'date'])",
+        "content": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "highlight": { ".validate": "newData.isString()" },
+        "date": { ".validate": "newData.isString()" },
+        "createdAt": { ".validate": "newData.isNumber()" }
+      }
+    },
+
+    "performance": {
+      ".read":  "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')"
+    },
+
+    "members": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')"
+    },
+    "research": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')"
+    },
+    "home": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')"
+    },
+    "photos": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.email == 'kinjecs0@gmail.com' || auth.token.email == 'admin_kinjecs0@gmail.com')",
+      "$photoId": {
+        ".validate": "newData.hasChildren(['src', 'year', 'category'])",
+        "src": { ".validate": "newData.isString() && newData.val().length > 0" },
+        "storagePath": { ".validate": "newData.isString()" },
+        "title": { ".validate": "newData.isString()" },
+        "date": { ".validate": "newData.isString()" },
+        "year": { ".validate": "newData.isString()" },
+        "category": { ".validate": "newData.isString()" },
+        "description": { ".validate": "newData.isString()" },
+        "filename": { ".validate": "newData.isString()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "uploadedBy": { ".validate": "newData.isString()" }
+      }
+    }
+  }
+}
