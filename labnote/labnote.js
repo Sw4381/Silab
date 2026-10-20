@@ -7,11 +7,10 @@
 const LN_ALLOWED = [ADMIN_UID, ROOT_UID];
 const LN_PATH = 'labnote';
 const LN_BUILD = '15';   // 임베드 iframe 캐시 무력화용 버전 (배포 시 올림)
-// 폴더 구조 이전: 예전에 저장된 짧은 링크(budget.html 등)를 새 경로로 매핑
+// 폴더 구조 이전: 예전에 저장된 짧은 링크(payroll.html 등)를 새 경로로 매핑
 const LN_PAGE_MOVES = {
-    'worklog.html': '/worklog/worklog.html', 'worklog-eval.html': '/worklog/worklog-eval.html',
     'member-performance.html': '/member-performance/member-performance.html', 'members.html': '/members/members.html',
-    'payroll.html': '/payroll/payroll.html', 'budget.html': '/budget/budget.html', 'performance.html': '/performance/performance.html'
+    'payroll.html': '/payroll/payroll.html', 'performance.html': '/performance/performance.html'
 };
 function resolveLink(url) { return (url && LN_PAGE_MOVES[url]) ? LN_PAGE_MOVES[url] : url; }
 const LN_COLORS = ['#4f46e5', '#0891b2', '#7c3aed', '#dc2626', '#d97706', '#059669', '#db2777', '#65a30d'];
@@ -37,14 +36,12 @@ const LN_DEFAULT_GROUPS = [
     ] },
     { name: 'Projects', color: '#059669', items: [] },
     { name: '실적평가', color: '#db2777', ownerOnly: true, items: [
-        { text: '개인별 평가', link: '/worklog/worklog-eval.html' },
         { text: '개인별 실적 전반', link: '/member-performance/member-performance.html' }
     ] },
     { name: '기타관리', color: '#65a30d', items: [
         { text: 'Lab 운영정책' },
         { text: 'Lab 구성원', link: '/members/members.html' },
         { text: '학생 인건비', link: '/payroll/payroll.html' },
-        { text: 'Lab 예산관리', link: '/budget/budget.html' },
         { text: 'Lab 주소록', link: LN_ADDRBOOK_URL },
         { text: LN_ROSTER_TEXT, link: LN_ROSTER_LINK }
     ] }
@@ -533,10 +530,10 @@ function openPop(btn, type, id) {
 }
 function closePop() { document.getElementById('lnPop').style.display = 'none'; }
 
-// 링크 지정: 외부 URL 또는 내부 페이지(예: budget.html)
+// 링크 지정: 외부 URL 또는 내부 페이지(예: payroll.html)
 function setLink(type, id) {
     const node = type === 'item' ? findItem(id).it : findSub(id).s;
-    const v = prompt('연결할 주소를 입력하세요.\n(외부: https://... / 내부 페이지: budget.html 등, 비우면 해제)', node.link || '');
+    const v = prompt('연결할 주소를 입력하세요.\n(외부: https://... / 내부 페이지: payroll.html 등, 비우면 해제)', node.link || '');
     if (v === null) return;
     node.link = v.trim();
     touch(); render();

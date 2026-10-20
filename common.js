@@ -173,7 +173,7 @@ function setupSessionTimeout() {
 document.addEventListener('DOMContentLoaded', function () {
     // 현재 페이지 자동 활성화 (탭으로 묶인 서브페이지는 부모 메뉴를 활성화)
     var currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    var navAlias = { 'member-performance.html': 'performance.html', 'team-performance.html': 'performance.html', 'payroll.html': 'budget.html', 'activity.html': 'budget.html' };
+    var navAlias = { 'member-performance.html': 'performance.html', 'team-performance.html': 'performance.html' };
     var activePage = navAlias[currentPage] || currentPage;
     document.querySelectorAll('.menu a').forEach(function (link) {
         // 폴더 구조(/members/members.html)·평면(members.html) 모두 파일명으로 비교
