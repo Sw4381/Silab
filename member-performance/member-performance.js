@@ -449,6 +449,20 @@ function patentItemRow(p) {
         ${p.date ? `<span class="mp-venue mp-inline">${esc(p.date)}</span>` : ''}
     </div>`;
 }
+// 수상 최신순 정렬 키 — photo.js awardSortKey 와 같은 규칙(내용 끝 "(YYYY.M[.D])" 우선, 없으면 date 필드)
+function awardSortKey(a) {
+    const re = /(\d{4})\s*[.\-\/년]\s*(\d{1,2})(?:\s*[.\-\/월]\s*(\d{1,2}))?/g;
+    let m, last = null;
+    while ((m = re.exec(a.content || '')) !== null) last = m;
+    if (last) {
+        const y = +last[1], mo = +last[2], d = last[3] ? +last[3] : 1;
+        if (y >= 1990 && y <= 2100 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) return y * 10000 + mo * 100 + d;
+    }
+    const dm = String(a.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return dm ? (+dm[1]) * 10000 + (+dm[2]) * 100 + (+dm[3]) : 0;
+}
+function sortAwards(list) { return list.slice().sort((a, b) => awardSortKey(b) - awardSortKey(a)); }
+
 function awardItemRow(a) {
     return `<div class="mp-item ${a.isFirst ? 'is-first' : ''}">
         <span class="mp-cat cat-aw"><i class="fas fa-trophy"></i></span>
@@ -502,7 +516,7 @@ function renderCards(rows) {
                 </div>
                 ${r.awardTotal ? `<div class="mp-list-block">
                     <div class="mp-list-title"><i class="fas fa-trophy"></i> 수상 <span class="mp-cnt">${r.awardTotal}</span></div>
-                    ${r.items.awards.map(awardItemRow).join('')}
+                    ${sortAwards(r.items.awards).map(awardItemRow).join('')}
                 </div>` : ''}
             </div>
         </div>`;
