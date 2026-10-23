@@ -42,7 +42,7 @@ const SCORE = {
     sciOther: { first: 4, co: 1 }      // SCIE 그 외(또는 백분위 미입력)
 };
 const PATENT_SCORE = { registered: 2, applied: 1 };   // 특허 등록 2 / 출원 1
-const AWARD_SCORE = 1;                                 // 수상 1인당
+const AWARD_SCORE = 1;                                 // 수상 1건당 (대표 수상자만)
 function sciTier(pct) { pct = Number(pct); if (pct >= 90) return 'sci90'; if (pct >= 75) return 'sci75'; return 'sciOther'; }
 function scoreKey(pub) { return pub._cat === 'sci' ? sciTier(pub.percentile) : pub._cat; }
 
@@ -306,18 +306,16 @@ function aggregate() {
         b.items.patents.push(p);
     });
 
-    // 수상 (awards 노드) — 수상자 첫 항목 = 대표(1.0), 나머지 공동(0.3)
+    // 수상 (awards 노드) — 수상자 첫 항목(대표 수상자)만 실적에 반영. 공동 수상자는 집계·점수 모두 제외 (2026-10 교수님 요청)
     state.awards.forEach(a => {
         if (!a._names || !a._names.length) return;
         state.members.forEach(m => {
             const idx = a._names.findIndex(n => { const k = korName(n); return !!k && m._kor.has(k); });
-            if (idx < 0) return;
-            const isFirst = idx === 0;
+            if (idx !== 0) return;
             const b = buckets.get(m.key);
-            const pos = isFirst ? 'first' : 'co';
-            b.award[pos]++;
+            b.award.first++;
             b.awardTotal++;
-            b.items.awards.push({ ...a, isFirst });
+            b.items.awards.push({ ...a, isFirst: true });
             b.score += AWARD_SCORE;
         });
     });
@@ -425,7 +423,7 @@ function renderTable(rows) {
             </tr></thead>
             <tbody>${body}</tbody>
         </table>
-        <div class="mp-table-foot">① = 1저자 건수 · 특허 ↑ = 등록 건수 · 점수(주저자/공동): SCIE 90↑ <b>8/2</b> · 75↑ <b>6/1.5</b> · 그외 <b>4/1</b> · KCI·국제 <b>2/0.5</b> · 국내 <b>1/0</b> · 특허 등록2·출원1 · 수상 1</div>`;
+        <div class="mp-table-foot">① = 1저자 건수 · 특허 ↑ = 등록 건수 · 점수(주저자/공동): SCIE 90↑ <b>8/2</b> · 75↑ <b>6/1.5</b> · 그외 <b>4/1</b> · KCI·국제 <b>2/0.5</b> · 국내 <b>1/0</b> · 특허 등록2·출원1 · 수상(대표 수상자만) 1</div>`;
 }
 
 function pubItemRow(it) {
