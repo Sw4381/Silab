@@ -105,10 +105,11 @@ async function loadAwardsFromDatabase() {
         const snapshot = await ref.once('value');
         const data = snapshot.val() || {};
 
+        // 최신순 정렬 — 내용 끝의 "(2025.6)" 같은 표기를 우선 사용(awardSortKey), 없으면 date 필드
         const awards = Object.entries(data)
             .filter(([key, value]) => value && value.content)
             .map(([key, value]) => ({ key, ...value }))
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
+            .sort((a, b) => (awardSortKey(b) - awardSortKey(a)) || ((b.createdAt || 0) - (a.createdAt || 0)));
 
         awards.forEach((award, index) => {
             award.id = `award_${index}`;
@@ -146,6 +147,21 @@ function addPatentToDOM(patent) {
     patentList.appendChild(li);
 }
 
+// 수상 정렬 키(YYYYMMDD 숫자). 내용에 적힌 마지막 "YYYY.M" / "YYYY.M.D" 표기를 우선하고
+// (교수님이 직접 적는 날짜라 가장 정확), 없으면 date 필드(YYYY-MM-DD), 그것도 없으면 0.
+function awardSortKey(award) {
+    const text = award.content || '';
+    const re = /(\d{4})\s*[.\-\/년]\s*(\d{1,2})(?:\s*[.\-\/월]\s*(\d{1,2}))?/g;
+    let m, last = null;
+    while ((m = re.exec(text)) !== null) last = m;
+    if (last) {
+        const y = +last[1], mo = +last[2], d = last[3] ? +last[3] : 1;
+        if (y >= 1990 && y <= 2100 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) return y * 10000 + mo * 100 + d;
+    }
+    const dm = String(award.date || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return dm ? (+dm[1]) * 10000 + (+dm[2]) * 100 + (+dm[3]) : 0;
+}
+
 function addAwardToDOM(award) {
     const awardList = document.querySelector('.award-list');
     if (!awardList) return;
@@ -154,6 +170,7 @@ function addAwardToDOM(award) {
     li.setAttribute('data-award-id', award.id);
     li.setAttribute('data-firebase', 'true');
     li.setAttribute('data-firebase-key', award.key || award.id);
+    li.setAttribute('data-date', award.date || '');
 
     let content = award.content;
     if (award.highlight) {
@@ -480,8 +497,10 @@ window.editPatent = function(patentId) {
 
     const highlightGroup = document.getElementById('editHighlightGroup');
     const patentNumberGroup = document.getElementById('editPatentNumberGroup');
+    const dateGroup = document.getElementById('editDateGroup');
     if (highlightGroup) highlightGroup.style.display = 'none';
     if (patentNumberGroup) patentNumberGroup.style.display = 'block';
+    if (dateGroup) dateGroup.style.display = 'none';
 
     currentEditingItem = { id: patentId, firebaseKey, type: 'patent' };
 
@@ -602,18 +621,24 @@ window.editAward = function(awardId) {
 
     let content = clonedElement.textContent.trim();
     const firebaseKey = awardElement.getAttribute('data-firebase-key') || awardId;
+    const existingDate = awardElement.getAttribute('data-date') || '';
 
     document.getElementById('editItemKey').value = firebaseKey;
     document.getElementById('editItemType').value = 'award';
     document.getElementById('editItemContent').value = content;
     document.getElementById('editItemHighlight').value = highlight;
+    // 날짜칸을 비워 두면 저장 시 오늘 날짜로 덮어써져 정렬이 틀어졌던 문제 → 기존 날짜를 채워서 보여줌
+    const dateInput = document.getElementById('editAwardDate');
+    if (dateInput) dateInput.value = /^\d{4}-\d{2}-\d{2}$/.test(existingDate) ? existingDate : '';
 
     const highlightGroup = document.getElementById('editHighlightGroup');
     const patentNumberGroup = document.getElementById('editPatentNumberGroup');
+    const dateGroup = document.getElementById('editDateGroup');
     if (patentNumberGroup) patentNumberGroup.style.display = 'none';
     if (highlightGroup) highlightGroup.style.display = 'block';
+    if (dateGroup) dateGroup.style.display = 'block';
 
-    currentEditingItem = { id: awardId, firebaseKey, type: 'award' };
+    currentEditingItem = { id: awardId, firebaseKey, type: 'award', date: existingDate };
 
     if (addPatentForm) addPatentForm.style.display = 'none';
     if (addAwardForm) addAwardForm.style.display = 'none';
@@ -670,10 +695,12 @@ async function updateItem() {
             showAlert('수상내역 내용을 입력해주세요.', 'warning');
             return;
         }
+        // 날짜칸이 비어 있으면 기존 날짜 유지 (오늘 날짜로 덮어쓰지 않음)
+        const existingDate = (currentEditingItem && currentEditingItem.date) || '';
         updatedAward = {
             content: content,
             highlight: (formData.get('editItemHighlight') || '').trim(),
-            date: (formData.get('editAwardDate') || '').trim() || new Date().toISOString().split('T')[0]
+            date: (formData.get('editAwardDate') || '').trim() || existingDate || new Date().toISOString().split('T')[0]
         };
     }
 
