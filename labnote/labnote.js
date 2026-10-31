@@ -25,20 +25,19 @@ const LN_ROSTER_LINK = '/roster/roster.html';
 // 첫 사용 시 자동 생성되는 기본 메뉴 (이후 추가/이름변경/삭제/순서변경 자유)
 // link: 바깥/내부 페이지 주소 (기본은 클릭 시 오른쪽 본문에 iframe 임베드, openNew:true 면 새 창)
 // 상위 계정(ROOT)만 편집 가능한 기본 잠금 메뉴 (이름 기준 최초 1회 마이그레이션)
-const LN_OWNER_DEFAULT = ['Lab 세미나', 'Lab 연구논의', '실적평가'];
+const LN_OWNER_DEFAULT = ['Lab 연구논의', '실적평가'];
+// num: 메뉴 번호 직접 지정(비우면 순서대로 1,2,3…). 2026-10 교수님 지시: 1~3번 = 운영 중심, 90/91/99 = 참고관리용
 const LN_DEFAULT_GROUPS = [
-    { name: 'Lab 세미나', color: '#4f46e5', ownerOnly: true, items: [] },
     { name: 'Lab 주간보고', color: '#0891b2', items: [] },
     { name: 'Lab 연구논의', color: '#7c3aed', ownerOnly: true, items: [] },
-    { name: 'Lab 수시업무', color: '#dc2626', items: [] },
     { name: '논문/특허 관리', color: '#d97706', items: [
         { text: '논문 제출처', link: 'https://docs.google.com/spreadsheets/d/1CERDZ18IWs0fec5M8vcrxFjKkGYHyFBSewjK4MKTU2M/edit?gid=155235501#gid=155235501' }
     ] },
-    { name: 'Projects', color: '#059669', items: [] },
-    { name: '실적평가', color: '#db2777', ownerOnly: true, items: [
+    { name: 'Projects', color: '#059669', num: '90', items: [] },
+    { name: '실적평가', color: '#db2777', num: '91', ownerOnly: true, items: [
         { text: '개인별 실적 전반', link: '/member-performance/member-performance.html' }
     ] },
-    { name: '기타관리', color: '#65a30d', items: [
+    { name: '기타관리', color: '#65a30d', num: '99', items: [
         { text: 'Lab 운영정책' },
         { text: 'Lab 구성원', link: '/members/members.html' },
         { text: 'Lab 주소록', link: LN_ADDRBOOK_URL },
@@ -115,6 +114,8 @@ function normalize() {
         if (!g.name) g.name = '(이름없음)';
         if (!g.color) g.color = LN_COLORS[i % LN_COLORS.length];
         if (typeof g.body !== 'string') g.body = '';
+        // 메뉴 번호 직접 지정 (예: '90'). 비어 있으면 화면 순서대로 자동 번호
+        g.num = (typeof g.num === 'string' || typeof g.num === 'number') ? String(g.num).trim() : '';
         // 상위 계정 전용 잠금: 값이 없으면 기본 잠금 메뉴 이름으로 최초 1회 판정
         if (typeof g.ownerOnly !== 'boolean') g.ownerOnly = LN_OWNER_DEFAULT.includes(g.name);
         g.items = toArr(g.items).map(it => {
@@ -190,7 +191,7 @@ function hhmm(n) { return String(n.getHours()).padStart(2, '0') + ':' + String(n
 // 본문 텍스트를 뺀 트리 뼈대 (구조 저장용) — 본문은 bodies 경로에 따로 있으므로 여기서 제외
 function skeleton() {
     return data.groups.map(g => ({
-        id: g.id, name: g.name, color: g.color, ownerOnly: !!g.ownerOnly,
+        id: g.id, name: g.name, color: g.color, ownerOnly: !!g.ownerOnly, num: g.num || '',
         items: g.items.map(it => ({
             id: it.id, text: it.text, link: it.link || '', openNew: !!it.openNew,
             subs: it.subs.map(s => ({ id: s.id, name: s.name || '', link: s.link || '', openNew: !!s.openNew }))
@@ -294,6 +295,33 @@ function ensureRosterItem() {
     g.items.push({ id: newId('i'), text: LN_ROSTER_TEXT, body: '', link: LN_ROSTER_LINK, openNew: false, subs: [] });
     return true;
 }
+// 최초 1회(2026-10 교수님 지시): 메뉴 재배치 — 플래그 labnote/menuReorg2026_10 로 한 번만 수행.
+//  · 'Lab 세미나'·'Lab 수시업무' 삭제(서브탭이 생겼으면 안전을 위해 삭제하지 않고 뒤로 보냄)
+//  · 주간보고→1, 연구논의→2, 논문/특허 관리→3 (운영 중심) · Projects→90, 실적평가→91, 기타관리→99 (참고관리용)
+//  · id 우선 매칭(2026-10-20 백업 기준), id가 다르면 이름으로 매칭. 본문(bodies)은 건드리지 않아 복구 가능.
+const LN_REORG = [
+    { id: 'gms38idix1', name: 'Lab 주간보고',   num: '' },
+    { id: 'gms38idix2', name: 'Lab 연구논의',   num: '' },
+    { id: 'gms38idix4', name: '논문/특허 관리', num: '' },
+    { id: 'gms38idix6', name: 'Projects',        num: '90' },
+    { id: 'gms38idix7', name: '실적평가',        num: '91' },
+    { id: 'gms38idixa', name: '기타관리',        num: '99' }
+];
+const LN_REORG_DELETE = [
+    { id: 'gms38idix0', name: 'Lab 세미나' },
+    { id: 'gms38idix3', name: 'Lab 수시업무' }
+];
+function reorgMenu2026_10() {
+    const pick = (spec) => data.groups.find(g => g.id === spec.id) || data.groups.find(g => g.name === spec.name);
+    const ordered = [];
+    LN_REORG.forEach(spec => { const g = pick(spec); if (g && !ordered.includes(g)) { g.num = spec.num; ordered.push(g); } });
+    if (!ordered.length) return false;   // 아는 메뉴가 하나도 없으면 손대지 않음
+    const removed = [];
+    LN_REORG_DELETE.forEach(spec => { const g = pick(spec); if (g && !ordered.includes(g) && !g.items.length) removed.push(g); });
+    const rest = data.groups.filter(g => !ordered.includes(g) && !removed.includes(g));
+    data.groups = ordered.concat(rest);
+    return true;
+}
 // bodies 맵을 인메모리 노드 본문에 병합 (id별 본문 우선, 없으면 뼈대에 남은 구버전 본문 유지)
 function mergeBodies(bodies) {
     if (!bodies || typeof bodies !== 'object') return;
@@ -324,12 +352,13 @@ async function rescueNestedBodies(bodies) {
 async function loadData() {
     setSaveStat('', '불러오는 중...');
     // 경로별 개별 읽기 — 본문(bodies)은 id별로 저장되므로 groups(뼈대)와 나눠 읽고 병합
-    const [gSnap, bSnap, cSnap, mSnap, rSnap] = await Promise.all([
+    const [gSnap, bSnap, cSnap, mSnap, rSnap, qSnap] = await Promise.all([
         database.ref(LN_PATH + '/groups').once('value'),
         database.ref(LN_PATH + '/bodies').once('value'),
         database.ref(LN_PATH + '/calendar').once('value'),
         database.ref(LN_PATH + '/bodiesMigrated').once('value'),
-        database.ref(LN_PATH + '/rosterItemAdded').once('value')
+        database.ref(LN_PATH + '/rosterItemAdded').once('value'),
+        database.ref(LN_PATH + '/menuReorg2026_10').once('value')
     ]);
     data = { groups: gSnap.val(), calendar: cSnap.val() };
     normalize();
@@ -344,6 +373,14 @@ async function loadData() {
         if (added) upd.groups = skeleton();
         try { await database.ref(LN_PATH).update(upd); }
         catch (e) { console.error('인원 정보 항목 추가 실패', e); }
+    }
+    // 최초 1회: 2026-10 메뉴 재배치 (삭제 2 · 순서 변경 · 번호 90/91/99). 뼈대만 기록, 본문은 그대로.
+    if (!qSnap.val()) {
+        const changed = reorgMenu2026_10();
+        const upd = { menuReorg2026_10: true };
+        if (changed) upd.groups = skeleton();
+        try { await database.ref(LN_PATH).update(upd); }
+        catch (e) { console.error('메뉴 재배치 실패', e); }
     }
     dirty = false;
     setSaveStat('linked', '동기화됨');
@@ -365,11 +402,12 @@ function render() {
     }
     data.groups.forEach((g, gi) => {
         const gLocked = !!g.ownerOnly && !isOwner();   // 이 메뉴가 지금 사용자에게 잠겼는가
+        const gNum = g.num || String(gi + 1);           // 직접 지정한 번호(90/91/99 등) 우선, 없으면 순서 번호
         const gEl = document.createElement('div');
         gEl.className = 'ln-grp' + (openN[g.id] !== false ? ' open' : '');
         gEl.appendChild(rowEl({
             type: 'group', node: g, cls: 'ln-g-head', sel: cur && cur.type === 'group' && cur.id === g.id,
-            label: g.name, num: String(gi + 1), count: g.items.length, locked: gLocked, ownerOnly: g.ownerOnly,
+            label: g.name, num: gNum, count: g.items.length, locked: gLocked, ownerOnly: g.ownerOnly,
             onToggle: () => toggleN(g.id), onSelect: () => select('group', g.id)
         }));
         const cg = document.createElement('div'); cg.className = 'ln-children-g';
@@ -377,14 +415,14 @@ function render() {
             const iEl = document.createElement('div'); iEl.className = 'ln-itm' + (openN[it.id] ? ' open' : '');
             iEl.appendChild(rowEl({
                 type: 'item', node: it, cls: 'ln-i-head', sel: cur && cur.type === 'item' && cur.id === it.id,
-                label: it.text, num: (gi + 1) + '-' + (ii + 1), count: it.subs.length, link: it.link, openNew: it.openNew, locked: gLocked,
+                label: it.text, num: gNum + '-' + (ii + 1), count: it.subs.length, link: it.link, openNew: it.openNew, locked: gLocked,
                 onToggle: () => toggleN(it.id), onSelect: () => select('item', it.id)
             }));
             const ci = document.createElement('div'); ci.className = 'ln-children-i';
             it.subs.forEach((s, si) => {
                 ci.appendChild(rowEl({
                     type: 'sub', node: s, cls: 'ln-s-head', sel: cur && cur.type === 'sub' && cur.id === s.id,
-                    label: subName(s), num: (gi + 1) + '-' + (ii + 1) + '-' + (si + 1), leaf: true, link: s.link, openNew: s.openNew, locked: gLocked,
+                    label: subName(s), num: gNum + '-' + (ii + 1) + '-' + (si + 1), leaf: true, link: s.link, openNew: s.openNew, locked: gLocked,
                     onSelect: () => select('sub', s.id)
                 }));
             });
@@ -507,6 +545,13 @@ function openPop(btn, type, id) {
     if (type === 'group') add('➕ 서브탭 추가', () => addChild('group', id));
     if (type === 'item') add('➕ 세부 추가', () => addChild('item', id));
     add('✏️ 이름 바꾸기', () => startRename(id));
+    if (type === 'group') {
+        add(node.num ? '🔢 번호 바꾸기 (' + node.num + ')' : '🔢 번호 지정', () => {
+            const v = prompt('이 메뉴의 번호를 입력하세요.\n(예: 90 · 비우면 순서대로 자동 번호)', node.num || '');
+            if (v === null) return;
+            node.num = v.trim().slice(0, 6); touch(); render();
+        });
+    }
     if (type !== 'group') {
         add(node.link ? '🔗 링크 수정' : '🔗 링크 지정', () => setLink(type, id));
         if (node.link) {
