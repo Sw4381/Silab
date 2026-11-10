@@ -88,8 +88,8 @@ function showAlert(message, type) {
 
 // --- 이름 정규화 ---
 function hasHangul(s) { return /[가-힣]/.test(String(s || '')); }
-// 토큰에서 한글 이름만 추출 (앞쪽 한글 2~5자)
-function korName(token) { const m = String(token || '').match(/[가-힣]{2,5}/); return m ? m[0] : ''; }
+// 토큰에서 한글 이름 추출 (앞쪽 한글 2~5자). 동명이인 구분용 짧은 영문 접미(예: '이주영B')는 유지 — 접미를 버리면 '이주영'과 '이주영B'가 같은 키가 되어 실적이 둘 다에 집계됨
+function korName(token) { const m = String(token || '').match(/([가-힣]{2,5})\s?([A-Za-z]{1,2})?(?![A-Za-z])/); return m ? m[1] + (m[2] || '').toUpperCase() : ''; }
 // 영문/이니셜 정규화: 소문자 + 영숫자만 ("S. W. Lee" -> "swlee", "L.S.W" -> "lsw")
 function normLatin(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 // 별칭 문자열 -> 표기 배열 (세미콜론/줄바꿈 구분)
