@@ -857,6 +857,15 @@ function fitEmbed(snap) {
 }
 window.addEventListener('resize', () => fitEmbed(false));
 
+// 임베드(iframe)만 다시 불러오기 — 바깥 labnote 페이지는 새로고침하지 않는다.
+// 같은 출처(내부 페이지)면 iframe 안에서 reload(현재 보던 주소 유지), 외부 사이트는 보안상 접근이 안 되므로 src 재지정으로 처음 주소를 다시 로드.
+function reloadEmbed(link) {
+    const ifr = document.getElementById('lnEmbed');
+    if (!ifr) return;
+    try { ifr.contentWindow.location.reload(); return; } catch (e) { /* cross-origin */ }
+    ifr.src = embedSrc(link);
+}
+
 function showBody() {
     if (!bodyEl) return;
     // 임베드 전체 폭 상태 초기화 (텍스트/캘린더로 가면 원래 폭 복귀)
@@ -874,16 +883,20 @@ function showBody() {
         document.body.classList.add('ln-embed-body');
         bodyEl.innerHTML =
             '<div class="ln-title ln-title-row"><span>' + esc(b.title) + '</span>' +
+            '<button class="wl-btn" id="lnReload" title="바깥 페이지는 그대로 두고 이 화면(임베드)만 다시 불러오기"><i class="fas fa-sync-alt"></i> 새로고침</button>' +
             '<button class="wl-btn" id="lnFs" title="브라우저 전체 화면으로 크게 보기"><i class="fas fa-expand"></i> 전체화면</button>' +
             '<button class="wl-btn" id="lnNewTab" title="새 탭으로 열기"><i class="fas fa-external-link-alt"></i> 새 탭</button></div>' +
             '<div class="ln-embed-note">화면이 비어 있으면(외부 사이트 보안 정책) <a href="#" id="lnNote">새 탭으로 열기</a>를 눌러주세요.</div>' +
             '<div class="ln-embed-wrap" id="lnEmbedWrap">' +
+            '  <button class="wl-btn ln-fs-reload" id="lnFsReload" title="이 화면만 새로고침"><i class="fas fa-sync-alt"></i> 새로고침</button>' +
             '  <button class="wl-btn ln-fs-close" id="lnFsClose" title="전체화면 닫기"><i class="fas fa-compress"></i> 닫기</button>' +
             '  <iframe class="ln-embed" id="lnEmbed" src="' + esc(embedSrc(b.link)) + '" referrerpolicy="no-referrer-when-downgrade"></iframe>' +
             '</div>';
         const wrap = document.getElementById('lnEmbedWrap');
         document.getElementById('lnFs').onclick = () => wrap.classList.add('fs');
         document.getElementById('lnFsClose').onclick = () => { wrap.classList.remove('fs'); fitEmbed(true); };
+        document.getElementById('lnReload').onclick = () => reloadEmbed(b.link);
+        document.getElementById('lnFsReload').onclick = () => reloadEmbed(b.link);
         document.getElementById('lnNewTab').onclick = () => openLink(b.link);
         document.getElementById('lnNote').onclick = e => { e.preventDefault(); openLink(b.link); };
         requestAnimationFrame(() => fitEmbed(true));   // 제목을 네비 아래로 올리고 임베드를 남은 화면에 딱 맞춤
