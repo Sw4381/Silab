@@ -1,5 +1,6 @@
 // team-performance.js - 팀별 종합 실적 집계 (로그인 전용)
-// 멤버 실적(논문/특허/수상 건수)을 팀(연구분야) 단위로 합산. 멤버는 여러 팀 소속 가능.
+// 멤버 실적(논문/특허/수상 건수 + 실적 점수)을 팀(연구분야) 단위로 합산. 멤버는 여러 팀 소속 가능.
+// ⚠ 멤버별 집계 로직(이름 매칭·수상 규칙·점수표)은 member-performance.js 와 반드시 동일하게 유지 — 두 페이지 숫자가 맞아야 한다.
 // 데이터: members, publications/{sci,kci,other}, performance/__track__/patents, awards, memberPerfAliases, teams
 
 // ==================== 상수 ====================
@@ -22,6 +23,20 @@ const CATS = [
     { key: 'confIntl', label: '국제', cls: 'cat-ci' },
     { key: 'confDom', label: '국내', cls: 'cat-cd' }
 ];
+// 실적 점수표 (member-performance.js 와 동일). SCIE는 JIF 백분위로 3단계.
+const SCORE = {
+    confDom:  { first: 1, co: 0 },
+    confIntl: { first: 2, co: 0.5 },
+    kci:      { first: 2, co: 0.5 },
+    sci90:    { first: 8, co: 2 },     // SCIE JIF 백분위 90↑
+    sci75:    { first: 6, co: 1.5 },   // SCIE 75↑
+    sciOther: { first: 4, co: 1 }      // SCIE 그 외(또는 백분위 미입력)
+};
+const PATENT_SCORE = { registered: 2, applied: 1 };   // 특허 등록 2 / 출원 1
+const AWARD_SCORE = 1;                                 // 수상 1건당 (대표 수상자만)
+function sciTier(pct) { pct = Number(pct); if (pct >= 90) return 'sci90'; if (pct >= 75) return 'sci75'; return 'sciOther'; }
+function scoreKey(pub) { return pub._cat === 'sci' ? sciTier(pub.percentile) : pub._cat; }
+const fmt = n => (Math.round(Number(n) * 100) / 100).toString();
 const ALLOWED_USERS = [ADMIN_UID, ROOT_UID];   // UID 기준
 
 // ==================== 전역 상태 ====================
@@ -29,7 +44,7 @@ let auth, database, currentUser = null;
 const state = {
     members: [], aliases: {}, pubs: [], patents: [], awards: [],
     teams: [],          // [{key,name,area,leader,members:[memberKey],order}]
-    sort: 'papers', editKey: null
+    sort: 'score', editKey: null
 };
 let loginBtn, logoutBtn, loginModal, loginClose, userInfo, userName, authGate, tpApp;
 
@@ -43,7 +58,8 @@ function showAlert(message, type) {
 }
 function uid() { return 't' + Math.abs(((performance.now() * 1000) | 0)).toString(36) + (state._seq = (state._seq || 0) + 1).toString(36); }
 function hasHangul(s) { return /[가-힣]/.test(String(s || '')); }
-function korName(token) { const m = String(token || '').match(/[가-힣]{2,5}/); return m ? m[0] : ''; }
+// 한글 이름 추출. 동명이인 구분용 짧은 영문 접미(예: '이주영B')는 유지 — member-performance.js 와 동일
+function korName(token) { const m = String(token || '').match(/([가-힣]{2,5})\s?([A-Za-z]{1,2})?(?![A-Za-z])/); return m ? m[1] + (m[2] || '').toUpperCase() : ''; }
 function normLatin(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 function parseAliases(s) { return String(s || '').split(/[;\n]/).map(t => t.trim()).filter(Boolean); }
 function parseAuthors(s) {
@@ -149,7 +165,7 @@ async function loadData() {
 
     const collect = (snap, type) => Object.entries(snap.val() || {}).map(([id, v]) => ({
         id, type, title: v.title || '', authors: v.authors || '', journal: v.journal || '', award: (v.award || '').trim(),
-        url: v.url || '', _cat: pubCategory({ type, journal: v.journal }), _tokens: parseAuthors(v.authors)
+        url: v.url || '', percentile: v.percentile, _cat: pubCategory({ type, journal: v.journal }), _tokens: parseAuthors(v.authors)
     }));
     state.pubs = [...collect(sciSnap, 'sci'), ...collect(kciSnap, 'kci'), ...collect(otherSnap, 'other')];
     state.patents = Object.entries(patSnap.val() || {}).map(([id, v]) => ({ id, ...v }));
@@ -170,7 +186,7 @@ async function loadData() {
 
 // ==================== 멤버별 집계 (멤버 실적과 동일) ====================
 function emptyMetrics() {
-    const m = { papersTotal: 0, patentTotal: 0, awardTotal: 0, patent: { reg: 0, app: 0 } };
+    const m = { score: 0, papersTotal: 0, patentTotal: 0, awardTotal: 0, patent: { reg: 0, app: 0 } };
     CATS.forEach(c => m[c.key] = { first: 0, co: 0 }); m.award = { first: 0, co: 0 };
     return m;
 }
@@ -180,19 +196,24 @@ function aggregateMembers() {
     state.members.forEach(m => buckets.set(m.key, { member: m, ...emptyMetrics() }));
     state.pubs.forEach(pub => state.members.forEach(m => {
         const idx = pub._tokens.findIndex(t => pubAuthorMatch(t, m)); if (idx < 0) return;
-        const b = buckets.get(m.key); b[pub._cat][idx === 0 ? 'first' : 'co']++; b.papersTotal++;
+        const pos = idx === 0 ? 'first' : 'co';
+        const b = buckets.get(m.key); b[pub._cat][pos]++; b.papersTotal++;
+        b.score += (SCORE[scoreKey(pub)][pos] || 0);
     }));
     state.patents.forEach(p => {
         const m = matchPatentMember(patentToken(p.label), state.members); if (!m) return;
         const b = buckets.get(m.key);
-        if (patentStatusDef(p.status).v === 'registered') b.patent.reg++; else b.patent.app++;
+        if (patentStatusDef(p.status).v === 'registered') { b.patent.reg++; b.score += PATENT_SCORE.registered; }
+        else { b.patent.app++; b.score += PATENT_SCORE.applied; }
         b.patentTotal++;
     });
+    // 수상: 대표 수상자(첫 항목)만 집계 — member-performance.js 와 동일 (2026-10 교수님 요청). 공동 수상자는 제외.
     state.awards.forEach(a => {
         if (!a._names || !a._names.length) return;
         state.members.forEach(m => {
             const idx = a._names.findIndex(n => { const k = korName(n); return !!k && m._kor.has(k); });
-            if (idx < 0) return; const b = buckets.get(m.key); b.award[idx === 0 ? 'first' : 'co']++; b.awardTotal++;
+            if (idx !== 0) return;
+            const b = buckets.get(m.key); b.award.first++; b.awardTotal++; b.score += AWARD_SCORE;
         });
     });
     return buckets;
@@ -204,12 +225,12 @@ function teamAggregate() {
     const validKeys = new Set(state.members.map(m => m.key));
     const teamRows = state.teams.map(t => {
         const keys = (t.members || []).filter(k => validKeys.has(k));
-        const agg = { sci: 0, kci: 0, confIntl: 0, confDom: 0, papersTotal: 0, patReg: 0, patApp: 0, patentTotal: 0, awardTotal: 0 };
+        const agg = { score: 0, sci: 0, kci: 0, confIntl: 0, confDom: 0, papersTotal: 0, patReg: 0, patApp: 0, patentTotal: 0, awardTotal: 0 };
         keys.forEach(k => {
             const b = byMember.get(k); if (!b) return;
             CATS.forEach(c => agg[c.key] += catCount(b, c.key));
             agg.papersTotal += b.papersTotal; agg.patReg += b.patent.reg; agg.patApp += b.patent.app;
-            agg.patentTotal += b.patentTotal; agg.awardTotal += b.awardTotal;
+            agg.patentTotal += b.patentTotal; agg.awardTotal += b.awardTotal; agg.score += b.score;
         });
         return { team: t, memberKeys: keys, ...agg };
     });
@@ -223,6 +244,7 @@ function memberName(key) { const m = state.members.find(x => x.key === key); ret
 function sortTeams(rows) {
     const a = rows.slice();
     if (state.sort === 'name') a.sort((x, y) => x.team.name.localeCompare(y.team.name, 'ko'));
+    else if (state.sort === 'score') a.sort((x, y) => y.score - x.score || y.papersTotal - x.papersTotal);
     else if (state.sort === 'sci') a.sort((x, y) => y.sci - x.sci || y.papersTotal - x.papersTotal);
     else if (state.sort === 'patents') a.sort((x, y) => y.patentTotal - x.patentTotal || y.papersTotal - x.papersTotal);
     else if (state.sort === 'awards') a.sort((x, y) => y.awardTotal - x.awardTotal || y.papersTotal - x.papersTotal);
@@ -248,7 +270,7 @@ function renderStatCards(teamRows, unassigned) {
         { icon: 'fa-people-group', label: '팀', main: `${state.teams.length}`, sub: `배정 ${assignedCount}/${state.members.length}명` },
         { icon: 'fa-file-lines', label: '논문(팀 합산)', main: `${papers}`, sub: '중복 포함' },
         { icon: 'fa-certificate', label: '특허(팀 합산)', main: `${pats}`, sub: '등록+출원' },
-        { icon: 'fa-trophy', label: '수상(팀 합산)', main: `${awards}`, sub: '' }
+        { icon: 'fa-trophy', label: '수상(팀 합산)', main: `${awards}`, sub: '대표 수상자만' }
     ];
     el.innerHTML = cards.map(c => `
         <div class="mp-stat-card"><div class="mp-stat-icon"><i class="fas ${c.icon}"></i></div>
@@ -258,21 +280,21 @@ function numCell(v) { return v ? `<td class="mp-num">${v}</td>` : `<td class="mp
 function renderTable(rows) {
     const el = document.getElementById('tmTableWrap'); if (!el) return;
     if (!rows.length) { el.innerHTML = `<div class="empty-state small"><i class="fas fa-people-group"></i><p>등록된 팀이 없습니다. 우측 상단 ‘팀 추가’로 시작하세요.</p></div>`; return; }
-    const maxP = Math.max(1, ...rows.map(r => r.papersTotal));
+    const maxS = Math.max(1, ...rows.map(r => r.score));
     const body = rows.map((r, i) => {
         const patCell = (r.patReg || r.patApp) ? `<td class="mp-num">${r.patentTotal}<span class="mp-first" title="등록 ${r.patReg} / 출원 ${r.patApp}">${r.patReg}↑</span></td>` : `<td class="mp-num zero">·</td>`;
         return `<tr data-key="${esc(r.team.key)}">
             <td class="mp-rank ${i < 3 ? 'rank-' + (i + 1) : ''}">${i + 1}</td>
             <td class="mp-td-name"><span class="mp-name">${esc(r.team.name)}</span>${r.team.area ? `<span class="tm-area">${esc(r.team.area)}</span>` : ''}</td>
             <td class="mp-num">${r.memberKeys.length}</td>
-            ${numCell(r.sci)}${numCell(r.kci)}${numCell(r.confIntl)}${numCell(r.confDom)}${patCell}${numCell(r.awardTotal)}
-            <td class="mp-score-cell"><div class="mp-score-bar"><span style="width:${(r.papersTotal / maxP * 100).toFixed(0)}%"></span></div><b>${r.papersTotal}</b></td>
+            ${numCell(r.sci)}${numCell(r.kci)}${numCell(r.confIntl)}${numCell(r.confDom)}${patCell}${numCell(r.awardTotal)}${numCell(r.papersTotal)}
+            <td class="mp-score-cell"><div class="mp-score-bar"><span style="width:${(r.score / maxS * 100).toFixed(0)}%"></span></div><b>${fmt(r.score)}</b></td>
         </tr>`;
     }).join('');
     el.innerHTML = `<table class="mp-table">
-        <thead><tr><th>#</th><th>팀</th><th>인원</th><th>SCI</th><th>KCI</th><th>국제<small>컨퍼</small></th><th>국내<small>컨퍼</small></th><th>특허</th><th>수상</th><th>논문 합</th></tr></thead>
+        <thead><tr><th>#</th><th>팀</th><th>인원</th><th>SCI</th><th>KCI</th><th>국제<small>컨퍼</small></th><th>국내<small>컨퍼</small></th><th>특허</th><th>수상</th><th>논문 합</th><th>실적 점수</th></tr></thead>
         <tbody>${body}</tbody></table>
-        <div class="mp-table-foot">특허 ↑ = 등록 건수 · 멤버가 여러 팀이면 각 팀에 중복 합산됩니다 · 행 클릭 → 팀 수정</div>`;
+        <div class="mp-table-foot">멤버 실적 페이지의 멤버별 수치·점수를 팀원끼리 그대로 더한 값 · 특허 ↑ = 등록 건수 · 수상은 대표 수상자만 · 멤버가 여러 팀이면 각 팀에 중복 합산 · 행 클릭 → 팀 수정</div>`;
     el.querySelectorAll('tbody tr').forEach(tr => tr.addEventListener('click', () => openTeamForm(tr.dataset.key)));
 }
 function renderCards(rows) {
@@ -301,6 +323,7 @@ function renderCards(rows) {
                 <div class="mp-stat"><b>${r.confDom}</b><span>국내컨퍼</span></div>
                 <div class="mp-stat"><b>${r.patentTotal}</b><span>특허</span></div>
                 <div class="mp-stat"><b>${r.awardTotal}</b><span>수상</span></div>
+                <div class="mp-stat"><b>${fmt(r.score)}</b><span>실적 점수</span></div>
             </div>
             <div class="tm-card-members">${chips}</div>
         </div>`;
