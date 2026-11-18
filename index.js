@@ -526,7 +526,10 @@ function renderRecentPubs(pubs) {
         Object.values(pubs[type]).forEach(pub => items.push({ ...pub, _type: type }));
     });
 
-    items.sort((a, b) => (b.year || 0) - (a.year || 0));
+    // Publication 페이지와 동일하게 publicationId(P229 …) 숫자 내림차순 → 맨 위 3건이 곧 '최근'.
+    // (예전엔 존재하지 않는 year 필드로 정렬해 등록 순서의 SCI 첫 3건이 고정으로 나왔음)
+    const pubNo = p => parseInt(String(p.publicationId || '').replace(/[^\d]/g, ''), 10) || 0;
+    items.sort((a, b) => pubNo(b) - pubNo(a) || (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
     const recent = items.slice(0, 3);
 
     container.innerHTML = '';
@@ -538,15 +541,19 @@ function renderRecentPubs(pubs) {
     recent.forEach(pub => {
         const badgeClass = pub._type === 'sci' ? 'sci' : pub._type === 'kci' ? 'kci' : 'other';
         const badgeLabel = pub._type === 'sci' ? 'SCI' : pub._type === 'kci' ? 'KCI' : 'Conf';
+        const venue = pub.journal || pub.conference || '';
+        // 연도는 별도 필드가 없고 저널란의 '(2026.11)' 같은 표기에서 뽑는다
+        const ym = String(venue).match(/(20\d{2})(?:[.\-\/]\s?(\d{1,2}))?/);
+        const when = ym ? (ym[2] ? `${ym[1]}.${ym[2].padStart(2, '0')}` : ym[1]) : '';
         const card = document.createElement('div');
         card.className = 'pub-card';
         card.innerHTML = `
             <span class="pub-badge ${badgeClass}">${badgeLabel}</span>
-            <div class="pub-title">${pub.title || '(제목 없음)'}</div>
+            <div class="pub-title">${escHtml(pub.title || '(제목 없음)')}</div>
             <div class="pub-meta">
-                <span>${pub.authors || ''}</span>
-                ${pub.year ? `<span>${pub.year}</span>` : ''}
-                ${pub.journal || pub.conference ? `<span>${pub.journal || pub.conference}</span>` : ''}
+                <span>${escHtml(pub.authors || '')}</span>
+                ${when ? `<span>${escHtml(when)}</span>` : ''}
+                ${venue ? `<span>${escHtml(venue)}</span>` : ''}
             </div>
         `;
         container.appendChild(card);
@@ -563,9 +570,12 @@ function renderRecentProjects(curProj) {
         return;
     }
 
+    // 과제 번호([PJ53], [P52] …) 내림차순 → 최신 과제가 위. 번호가 없으면 displayOrder 순.
+    // (예전엔 displayOrder 순이었는데 새로 등록한 과제엔 그 값이 없어 맨 아래에 붙었음)
+    const projNo = p => { const m = String(p.name || '').match(/\[?\s*PJ?\s*(\d+)/i); return m ? parseInt(m[1], 10) : 0; };
     const items = Object.values(curProj)
         .filter(p => p && p.name)
-        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+        .sort((a, b) => projNo(b) - projNo(a) || (a.displayOrder || 0) - (b.displayOrder || 0));
 
     if (items.length === 0) {
         container.innerHTML = '<div class="feed-empty"><i class="fas fa-project-diagram"></i><p style="margin-top:8px;">진행 중인 프로젝트가 없습니다</p></div>';
@@ -578,9 +588,9 @@ function renderRecentProjects(curProj) {
         item.innerHTML = `
             <div class="project-feed-icon"><i class="fas fa-flask"></i></div>
             <div class="project-feed-body">
-                <div class="project-feed-name">${proj.name || '(제목 없음)'}</div>
+                <div class="project-feed-name">${escHtml(proj.name || '(제목 없음)')}</div>
                 <div class="project-feed-meta">
-                    ${proj.period ? `<span><i class="fas fa-calendar"></i>${proj.period}</span>` : ''}
+                    ${String(proj.period || '').trim() ? `<span><i class="fas fa-calendar"></i>${escHtml(String(proj.period).trim())}</span>` : ''}
                 </div>
             </div>
             <span class="project-status">진행 중</span>
