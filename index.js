@@ -520,8 +520,9 @@ function renderRecentPubs(pubs) {
     const container = document.getElementById('recentPubs');
     if (!container) return;
 
+    // 홈 '최근 논문'은 SCI만 (2026-11 요청). KCI/학회 논문은 Publication 페이지에서만.
     const items = [];
-    ['sci', 'kci', 'other'].forEach(type => {
+    ['sci'].forEach(type => {
         if (!pubs[type]) return;
         Object.values(pubs[type]).forEach(pub => items.push({ ...pub, _type: type }));
     });
