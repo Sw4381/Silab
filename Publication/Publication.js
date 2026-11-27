@@ -34,7 +34,7 @@ function resolveProjectPageUrl(title) {
 // 클릭하면 현재 화면 위에 모달이 떠서 /Publication/summary/P###.html (1장 요약) 을 iframe 으로 보여준다.
 // 새 요약을 추가하려면 summary/P###.html 을 만들고(P229.html 복사) 아래 목록에 번호만 넣으면 된다.
 // [Summary] 가 있는 논문은 project page 링크를 표시하지 않는다(요약이 그 역할을 대신).
-var SUMMARY_PAGES = ['P229', 'P212', 'P196', 'P187'];   // P190(ICT Express)은 원문 PDF 받으면 추가
+var SUMMARY_PAGES = ['P229', 'P212', 'P196', 'P190', 'P187'];
 
 function resolveSummaryUrl(publicationId) {
     var id = String(publicationId || '').toUpperCase().trim();
