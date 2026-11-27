@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!--
+    논문 1장 요약 — P196 (IEEE Access, 2025.12)
+    Publication 목록의 [Summary] 클릭 시 모달(iframe)로 열린다. 단독 열람: /Publication/summary/P196.html
+    새 요약을 만들 때는 P229.html 을 복사해 P###.html 로 저장하고 Publication.js 의 SUMMARY_PAGES 에 번호를 추가.
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[P196] 요약 - 보안 지능 연구실</title>
+    <link rel="icon" href="/image.png" type="image/png">
+    <link rel="stylesheet" href="/Publication/summary/summary.css?v=1">
+</head>
+<body class="ps-body">
+<article class="ps">
+    <header class="ps-head">
+        <h1 class="ps-title">효과적인 TTPs 분석을 통한 침해대응 강화: 설계 접근법</h1>
+        <p class="ps-title-en">Enhancing Incident Response Through Effective TTPs Analysis: A Design Approach</p>
+        <p class="ps-meta">
+            <span>한태현 · 황상연 · 이태진(교신)</span>
+            <span>가천대 · SecuLayer</span>
+            <span><b>IEEE Access</b> 13, 217799–217810 (2025)<span class="ps-badge">SCIE</span></span>
+            <span>2025.12 게재 · Open Access(CC BY)</span>
+            <span>DOI: <a href="https://doi.org/10.1109/ACCESS.2025.3645226" target="_blank" rel="noopener">10.1109/ACCESS.2025.3645226</a></span>
+        </p>
+    </header>
+
+    <div class="ps-core">
+        <span class="ps-core-tag">핵심</span>
+        <p>MITRE ATT&amp;CK 지식과 <span class="hl">실제 침해대응 데이터</span>를 연결한 TTP 그래프를 <span class="hl">metapath2vec 임베딩</span>(기법 클러스터)과 <span class="hl">TF-IDF 공격 패턴 행렬</span>로 지식 맵화 → 탐지된 몇 개 기법만으로 공격자의 <b>다음 행위</b>를 추론하고, 후보군 + <span class="hl">XGBoost</span>로 <b>공격 그룹</b>을 식별해 탐지–대응을 잇는다</p>
+    </div>
+
+    <div class="ps-kpis">
+        <div class="ps-kpi"><b>93.49%</b><span>공격 그룹 식별 정확도 (ID-K-G, XGBoost 단독 87.19%)</span></div>
+        <div class="ps-kpi"><b>91.73%</b><span>기법 클러스터 신뢰도 (ID-K-T, Jaccard·Phi 대비 우위)</span></div>
+        <div class="ps-kpi"><b>142,949</b><span>검증에 쓴 실제 침해사고 인스턴스 (ID-C-T)</span></div>
+        <div class="ps-kpi"><b>569</b><span>MITRE ATT&amp;CK v18.0 기법 · 사고당 평균 7개 사용</span></div>
+        <div class="ps-kpi"><b>4.01ms</b><span>건당 추론 시간 (XGBoost 0.93ms, EDR/AV 허용 범위)</span></div>
+    </div>
+
+    <div class="ps-grid">
+        <!-- 1단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>①</i>문제의식</h2>
+                <ul class="ps-list">
+                    <li><b>지능형 공격:</b> APT는 제로데이로 시그니처·AI/ML 탐지를 우회(Stuxnet, 대만 정전) → Cyber Kill Chain·TTPs 기반 대응 부상</li>
+                    <li><b>오탐 문제:</b> KISA 보고 — 탐지된 기법의 <span class="hl">83%</span>는 정상 사용자 행위와 구분 불가 → 기법 간 인과·상관 분석이 필수</li>
+                    <li><b>실환경 공백:</b> TTPs 방어는 효과적이나 운영 환경 적용 연구 희소, 기법 간 의미 있는 관계 식별·정량화가 난제</li>
+                    <li><b>단절된 대응:</b> 수집·포렌식·DB(MITRE·CVE·CAPEC)·정책 갱신이 독립 시스템 → 소통·효율 저하, 표준 지식으로 연결 필요</li>
+                </ul>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>②</i>기존 연구와 차별점</h2>
+                <table class="ps-table">
+                    <thead><tr><th>계열</th><th>대표</th><th>한계</th></tr></thead>
+                    <tbody>
+                        <tr><td>TTP 분석</td><td>Al-Shaer(Jaccard·Phi), Al-Sada, KISA</td><td>쌍(pairwise) 상관만 포착 → 다수 기법 간 복합 의존 미반영</td></tr>
+                        <tr><td>위협 모델링</td><td>AttackG, ThreatWeaver, KillChainGraph</td><td>사전 정의 규칙·기지 조합에 의존, 합성·태깅 데이터(표준 데이터셋 부재)</td></tr>
+                        <tr><td>공격자 예측</td><td>GloVe·TF-IDF 임베딩, 시퀀스 모델, DeepOP</td><td>TTP만으론 그룹 식별 불가(기법 공유), 위협정보는 실제 순서로 관측 안 됨</td></tr>
+                        <tr class="ps-ours"><td>제안</td><td colspan="2">실제 침해대응 메타데이터 + 임베딩(다대다 관계 학습, 규칙 정의 없음) + TF-IDF 후보군 + XGBoost 결합, 전 기법 범위</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>④</i>평가 데이터 <small>(6종 · 실사고 메타데이터)</small></h2>
+                <ul class="ps-list">
+                    <li><b>지식(ID-M):</b> MITRE ATT&amp;CK v18.0 — Enterprise·ICS·Mobile 그룹·캠페인·SW·전술·기법·완화책 통합, 학습 전용. 기법을 <b>4단계</b>(인프라 확보 → 초기 침투 → 내부 활동 → 목표 달성, 단계당 전술 2–9개)로 분류</li>
+                    <li><b>기법 상관(신뢰도):</b> ID-T 2,862건(그룹 라벨은 73건뿐 → 검증 가능 건만), ID-K-T 학습 4,271/검증 3,132, ID-C-T <b>142,949건 전량</b> 검증</li>
+                    <li><b>그룹 식별:</b> ID-K-G 67그룹(학습 9,855/검증 4,903), ID-C-G 50그룹(학습 28,939/검증 10,172) — <b>145 피처</b> = 실행파일 바이트 4-/10-gram 유사도</li>
+                    <li><b>출처:</b> 전문 침해대응 기업 제공 실제 사고 메타데이터(기존 연구는 보고서 기반 시뮬레이션 데이터)</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- 2단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>③</i>제안 방법</h2>
+                <figure class="ps-fig">
+                    <img src="/Publication/summary/img/P196-fig1.png" alt="Framework: Graph Design → TTPs Correlation Analysis → Incident Response Assistance">
+                    <figcaption>Fig.1 그래프 설계(MITRE ATT&amp;CK + 침해사고 연결) → TTP 상관 분석(AI 연관 학습 + 통계 가중치) → 지식 맵(클러스터·공격 패턴 행렬)으로 그룹 식별·동시 발생 기법 추론·공격 단계 확인</figcaption>
+                </figure>
+                <ul class="ps-list">
+                    <li><b>그래프 설계:</b> 그룹–기법, 캠페인–기법, 소프트웨어, 완화책 관계를 모두 담은 이종 TTP 그래프에 실사고 인스턴스를 연결, 기법은 4단계 공격 수행 단계로 배치</li>
+                    <li><b>연관 학습(metapath2vec):</b> 메타패스 <b>5종</b>(그룹–기법·그룹–SW·캠페인–기법·캠페인–SW·기법–완화책), 경로 길이 500·20경로·<b>윈도 3</b>(1-depth 직접 관계만 학습, T0−G1−T2−G3−T4 같은 간접 경로는 잡음), <b>64차원</b>(32–256 차이 없음). 이웃은 당기고 비이웃은 밀어내는 스킵그램 목적함수</li>
+                    <li><b>다음 행위 추론:</b> 탐지된 n개 기법과의 유클리드 거리 합(min-max 정규화로 메타패스 간 결합)이 최소인 기법 = T<sub>next</sub>. 거리는 <b>계층적 군집</b>(ward)으로 관리 → 한 군집 = 동시 발생 가능 기법, 임계값·연결법은 도메인별 조정 가능</li>
+                    <li><b>통계 분석(TF-IDF):</b> 문서=그룹·단어=기법 → 공격 패턴 행렬 TR(t,ta)=log(전체 그룹 수 / t 사용 그룹 수). T1105(83그룹) <b>0.129</b> ↔ T0852(2그룹) <b>0.8</b>: 값이 클수록 특정 그룹 고유 기법</li>
+                    <li><b>그룹 식별:</b> 탐지 기법 가중 합으로 상위 N 후보군 C 산출 → <b>XGBoost</b>(lr 0.3, depth 4)의 리프 출력을 C로 제한해 최종 판정(의사결정트리보다 우수). 예: T1571+T1027 → G0099 0.705 &gt; G0045 0.208 / T1105+T1027 → 두 그룹 <b>0.337 동점</b> → 분류기 결합 필요</li>
+                    <li><b>지식 맵 활용:</b> 예) G0139 전용 하위 군집 T1611·T1610·T1569·T1613 — 현장에서 T1610 탐지 시 나머지 3개 후속 예상. 그룹 식별 후엔 과거 기법·SW·악성도구로 최종 목표 예측</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- 3단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>⑤</i>주요 결과</h2>
+                <table class="ps-table ps-results">
+                    <thead><tr><th>지표</th><th>데이터</th><th>제안</th><th>최고 비교모델</th><th>비교</th></tr></thead>
+                    <tbody>
+                        <tr><td>클러스터 신뢰도</td><td>ID-T</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:79%"></span></span><b>79.15%</b></span></td><td class="ps-bar-cell">— <span class="who">Jaccard·Phi 열세</span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>클러스터 신뢰도</td><td>ID-K-T</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:92%"></span></span><b>91.73%</b></span></td><td class="ps-bar-cell">— <span class="who">Jaccard·Phi 열세</span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>클러스터 신뢰도</td><td>ID-C-T</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:78%"></span></span><b>77.56%</b></span></td><td class="ps-bar-cell">— <span class="who">Jaccard·Phi 열세</span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>그룹 식별 정확도</td><td>ID-K-G</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:93%"></span></span><b>93.49%</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:87%"></span></span><b>87.19%</b> <span class="who">XGBoost</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>그룹 식별 정확도</td><td>ID-C-G</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:86%"></span></span><b>86.37%</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:85%"></span></span><b>85.33%</b> <span class="who">XGBoost</span></span></td><td class="cmp up">▲</td></tr>
+                    </tbody>
+                </table>
+                <p class="ps-fine">신뢰도 = 한 사고의 기법들이 같은 군집에 속한 비율(3개 중 3개 100%·2개 ≈66%·전부 다름 0%), 최대 군집 수 50·45·40·35·30·25로 실험 — 35까지 실용적. 50군집이면 군집당 ≈11 기법. Jaccard·Phi의 신뢰도 수치는 본문에 미기재(표 4). 그룹 식별 비교(표 5): TF-IDF top-15 37.36 / 53.45%, 의사결정트리 58.47 / 81.79%.</p>
+                <ul class="ps-list">
+                    <li><b>그룹 식별(ID-K-G):</b> 정확도 93.49% · 정밀도 97.87% · 재현율 93.49% · F1 94.9% — XGBoost 단독 대비 +6.3pp. ID-C-G는 86.37%(F1 85.9%)로 XGBoost(85.33%)와 근소</li>
+                    <li><b>유스케이스 1·3:</b> T1591.004·T1199·T1204 탐지 → <b>G1004 점수 2.439</b>(차순위 G1001·G0027), 현재 단계 ‘초기 침투’ 판정. 추론된 후속 5개 중 T1098.003·T1136.003·T1578.002(내부 활동)는 다음 행위, T1593.003·T1584.002(인프라 확보)는 미탐지·미수행으로 해석</li>
+                    <li><b>유스케이스 2:</b> 기법 5개 → 캠페인 <b>C0017</b>(후보 C0001·C0024), 단계 ‘내부 활동’, 후속 추론 T1059.003·T1016·T1005·T1071.001</li>
+                    <li><b>군집 품질:</b> 7개 연결법 전수 비교(엔트로피↑·군집 크기 표준편차↓) → Jaccard=ward, Phi=average, 제안=ward 채택</li>
+                    <li><b>속도:</b> 건당 4.01 ms, XGBoost 단독 0.93 ms(≈4×) — EDR/AV 맥락에서 허용 가능</li>
+                </ul>
+                <div class="ps-callout">
+                    <b>왜 TTP만으론 안 되나:</b> 기법 정보만으로 최고점을 받은 그룹이 <b>평균 30개 동점</b>(TF-IDF 가중만 적용해도 34개) → 30개 후보 제시는 방어자를 혼란시킴. 거리 보정 TR′=TR+ε/‖V<sub>ta</sub>−V<sub>t</sub>‖(표 6)는 ε↑에 따라 동점은 줄지만 정확도도 동반 하락해 비실용. 임베딩 시각화에서 그룹끼리·기법끼리 뭉치는 얽힌 영역 확인 → 군집 기반은 통하나 거리 기반은 안 통함 → <b>비TTP 정보(실행파일 n-gram) + XGBoost 결합</b>이 필수
+                </div>
+                <figure class="ps-fig" style="max-width:300px;margin-top:8px">
+                    <img src="/Publication/summary/img/P196-results.png" alt="Table 5: ID-K-G / ID-C-G 공격 그룹 식별 Accuracy·Precision·Recall·F1 비교">
+                    <figcaption>표 5 그룹 식별 성능 — TF-IDF(top 15)·Decision Tree·XGBoost 대비 제안 기법(ID-K-G / ID-C-G)</figcaption>
+                </figure>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>⑥</i>한계 · 향후</h2>
+                <ul class="ps-list">
+                    <li>분류기는 블랙박스(설명 부재) / GPT 등 언어모델 임베딩은 파인튜닝 비용 과다 → 설명 가능성 보강이 과제</li>
+                    <li>적대적 환경(로그 조작·명령 난독화로 TTP 식별 방해) 미검증, 학습에 없는 신규 기법·회피 전략·제로데이 미해결</li>
+                    <li>그룹 라벨 희소(ID-T 73건)·기법 ID 라벨링 신뢰도 문제, 클러스터 신뢰도는 표준 지표가 없어 자체 척도로 평가</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <footer class="ps-foot">
+        <span class="ai-note">AI 생성 요약(원문 기반) · 수치는 논문 본문 기준 — 저자 검토 전 초안</span>
+    </footer>
+</article>
+</body>
+</html>

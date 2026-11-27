@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--
+    논문 1장 요약 — P187 (Applied Sciences, 2025.06)
+    Publication 목록의 [Summary] 클릭 시 모달(iframe)로 열린다. 단독 열람: /Publication/summary/P187.html
+    새 요약을 만들 때는 이 파일을 복사해 P###.html 로 저장하고 Publication.js 의 SUMMARY_PAGES 에 번호를 추가.
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[P187] 요약 - 보안 지능 연구실</title>
+    <link rel="icon" href="/image.png" type="image/png">
+    <link rel="stylesheet" href="/Publication/summary/summary.css?v=1">
+</head>
+<body class="ps-body">
+<article class="ps">
+    <header class="ps-head">
+        <h1 class="ps-title">LogRESP-Agent: 문맥 인식 로그 이상탐지와 TTP 분석을 위한 재귀적 AI 에이전트 프레임워크</h1>
+        <p class="ps-title-en">LogRESP-Agent: A Recursive AI Framework for Context-Aware Log Anomaly Detection and TTP Analysis</p>
+        <p class="ps-meta">
+            <span>이주영 · 정연수 · 한태현 · 이태진(교신)</span>
+            <span>가천대</span>
+            <span><b>Applied Sciences</b> 15(13), 7237 (2025)<span class="ps-badge">SCIE</span></span>
+            <span>DOI: <a href="https://doi.org/10.3390/app15137237" target="_blank" rel="noopener">10.3390/app15137237</a></span>
+            <span>2025.06.27 게재 (접수 05.31 · 승인 06.24)</span>
+        </p>
+    </header>
+
+    <div class="ps-core">
+        <span class="ps-core-tag">핵심</span>
+        <p>템플릿 파싱 없이 이종 엔드포인트 로그를 LLM이 직접 읽고, <span class="hl">계획형 LLM 에이전트</span>(Gemini-2.0-Flash)가 <span class="hl">7개 도구</span>(규칙·이상점수·문맥 RAG·TTP 매핑 등)를 상황에 맞게 골라 호출하는 <span class="hl">재귀 TAO(Thought–Action–Observation) 루프</span>로 탐지 + <span class="hl">MITRE ATT&amp;CK 근거 설명</span>까지 자동 생성</p>
+    </div>
+
+    <div class="ps-kpis">
+        <div class="ps-kpi"><b>99.97%</b><span>Monster-THC 이진 이상탐지 정확도 (FPR 0.0)</span></div>
+        <div class="ps-kpi"><b>0.97</b><span>Monster-THC 평균 F1 (AE +15pp · LogBERT +14pp)</span></div>
+        <div class="ps-kpi"><b>99.47%</b><span>EVTX-ATTACK 8개 전술 다중분류 F1 (정확도 99.54%)</span></div>
+        <div class="ps-kpi"><b>−4.01%</b><span>RuleMatcher 제거 시 F1 하락 (ablation 최대)</span></div>
+        <div class="ps-kpi"><b>10–15s</b><span>로그 1건 전체 추론 주기 (도구 호출당 1–5s)</span></div>
+    </div>
+
+    <div class="ps-grid">
+        <!-- 1단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>①</i>문제의식</h2>
+                <ul class="ps-list">
+                    <li><b>Q1 이종·비정형 로그:</b> 벤더·도구마다 필드명·스키마·상세도가 달라 DeepLog·LogBERT류의 고정 어휘·템플릿 파싱은 의미 손실·일반화 실패, 다중 출처면 재학습·수동 정규화 필요</li>
+                    <li><b>Q2 해석 불가:</b> 대부분 이진 라벨·점수만 출력 — 실무자 80%+가 설명 없는 경보엔 조치를 주저(Ma et al.), 시간·출처 간 상관 없이 시퀀스를 고립 처리</li>
+                    <li><b>Q3 정적·수동 추론:</b> 단일 패스 추론, 외부 검색·다단계 추론·목표 계획 없음. IDS-Agent·SERC 같은 LLM 시스템도 고정 도구 파이프라인·정적 프롬프트라 가설 수정·재귀 불가</li>
+                </ul>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>②</i>기존 연구와 차별점</h2>
+                <table class="ps-table">
+                    <thead><tr><th>계열</th><th>대표</th><th>한계</th></tr></thead>
+                    <tbody>
+                        <tr><td>지도 ML</td><td>SVM·RF·DT</td><td>라벨·정형 필드 의존, 새 포맷에 취약</td></tr>
+                        <tr><td>시퀀스 DL</td><td>DeepLog, LogAnomaly, AE</td><td>로그 구조 변화에 민감, 해석 불가</td></tr>
+                        <tr><td>Transformer</td><td>LogBERT, LogGPT, LogFiT</td><td>데이터셋별 재학습, 수동(passive) 단일 패스</td></tr>
+                        <tr><td>LLM 에이전트</td><td>IDS-Agent, SERC, Audit-LLM</td><td>고정 순서 파이프라인, 중간 수정·도구 재선택 불가</td></tr>
+                        <tr class="ps-ours"><td>제안</td><td colspan="2">파서 불필요 + RAG 문맥 + 계획형 LLM의 재귀 TAO 루프로 도구를 동적 선택, ATT&amp;CK 매핑된 자연어 설명 출력</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>④</i>평가 데이터 · 설정 <small>(2종 · 2과제)</small></h2>
+                <ul class="ps-list">
+                    <li><b>Monster-THC(이진):</b> 실기업 Windows 환경 Monster Agent 프로세스 생성 이벤트(ID 1500), Chrome·Edge·Hwp — <b>33,559건</b>(정상 33,272 / 악성 287, Execution·권한상승·방어회피 등). 산업체 제공, 비공개</li>
+                    <li><b>EVTX-ATTACK-SAMPLES(다중):</b> 공개 Windows 공격 evtx → CSV, MITRE ATT&amp;CK 전술 라벨 — <b>악성 3,167건 · 8개 전술</b>(C2·권한상승·측면이동 등)</li>
+                    <li><b>설정:</b> 80/20 분할(클래스 비율 유지), 교차검증 없음, 지표 TPR·FPR·Acc·F1, Welch t-test 5회 독립 실행</li>
+                    <li><b>비교:</b> 비지도 AE·LogBERT(이진) / MLP·RF·XGBoost(다중) / 에이전트 변형: SequenceScorer를 LogBERT(이진) 또는 RF·XGBoost(다중)로 교체</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- 2단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>③</i>제안 방법</h2>
+                <figure class="ps-fig">
+                    <img src="/Publication/summary/img/P187-fig1.jpg" alt="LogRESP-Agent 아키텍처: 엔드포인트 로그+사용자 질의 → Planner(Thought) → 7개 Tool → Action(이상탐지 모델·DB) → Recursive Reasoning(Observation) → 최종 분석 결과">
+                    <figcaption>Fig.1 로그 + 사용자 목표 → Planner(Thought)가 도구 선택 → 도구 실행(시퀀스 이상탐지 모델·DB 조회: 예측·임베딩·규칙·과거 로그·TTP·공격 정보) → Recursive Reasoning(Observation) — 정보 부족 시 Planner로 되돌아가고, 충분하면 자연어 분석 결과 출력</figcaption>
+                </figure>
+                <ul class="ps-list">
+                    <li><b>입력·목표:</b> 사용자/시스템 목표(예: “process A 악성 여부”)에 해당하는 로그를 읽어 의미 기술 D 생성 — 프로세스명·부모 계보·경로·권한 수준·실행 문맥 추출(템플릿 파싱 없음)</li>
+                    <li><b>Planning(Thought):</b> LLM(<b>Gemini-2.0-Flash</b>, LangChain 기반)이 도구별 효용 = <b>목표 관련성 + 기대 정보이득</b>을 각 5점 척도로 직접 채점해 최고 도구 선택 (수식 아닌 LLM 문맥 추론 — 휴리스틱)</li>
+                    <li><b>7개 도구(Action):</b> LogLoader · DescriptionGenerator(자연어 요약) · RuleMatcher(알려진 악성 지표) · SequenceScorer(LogBERT 이상점수 / RF·XGBoost 다중분류) · ContextRetriever(과거 로그·프로세스 계보 RAG) · TTPMapper(ATT&amp;CK 기법) · ThreatLookup(위협정보 DB)</li>
+                    <li><b>Reasoning(Observation)·재귀:</b> 결과를 단기 메모리(ObservationList)와 전역 추론 추적(ThoughtHistory)에 누적 → 신뢰도 기반 충분성 판단, 부족하면 Planning으로 복귀. 규칙 미매치 시 ContextRetriever로 피벗, 이상점수·TTP·계보가 동시 수렴하면 조기 종료</li>
+                    <li><b>최종 출력 E:</b> Summary(정상/의심/공격) · Evidence · Reasoning Trace(도구 호출 순서·단계별 결론) · Mapped Threat Context(ATT&amp;CK 전술·기법)</li>
+                    <li><b>운영:</b> 비지도 탐지기는 재학습 불필요(분포 급변 시 선택), 규칙·문맥·TTP·위협정보 도구는 핵심 모델과 독립 갱신. 외부 API LLM 사용으로 로컬 메모리 부담 최소</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- 3단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>⑤</i>주요 결과</h2>
+                <table class="ps-table ps-results">
+                    <thead><tr><th>조건</th><th>과제</th><th>제안 F1</th><th>최고 비교모델</th><th>비교</th></tr></thead>
+                    <tbody>
+                        <tr><td>THC Chrome</td><td>이진</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:100%"></span></span><b>1.00</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:81%"></span></span><b>0.81</b> <span class="who">LogBERT</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>THC Edge</td><td>이진</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:94%"></span></span><b>0.94</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:86%"></span></span><b>0.86</b> <span class="who">AE·LogBERT</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>THC Hwp</td><td>이진</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:97%"></span></span><b>0.97</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:86%"></span></span><b>0.86</b> <span class="who">AE</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>THC 평균(5회)</td><td>이진</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:97%"></span></span><b>97.37%</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:84%"></span></span><b>83.52%</b> <span class="who">LogBERT</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>EVTX 평균(5회)</td><td>다중</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:99%"></span></span><b>98.96%</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:98%"></span></span><b>98.02%</b> <span class="who">XGBoost</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>EVTX Cred. Access</td><td>다중</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:97%"></span></span><b>0.97</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:87%"></span></span><b>≤0.87</b> <span class="who">MLP·RF</span></span></td><td class="cmp up">▲</td></tr>
+                    </tbody>
+                </table>
+                <p class="ps-fine">막대: 0~1 F1 비율. 평균 행은 Welch t-test용 5회 독립 실행 평균(THC ±0.57 vs LogBERT ±0.99·AE 80.96±1.10, p&lt;10⁻⁷ / EVTX 에이전트+XGB ±0.10 vs XGB ±0.13, p=5.84×10⁻⁶). 다중분류 제안값은 XGBoost 변형(RF 변형 98.25%, Cred. Access 0.96). THC 평균 TPR 0.94·FPR 0.0.</p>
+                <ul class="ps-list">
+                    <li><b>전술별(EVTX, 에이전트+XGB):</b> C2 F1 1.0·FPR 0 / Defense Evasion·Persistence 0.97(FPR ≤0.003) / Discovery·Execution ≥0.99 / Lateral Movement·권한상승 0.99–1.0(기준 모델 0.87–0.90). XGBoost 단독 대비 평균 이득은 ~1%p</li>
+                    <li><b>Ablation(F1 평균 하락, 3구성):</b> RuleMatcher <b>−4.01%</b> &gt; TTPMapper −3.50% &gt; SequenceScorer −2.71% &gt; ThreatLookup −1.22% — 규칙·TTP 도구가 탐지·분류 모두에 가장 영향</li>
+                    <li><b>사례 #30048(THC 악성):</b> 샌드박스 해제 Chrome → PowerShell 숨김 실행 → msgbox.exe 다운로드 → cmd.exe 상승 명령; RuleMatcher(-ForceV1·ComputerDefaults.exe·SeChangeNotifyPrivilege) + 계보 복원 → <b>T1202·T1548</b> 매핑, 정답 일치</li>
+                    <li><b>사례 #441(EVTX Cred. Access):</b> w3wp.exe → PowerShell(-nop -noni -enc, Temp 경로) → appcmd.exe list vdir /text:password → RF 분류 ‘Credential Access’ + <b>T1552.001·T1027</b></li>
+                    <li><b>사례 #1671(정상 Chrome):</b> 규칙·점수 모두 정상, ContextRetriever가 Slack→Chrome 실행 계보 확인 → 오탐 회피</li>
+                </ul>
+                <div class="ps-callout">
+                    <b>해석 시 주의:</b> 탐지 점수 자체는 기존 모델(LogBERT / RF·XGBoost)을 SequenceScorer로 품고, 에이전트가 규칙·문맥·TTP 신호를 재귀적으로 결합해 얻는 이득 — 다중분류는 XGBoost 단독 98.02→98.96%. 로그 1건당 10–15s라 <b>실시간 탐지가 아닌 triage·조사 용도</b>. 설명 품질은 사례 3건 정성 분석만, 구조화된 사람 평가 없음
+                </div>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>⑥</i>한계 · 향후</h2>
+                <ul class="ps-list">
+                    <li>탐지·설명까지만 — 방화벽 규칙·호스트 격리 등 자동 대응 없음 / 제로데이·적대적 로그 조작에 대한 강건성 미평가(향후 회피 공격 시뮬레이션)</li>
+                    <li>도구 선택이 LLM 5점 휴리스틱 → 학습형 효용 모델로 대체 예정 / 성능이 RuleMatcher·SequenceScorer 등 개별 도구 품질에 종속</li>
+                    <li>Monster-THC 비공개(산업체 계약), 교차검증 없음, 평가 LLM 1종(Gemini-2.0-Flash) / 향후 포맷 무관 로그 정규화 모듈(EDR·SIEM·클라우드), 다국어 로그, 분석가 피드백 기반 설명 평가</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <footer class="ps-foot">
+        <span>AI 생성 요약(원문 기반) · 수치는 논문 표 기준 — 저자 검토 전 초안</span>
+        <span>지원: IITP RS-2023-00235509(70%), RS-2024-00354169(30%)</span>
+    </footer>
+</article>
+</body>
+</html>

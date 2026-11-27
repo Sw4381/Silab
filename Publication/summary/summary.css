@@ -1,0 +1,138 @@
+/* =====================================================================
+   논문 1장 요약(Summary) 페이지 공통 스타일
+   - Publication 목록의 [Summary] 클릭 → 모달(iframe)로 열리고, 단독 URL로도 열린다.
+   - 레이아웃: 제목 → 핵심 한 줄(남색 띠) → 핵심 수치 카드 → 3단(문제·차별점·데이터 / 제안 방법 / 결과·한계)
+   - 새 요약을 만들 때는 P229.html 을 복사해서 내용만 바꾸면 된다. 1000px 이하에서는 1단으로 쌓인다.
+   ===================================================================== */
+:root {
+    --ps-navy: #1e3a5f;
+    --ps-navy-2: #2b4f80;
+    --ps-ink: #1f2937;
+    --ps-muted: #5b6573;
+    --ps-line: #d9dee6;
+    --ps-soft: #f3f6fa;
+    --ps-accent: #e36414;    /* 강조어(주황) */
+    --ps-good: #1f7a3a;
+    --ps-bad: #b42318;
+    --ps-bar: #2b4f80;
+    --ps-bar-base: #b9c3d1;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body.ps-body {
+    background: #fff;
+    color: var(--ps-ink);
+    font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", system-ui, sans-serif;
+    font-size: 13.5px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+}
+a { color: var(--ps-navy-2); }
+
+.ps { max-width: 1360px; margin: 0 auto; padding: 22px 26px 26px; }
+
+/* ---------- 제목 ---------- */
+.ps-head { border-bottom: 2px solid var(--ps-navy); padding-bottom: 8px; margin-bottom: 12px; }
+.ps-title { margin: 0; font-size: 1.75em; font-weight: 800; letter-spacing: -0.01em; line-height: 1.25; color: #111827; }
+.ps-title-en { margin: 3px 0 0; font-size: 1em; color: var(--ps-muted); }
+.ps-meta { margin: 6px 0 0; font-size: 0.86em; color: var(--ps-muted); display: flex; flex-wrap: wrap; gap: 2px 0; }
+.ps-meta > span + span::before { content: "·"; margin: 0 7px; color: #a3adbb; }
+.ps-meta b { color: var(--ps-ink); }
+.ps-badge { display: inline-block; background: var(--ps-navy); color: #fff; font-size: 0.78em; font-weight: 700; padding: 1px 7px; border-radius: 4px; vertical-align: middle; margin-left: 6px; }
+
+/* ---------- 핵심 한 줄 ---------- */
+.ps-core {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--ps-navy); color: #fff; border-radius: 6px;
+    padding: 9px 14px; margin: 0 0 12px; font-size: 0.98em; line-height: 1.5;
+}
+.ps-core-tag { flex: none; font-weight: 800; letter-spacing: 0.08em; opacity: 0.9; }
+.ps-core p { margin: 0; }
+.ps-core .hl { color: #ffb067; font-weight: 700; }
+
+/* ---------- 핵심 수치 카드 ---------- */
+.ps-kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 0 0 16px; }
+.ps-kpi { background: var(--ps-soft); border: 1px solid var(--ps-line); border-radius: 8px; padding: 10px 8px; text-align: center; }
+.ps-kpi b { display: block; font-size: 1.65em; font-weight: 800; color: var(--ps-navy); line-height: 1.15; letter-spacing: -0.01em; }
+.ps-kpi span { display: block; font-size: 0.8em; color: var(--ps-muted); margin-top: 3px; }
+
+/* ---------- 3단 본문 ---------- */
+.ps-grid { display: grid; grid-template-columns: 27fr 33fr 40fr; gap: 18px; align-items: start; }
+.ps-col { min-width: 0; }
+.ps-sec { margin-bottom: 14px; }
+.ps-sec h2 {
+    margin: 0 0 7px; font-size: 1.02em; font-weight: 800; color: var(--ps-navy);
+    border-left: 4px solid var(--ps-navy); background: var(--ps-soft);
+    padding: 3px 8px; border-radius: 0 4px 4px 0;
+}
+.ps-sec h2 i { font-style: normal; margin-right: 5px; }
+.ps-sec h2 small { font-weight: 500; color: var(--ps-muted); font-size: 0.85em; margin-left: 4px; }
+
+.ps-list { margin: 0; padding-left: 14px; }
+.ps-list li { margin: 0 0 5px; }
+.ps-list li::marker { color: #9aa5b5; }
+.ps-list b { color: var(--ps-ink); }
+.ps-list .hl { color: var(--ps-accent); font-weight: 700; }
+.ps-p { margin: 0 0 6px; }
+
+/* ---------- 표 ---------- */
+.ps-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+.ps-table th, .ps-table td { padding: 4px 6px; border-bottom: 1px solid var(--ps-line); text-align: left; vertical-align: top; }
+.ps-table th { background: var(--ps-soft); color: var(--ps-navy); font-weight: 700; white-space: nowrap; }
+.ps-table td:first-child { font-weight: 700; white-space: nowrap; }
+.ps-table tr.ps-ours td { background: #fff7ef; }
+.ps-table tr.ps-ours td:first-child { color: var(--ps-accent); }
+.ps-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* 결과 표: 막대 + 수치 */
+.ps-results td { white-space: nowrap; }
+.ps-results td.ps-bar-cell { width: 1%; }
+.ps-bar { display: inline-flex; align-items: center; gap: 6px; }
+.ps-bar-track { display: inline-block; width: 78px; height: 9px; background: #e9edf3; border-radius: 2px; overflow: hidden; vertical-align: middle; }
+.ps-bar-fill { display: block; height: 100%; background: var(--ps-bar); }
+.ps-bar-fill.base { background: var(--ps-bar-base); }
+.ps-bar b { font-variant-numeric: tabular-nums; }
+.ps-results .cmp { text-align: center; font-weight: 800; }
+.ps-results .cmp.up { color: var(--ps-good); }
+.ps-results .cmp.down { color: var(--ps-bad); }
+.ps-results .cmp.eq { color: var(--ps-muted); }
+.ps-results .who { color: var(--ps-muted); font-weight: 400; font-size: 0.92em; }
+.ps-fine { margin: 5px 0 8px; font-size: 0.82em; color: var(--ps-muted); line-height: 1.45; }
+
+/* ---------- 그림 ---------- */
+.ps-fig { margin: 0 0 8px; border: 1px solid var(--ps-line); border-radius: 6px; padding: 6px; background: #fff; }
+.ps-fig img { display: block; width: 100%; height: auto; }
+.ps-fig figcaption { font-size: 0.8em; color: var(--ps-muted); margin-top: 5px; line-height: 1.4; }
+.ps-fig-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* ---------- 강조 박스 ---------- */
+.ps-callout { background: #fff8e6; border: 1px solid #f1d58a; border-left: 4px solid #e0a51c; border-radius: 6px; padding: 8px 10px; margin: 8px 0 0; font-size: 0.9em; line-height: 1.5; }
+.ps-callout b:first-child { color: #8a5a00; }
+.ps-callout.blue { background: #eef4fb; border-color: #bcd2ee; border-left-color: var(--ps-navy-2); }
+.ps-callout.blue b:first-child { color: var(--ps-navy); }
+
+/* ---------- 하단 ---------- */
+.ps-foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--ps-line); margin-top: 6px; padding-top: 8px; font-size: 0.78em; color: var(--ps-muted); }
+.ps-foot .ai-note { color: #8a5a00; }
+
+/* ---------- 반응형 ---------- */
+@media (max-width: 1000px) {
+    .ps { padding: 16px 16px 20px; }
+    .ps-grid { grid-template-columns: 1fr 1fr; }
+    .ps-kpis { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 680px) {
+    body.ps-body { font-size: 13px; }
+    .ps-title { font-size: 1.35em; }
+    .ps-grid { grid-template-columns: 1fr; gap: 6px; }
+    .ps-kpis { grid-template-columns: repeat(2, 1fr); }
+    .ps-core { flex-direction: column; gap: 4px; }
+    .ps-results td { white-space: normal; }
+    .ps-bar-track { width: 54px; }
+    .ps-fig-row { grid-template-columns: 1fr; }
+}
+@media print {
+    .ps { max-width: none; padding: 0; }
+    .ps-grid { grid-template-columns: 27fr 33fr 40fr; }
+}

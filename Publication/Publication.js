@@ -29,6 +29,68 @@ function resolveProjectPageUrl(title) {
     return '';
 }
 
+// ==================== 논문 1장 요약(Summary) ====================
+// 2026-11 요청: SCIE 논문(2025년~)은 'project page' 링크 대신 [Summary] 를 보여주고,
+// 클릭하면 현재 화면 위에 모달이 떠서 /Publication/summary/P###.html (1장 요약) 을 iframe 으로 보여준다.
+// 새 요약을 추가하려면 summary/P###.html 을 만들고(P229.html 복사) 아래 목록에 번호만 넣으면 된다.
+// [Summary] 가 있는 논문은 project page 링크를 표시하지 않는다(요약이 그 역할을 대신).
+var SUMMARY_PAGES = ['P229', 'P212', 'P196', 'P187'];   // P190(ICT Express)은 원문 PDF 받으면 추가
+
+function resolveSummaryUrl(publicationId) {
+    var id = String(publicationId || '').toUpperCase().trim();
+    return SUMMARY_PAGES.indexOf(id) >= 0 ? '/Publication/summary/' + id + '.html' : '';
+}
+
+function ensureSummaryModal() {
+    var m = document.getElementById('pubSummaryModal');
+    if (m) return m;
+    m = document.createElement('div');
+    m.id = 'pubSummaryModal';
+    m.className = 'pub-summary-modal';
+    m.innerHTML = `
+        <div class="pub-summary-box" role="dialog" aria-modal="true" aria-label="논문 요약">
+            <div class="pub-summary-bar">
+                <i class="fas fa-file-lines"></i>
+                <span class="pub-summary-bar-title" id="pubSummaryTitle"></span>
+                <a id="pubSummaryOpen" class="pub-summary-ext" href="#" target="_blank" rel="noopener" title="새 탭에서 열기"><i class="fas fa-external-link-alt"></i></a>
+                <button type="button" class="pub-summary-close" id="pubSummaryClose" aria-label="닫기">&times;</button>
+            </div>
+            <iframe id="pubSummaryFrame" class="pub-summary-frame" title="논문 요약"></iframe>
+        </div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click', function (e) { if (e.target === m) closePubSummary(); });
+    m.querySelector('#pubSummaryClose').addEventListener('click', closePubSummary);
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && m.classList.contains('open')) closePubSummary();
+    });
+    return m;
+}
+
+function openPubSummary(url, title) {
+    var m = ensureSummaryModal();
+    m.querySelector('#pubSummaryTitle').textContent = title || '논문 요약';
+    m.querySelector('#pubSummaryOpen').href = url;
+    m.querySelector('#pubSummaryFrame').src = url;
+    m.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePubSummary() {
+    var m = document.getElementById('pubSummaryModal');
+    if (!m) return;
+    m.classList.remove('open');
+    m.querySelector('#pubSummaryFrame').src = 'about:blank';
+    document.body.style.overflow = '';
+}
+
+// 목록의 [Summary] 클릭 → 모달 (목록은 수시로 다시 그려지므로 문서 단위 위임)
+document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('.pub-summary-link');
+    if (!a) return;
+    e.preventDefault();
+    openPubSummary(a.getAttribute('href'), a.getAttribute('data-title') || '');
+});
+
 // ==================== DOM 요소들 ====================
 let loginBtn, logoutBtn, loginModal, loginClose, loginForm;
 let userInfo, userName, adminPanel, addPublicationBtn, addPublicationForm;
@@ -692,9 +754,14 @@ function createPublicationElement(publication) {
         ` - <span class="award">${publication.award}</span>` : '';
     // 주의: JIF 백분위는 공개 목록에 표시하지 않음 (data 속성으로만 보관 → 수정 폼/멤버 실적에서 사용)
 
-    // project page 링크 줄 (paper 원문은 제목 클릭으로 이동하므로 별도 표시하지 않음)
-    const linksContent = projectUrl ?
-        `<p class="publication-links"><a href="${projectUrl}" target="_blank" rel="noopener" class="pub-link">[project page]</a></p>` : '';
+    // 링크 줄: 1장 요약이 있으면 [Summary](모달), 없으면 project page 링크 (paper 원문은 제목 클릭)
+    const summaryUrl = resolveSummaryUrl(publication.publicationId);
+    let linksContent = '';
+    if (summaryUrl) {
+        linksContent = `<p class="publication-links"><a href="${summaryUrl}" class="pub-link pub-summary-link" data-title="[${escHtml(publication.publicationId)}] ${escHtml(publication.title || '')}"><i class="fas fa-file-lines"></i>[Summary]</a></p>`;
+    } else if (projectUrl) {
+        linksContent = `<p class="publication-links"><a href="${projectUrl}" target="_blank" rel="noopener" class="pub-link">[project page]</a></p>`;
+    }
 
     // 논문 요약 줄
     const summaryContent = summary ?

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!--
+    논문 1장 요약 — P229 (Computer Networks, 2026.11)
+    Publication 목록의 [Summary] 클릭 시 모달(iframe)로 열린다. 단독 열람: /Publication/summary/P229.html
+    새 요약을 만들 때는 이 파일을 복사해 P###.html 로 저장하고 Publication.js 의 SUMMARY_PAGES 에 번호를 추가.
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[P229] 요약 - 보안 지능 연구실</title>
+    <link rel="icon" href="/image.png" type="image/png">
+    <link rel="stylesheet" href="/Publication/summary/summary.css?v=1">
+</head>
+<body class="ps-body">
+<article class="ps">
+    <header class="ps-head">
+        <h1 class="ps-title">암호화 트래픽에서 네트워크 플로우 기반 토폴로지 인식 비지도 침입탐지</h1>
+        <p class="ps-title-en">Topology-aware unsupervised intrusion detection from network flows in encrypted traffic</p>
+        <p class="ps-meta">
+            <span>이선우 · 정혜란 · 이태진(교신)</span>
+            <span>가천대</span>
+            <span><b>Computer Networks</b> 292 (2027) 112940<span class="ps-badge">SCIE</span></span>
+            <span>2026.11.07 Accept</span>
+            <span>코드 공개: <a href="https://github.com/Sw4381/GNN_NIDS-Detector" target="_blank" rel="noopener">github.com/Sw4381/GNN_NIDS-Detector</a></span>
+        </p>
+    </header>
+
+    <div class="ps-core">
+        <span class="ps-core-tag">핵심</span>
+        <p>페이로드 없이 <span class="hl">플로우 메타데이터</span>(패킷·바이트·포트)만으로 2분 단위 <span class="hl">IP-pair 통신 그래프</span>를 만들고, 정상 트래픽만 학습한 <span class="hl">GNN 오토인코더</span>의 엣지 재구성 오차로 이상을 탐지 — 증강(노이즈·마스킹)+대조학습(DGI)으로 강건성 확보</p>
+    </div>
+
+    <div class="ps-kpis">
+        <div class="ps-kpi"><b>0.986</b><span>일반 NIDS 4종 평균 ROC-AUC (1위)</span></div>
+        <div class="ps-kpi"><b>0.936</b><span>종단간 암호화 4조건 평균 ROC-AUC (1위)</span></div>
+        <div class="ps-kpi"><b>0.911</b><span>교차환경 전이 평균 (비교모델 0.415–0.609)</span></div>
+        <div class="ps-kpi"><b>−3.0%</b><span>재보정 없는 전이 시 상대 성능 저하</span></div>
+        <div class="ps-kpi"><b>17.67ms</b><span>2분 윈도우 1개 처리(CPU) · 122,906 flows/s</span></div>
+    </div>
+
+    <div class="ps-grid">
+        <!-- 1단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>①</i>문제의식</h2>
+                <ul class="ps-list">
+                    <li><b>암호화 확산:</b> 웹 트래픽 95%+ HTTPS, TLS 1.3은 핸드셰이크 대부분(서버 인증서 포함)까지 암호화 → DPI 기반 NIDS 무력화</li>
+                    <li><b>Q1 암호화 환경 탐지:</b> 타이밍·크기 등 외형 정보만 관측 가능</li>
+                    <li><b>Q2 대규모 처리:</b> 대형망은 시간당 수백만 플로우 → 시간 집계·구조 추상화 필요</li>
+                    <li><b>Q3 강건성:</b> 실망 트래픽은 잡음·변화가 많고(concept drift), 지도학습은 라벨 의존·신규 공격 취약</li>
+                </ul>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>②</i>기존 연구와 차별점</h2>
+                <table class="ps-table">
+                    <thead><tr><th>계열</th><th>대표</th><th>한계</th></tr></thead>
+                    <tbody>
+                        <tr><td>지도 ML</td><td>RF·SVM·KNN</td><td>대량 라벨 필요, 신규 공격·변화 대응 약함</td></tr>
+                        <tr><td>비지도 AE</td><td>KitNET, VAE</td><td>플로우를 독립 처리 → 엔드포인트 간 구조 무시</td></tr>
+                        <tr><td>지도 GNN</td><td>E-GraphSAGE, TB-Graph</td><td>라벨 의존, IP:Port 그래프는 규모 과대</td></tr>
+                        <tr><td>비지도 GNN</td><td>Anomal-E, GraphIDS</td><td>2단계 학습(Anomal-E), IP 행위 특성 미반영</td></tr>
+                        <tr class="ps-ours"><td>제안</td><td colspan="2">비지도 + 플로우 기반 + GNN + IP 행위(노드 토폴로지) 모델링을 모두 결합, 출처 편향 통제 평가</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>④</i>평가 데이터 <small>(6종 · 8조건)</small></h2>
+                <ul class="ps-list">
+                    <li><b>일반 NIDS:</b> CIC-IDS2017(기업), NF-CSE-CIC-IDS2018-v3(클라우드), CIC-Edge-IIoTset(산업IoT), NF-UNSW-NB15-v3(테스트베드, 공격 4.6%)</li>
+                    <li><b>종단간 암호화:</b> DoH 터널링 Setup 2(교차코퍼스)·Setup 3(동일출처), TQH-C2 — Sliver over TLS, Merlin over QUIC(HTTP/3)</li>
+                    <li><b>비교 6종:</b> AE, VAE, KitNET, Anomal-E(IF/PCA), GraphIDS(NeurIPS'25)</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- 2단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>③</i>제안 방법</h2>
+                <figure class="ps-fig">
+                    <img src="/Publication/summary/img/P229-fig1.jpg" alt="Anomaly Detection Framework: 전처리 → GNN 오토인코더 학습 → 테스트">
+                    <figcaption>Fig.1 전처리 → GNN 오토인코더 학습(증강·DGI) → 테스트(엣지 재구성 오차 &gt; 임계값 → 이상)</figcaption>
+                </figure>
+                <ul class="ps-list">
+                    <li><b>그래프 구성:</b> 2분 고정 윈도우, 노드=IP, 방향 엣지=(src,dst) 플로우 묶음 / <b>엣지 23차원</b>(트래픽량 16·포트 6·플로우 수 1), <b>노드 4차원</b>(밀도·out/in-degree·군집계수) — NetFlow·sFlow·IPFIX 공통 필드만 사용</li>
+                    <li><b>Dual-stage AE:</b> 노드←인접 엣지 평균 집계 → 엣지+양끝 노드 문맥 결합 인코딩(→16차원) → 잠재 엣지를 다시 노드로 집계해 디코딩, MSE 재구성</li>
+                    <li><b>강건 학습:</b> 매 epoch 3개 증강 뷰 — 가우시안 노이즈(λ=0.2/0.5/0.7), 엣지 마스킹 5%, 노드 마스킹 3% (토폴로지는 보존)</li>
+                    <li><b>대조학습:</b> 엣지 중심 DGI(정상 vs 섞은 그래프 판별), 손실 = 재구성 + 1.0×DGI</li>
+                    <li><b>설정:</b> 전 데이터셋 동일 하이퍼파라미터, 100 epoch, CPU만 사용, 임계값은 Youden's J</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- 3단 -->
+        <div class="ps-col">
+            <section class="ps-sec">
+                <h2><i>⑤</i>주요 결과</h2>
+                <table class="ps-table ps-results">
+                    <thead><tr><th>조건</th><th>구분</th><th>제안 ROC-AUC</th><th>최고 비교모델</th><th>비교</th></tr></thead>
+                    <tbody>
+                        <tr><td>CIC-IDS2017</td><td>일반</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:97%"></span></span><b>0.983</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:98%"></span></span><b>0.989</b> <span class="who">GraphIDS</span></span></td><td class="cmp down">▽</td></tr>
+                        <tr><td>IDS2018</td><td>일반</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:100%"></span></span><b>1.000</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:93%"></span></span><b>0.965</b> <span class="who">VAE</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>Edge-IIoT</td><td>일반</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:99%"></span></span><b>0.997</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:100%"></span></span><b>1.000</b> <span class="who">Anomal-E(PCA)</span></span></td><td class="cmp down">▽</td></tr>
+                        <tr><td>UNSW</td><td>일반</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:93%"></span></span><b>0.966</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:99%"></span></span><b>0.997</b> <span class="who">Anomal-E(IF)</span></span></td><td class="cmp down">▽</td></tr>
+                        <tr><td>DoH Setup 2*</td><td>암호</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:96%"></span></span><b>0.982</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:96%"></span></span><b>0.982</b> <span class="who">VAE</span></span></td><td class="cmp eq">=</td></tr>
+                        <tr><td>DoH Setup 3</td><td>암호</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:59%"></span></span><b>0.797</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:44%"></span></span><b>0.720</b> <span class="who">Anomal-E(IF)</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>C2 over TLS</td><td>암호</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:99%"></span></span><b>0.995</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:86%"></span></span><b>0.930</b> <span class="who">KitNET</span></span></td><td class="cmp up">▲</td></tr>
+                        <tr><td>C2 over QUIC</td><td>암호</td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill" style="width:94%"></span></span><b>0.969</b></span></td><td class="ps-bar-cell"><span class="ps-bar"><span class="ps-bar-track"><span class="ps-bar-fill base" style="width:100%"></span></span><b>1.000</b> <span class="who">GraphIDS 등</span></span></td><td class="cmp down">▽</td></tr>
+                    </tbody>
+                </table>
+                <p class="ps-fine">막대: 0.5(무작위)~1.0 구간 표시. 개별 조건은 3승·1무·4패이나 평균은 두 영역 모두 1위(GraphIDS 대비 일반 0.940→0.986, 암호 0.864→0.936). 암호 조건 평균 PR-AUC도 1위(0.909).</p>
+                <ul class="ps-list">
+                    <li><b>암호화 C2(TLS):</b> ROC 0.995 / PR 0.884 / FPR 0.006 — 차순위 KitNET(0.930/0.425) 대비 큰 격차</li>
+                    <li><b>DoH Setup 3(가장 어려움):</b> 0.797 vs 비교 0.564–0.720 — 탐지는 가능하나 쉽게 분리되진 않음</li>
+                    <li><b>교차환경 전이(10쌍, 재보정 없음):</b> 7/10쌍 1위, 전 쌍 0.766–0.987, 평균 0.911 (비교모델은 0.5 미만 다수)</li>
+                    <li><b>Ablation(손상 입력, λ=1.0):</b> Full 강건성 이득 최대(ROC +1.39pp, PR +1.48pp). 단독으로 효과 있는 건 <b>가우시안 노이즈</b>(+1.37pp)뿐, DGI는 증강과 함께일 때만 기여. QUIC +5.15pp·UNSW +3.10pp, DoH는 이득 없음</li>
+                    <li><b>효율:</b> 학습 143.8s(AE 대비 3.2×), 처리량 AE 3.4×·GraphIDS 대비 1.26×. 단, 2분 윈도우로 <b>탐지 지연 최대 120s</b></li>
+                </ul>
+                <div class="ps-callout">
+                    <b>평가 위생(Origin control):</b> Setup 2는 정상=Jerabek, 악성=DoHBrw로 출처가 라벨과 일치 → 정상끼리만 비교해도 <b>origin-AUC 0.942</b>(1% 오탐 기준 타 출처 정상 20.3% 오탐). 즉 Setup 2의 0.98은 “환경 구분” 효과가 큼 → 암호화 DoH 성능 주장은 <b>동일출처 Setup 3(0.797)</b>에 근거
+                </div>
+            </section>
+
+            <section class="ps-sec">
+                <h2><i>⑥</i>한계 · 향후</h2>
+                <ul class="ps-list">
+                    <li>대부분 실험실·테스트베드 데이터, 운영망 검증 미수행 / DoT·DoQ·PQC-TLS 미평가</li>
+                    <li>IP를 독립 노드로 처리 → 서브넷 단위 협조 공격·NAT·동적 IP 영향 / 적대적 회피 공격 미평가</li>
+                    <li>단일 학습 시드(42) / 일반 NIDS 평균 PR-AUC는 Anomal-E(IF)보다 낮음(0.861 vs 0.900, UNSW 오탐 영향)</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <footer class="ps-foot">
+        <span>* DoH Setup 2는 출처 혼입 확인으로 성능 근거에서 제외(참고용)</span>
+        <span>지원: IITP RS-2023-00235509(80%), 융합보안대학원 RS-2026-25585348(20%)</span>
+    </footer>
+</article>
+</body>
+</html>

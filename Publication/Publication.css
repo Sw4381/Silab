@@ -829,6 +829,70 @@
     margin: 0 2px;
 }
 
+/* [Summary] 링크 — 1장 요약 모달 열기 */
+.publication-links .pub-summary-link {
+    color: #b85c12;
+    font-weight: 600;
+}
+.publication-links .pub-summary-link:hover { color: #e36414; }
+
+/* 논문 1장 요약(Summary) 모달 — 현재 화면 위에 떠서 /Publication/summary/P###.html 을 iframe 으로 보여줌 */
+.pub-summary-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.62);
+    z-index: 1500;
+    padding: 2vh 2vw;
+    align-items: center;
+    justify-content: center;
+}
+.pub-summary-modal.open { display: flex; }
+.pub-summary-box {
+    width: min(1400px, 96vw);
+    height: 94vh;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+.pub-summary-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px 8px 16px;
+    background: #1e3a5f;
+    color: #fff;
+    font-size: 0.9em;
+}
+.pub-summary-bar-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+.pub-summary-ext { color: #cfe0f5; padding: 4px 6px; }
+.pub-summary-ext:hover { color: #fff; }
+.pub-summary-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.7em;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 6px;
+}
+.pub-summary-close:hover { color: #ffb067; }
+.pub-summary-frame { flex: 1; width: 100%; border: 0; background: #fff; }
+@media (max-width: 768px) {
+    .pub-summary-modal { padding: 0; }
+    .pub-summary-box { width: 100vw; height: 100vh; border-radius: 0; }
+}
+
 /* 논문 요약문 */
 .publication-summary {
     margin: 8px 0 0 0;
